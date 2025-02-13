@@ -245,6 +245,13 @@ properties:
   vsys-smps-supply:
     description: Supply for regulator control logic
 
+  accdet:
+    type: object
+    $ref: /schemas/sound/mediatek,mt6359-accdet.yaml
+    unevaluatedProperties: false
+    description:
+      Accessory Detection
+
 patternProperties:
   "^vsys-v[a-z]+[0-9]*-supply$":
     description: Supplies for PMIC buck regulators
