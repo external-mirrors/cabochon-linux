@@ -1,0 +1,324 @@
+// SPDX-License-Identifier: (GPL-2.0 OR MIT)
+/*
+ * Copyright (c) 2023 MediaTek Inc.
+ * Copyright (c) 2025 Collabora Ltd
+ *                    AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
+ */
+#include <dt-bindings/iio/adc/mediatek,mt6363-auxadc.h>
+#include <dt-bindings/input/linux-event-codes.h>
+#include <dt-bindings/interrupt-controller/irq.h>
+#include <dt-bindings/spmi/spmi.h>
+
+&spmi0 {
+	pmic@4 {
+		compatible = "mediatek,mt6363";
+		reg = <0x4 SPMI_USID>;
+		interrupts = <4 64 IRQ_TYPE_NONE>;
+		interrupt-controller;
+		#address-cells = <1>;
+		#interrupt-cells = <3>;
+		#size-cells = <0>;
+
+#if 0 /* Not for upstream yet - working but removing for now */
+		keys@0 {
+			compatible = "mediatek,mt6363-keys";
+			reg = <0x0>;
+			interrupts = <4 48 IRQ_TYPE_LEVEL_HIGH>,
+				     <4 49 IRQ_TYPE_LEVEL_HIGH>,
+				     <4 51 IRQ_TYPE_LEVEL_HIGH>,
+				     <4 52 IRQ_TYPE_LEVEL_HIGH>;
+			interrupt-names = "powerkey", "homekey", "powerkey_r", "homekey_r";
+			mediatek,long-press-mode = <1>;
+
+			power {
+				linux,keycodes = <KEY_POWER>;
+				wakeup-source;
+			};
+
+			home {
+				linux,keycodes = <KEY_VOLUMEUP>;
+			};
+		};
+#endif
+
+		regulators@30 {
+			compatible = "mediatek,mt6363-regulator";
+			reg = <0x30>;
+
+			mt6363_vbuck1: vbuck1 {
+				regulator-name = "mt6363-vbuck1";
+				regulator-allowed-modes = <0 1 2>;
+			};
+
+			mt6363_vbuck2: vbuck2 {
+				regulator-name = "mt6363-vbuck2";
+				regulator-allowed-modes = <0 1 2>;
+			};
+
+			mt6363_vbuck3: vbuck3 {
+				regulator-name = "mt6363-vbuck3";
+				regulator-allowed-modes = <0 1 2>;
+			};
+
+			mt6363_vbuck4: vbuck4 {
+				regulator-name = "mt6363-vbuck4";
+				regulator-allowed-modes = <0 1 2>;
+			};
+
+			mt6363_vbuck5: vbuck5 {
+				regulator-name = "mt6363-vbuck5";
+				regulator-allowed-modes = <0 1 2>;
+			};
+
+			mt6363_vbuck6: vbuck6 {
+				regulator-name = "mt6363-vbuck6";
+				regulator-allowed-modes = <0 1 2>;
+			};
+
+			mt6363_vbuck7: vbuck7 {
+				regulator-name = "mt6363-vbuck7";
+				regulator-allowed-modes = <0 1 2>;
+			};
+
+			mt6363_vs1: vs1 {
+				regulator-name = "mt6363-vs1";
+				regulator-allowed-modes = <0 1 2>;
+				regulator-always-on;
+				regulator-allow-set-load;
+			};
+
+			mt6363_vs2: vs2 {
+				regulator-name = "mt6363-vs2";
+				regulator-allowed-modes = <0 1 2>;
+				regulator-always-on;
+				regulator-allow-set-load;
+			};
+
+			mt6363_vs3: vs3 {
+				regulator-name = "mt6363-vs3";
+				regulator-allowed-modes = <0 1 2>;
+				regulator-always-on;
+				regulator-allow-set-load;
+			};
+
+			mt6363_vsram_digrf: vsram-digrf {
+				regulator-name = "mt6363-vsram-digrf";
+				regulator-allowed-modes = <0 2>;
+			};
+
+			mt6363_vsram_mdfe: vsram-mdfe {
+				regulator-name = "mt6363-vsram-mdfe";
+				regulator-allowed-modes = <0 2>;
+			};
+
+			mt6363_vsram_modem: vsram-modem {
+				regulator-name = "mt6363-vsram-modem";
+				regulator-allowed-modes = <0 2>;
+			};
+
+			mt6363_vsram_cpub: vsram-cpub {
+				regulator-name = "mt6363-vsram-cpub";
+				regulator-allowed-modes = <0 2>;
+			};
+
+			mt6363_vsram_cpum: vsram-cpum {
+				regulator-name = "mt6363-vsram-cpum";
+				regulator-allowed-modes = <0 2>;
+			};
+
+			mt6363_vsram_cpul: vsram-cpul {
+				regulator-name = "mt6363-vsram-cpul";
+				regulator-allowed-modes = <0 2>;
+			};
+
+			mt6363_vsram_apu: vsram-apu {
+				regulator-name = "mt6363-vsram-apu";
+				regulator-allowed-modes = <0 2>;
+			};
+
+			mt6363_vemc: vemc {
+				regulator-name = "mt6363-vemc";
+				regulator-allowed-modes = <0 2>;
+				regulator-allow-set-load;
+			};
+
+			mt6363_vcn13: vcn13 {
+				regulator-name = "mt6363-vcn13";
+				regulator-allowed-modes = <0 2>;
+				regulator-allow-set-load;
+			};
+
+			mt6363_vtref18: vtref18 {
+				regulator-name = "mt6363-vtref18";
+				regulator-allowed-modes = <0 2>;
+				regulator-always-on;
+				regulator-allow-set-load;
+			};
+
+			mt6363_vaux18: vaux18 {
+				regulator-name = "mt6363-vaux18";
+				regulator-allowed-modes = <0 2>;
+				regulator-always-on;
+				regulator-allow-set-load;
+			};
+
+			mt6363_vcn15: vcn15 {
+				regulator-name = "mt6363-vcn15";
+				regulator-allowed-modes = <0 2>;
+				regulator-allow-set-load;
+			};
+
+			mt6363_vufs18: vufs18 {
+				regulator-name = "mt6363-vufs18";
+				regulator-allowed-modes = <0 2>;
+				regulator-allow-set-load;
+			};
+
+			mt6363_vio18: vio18 {
+				regulator-name = "mt6363-vio18";
+				regulator-allowed-modes = <0 2>;
+				regulator-always-on;
+				regulator-allow-set-load;
+			};
+
+			mt6363_vm18: vm18 {
+				regulator-name = "mt6363-vm18";
+				regulator-allowed-modes = <0 2>;
+				regulator-allow-set-load;
+			};
+
+			mt6363_va15: va15 {
+				regulator-name = "mt6363-va15";
+				regulator-allowed-modes = <0 2>;
+				regulator-always-on;
+				regulator-allow-set-load;
+			};
+
+			mt6363_vrf18: vrf18 {
+				regulator-name = "mt6363-vrf18";
+				regulator-allowed-modes = <0 2>;
+				regulator-allow-set-load;
+			};
+
+			mt6363_vrfio18: vrf-io18 {
+				regulator-name = "mt6363-vrfio18";
+				regulator-allowed-modes = <0 2>;
+				regulator-allow-set-load;
+			};
+
+			mt6363_vio075: vio0p75 {
+				regulator-name = "mt6363-vio0p75";
+				regulator-allowed-modes = <0 2>;
+				regulator-always-on;
+			};
+
+			mt6363_vufs12: vufs12 {
+				regulator-name = "mt6363-vufs12";
+				regulator-allowed-modes = <0 2>;
+				regulator-allow-set-load;
+			};
+
+			mt6363_va12_1: va12-1 {
+				regulator-name = "mt6363-va12-1";
+				regulator-allowed-modes = <0 2>;
+				regulator-always-on;
+				regulator-allow-set-load;
+			};
+
+			mt6363_va12_2: va12-2 {
+				regulator-name = "mt6363-va12-2";
+				regulator-allowed-modes = <0 2>;
+				regulator-always-on;
+				regulator-allow-set-load;
+			};
+
+			mt6363_vrf12: vrf12 {
+				regulator-name = "mt6363-vrf12";
+				regulator-allowed-modes = <0 2>;
+				regulator-allow-set-load;
+			};
+
+			mt6363_vrf13: vrf13 {
+				regulator-name = "mt6363-vrf13";
+				regulator-allowed-modes = <0 2>;
+				regulator-allow-set-load;
+			};
+
+			mt6363_vrf09: vrf0p9 {
+				regulator-name = "mt6363-vrf0p9";
+				regulator-allowed-modes = <0 2>;
+				regulator-allow-set-load;
+			};
+
+			mt6363_isink_load: isink-load {
+				regulator-name = "mt6363-isink-load";
+			};
+		};
+
+		mt6363_adc: adc@1000 {
+			compatible = "mediatek,mt6363-auxadc";
+			reg = <0x1000>;
+			#io-channel-cells = <1>;
+
+			batadc {
+				channel = <MT6363_AUXADC_BATADC>;
+			};
+
+			bat-temp {
+				channel = <MT6363_AUXADC_BAT_TEMP>;
+			};
+
+			chip-temp {
+				channel = <MT6363_AUXADC_CHIP_TEMP>;
+			};
+
+			vcore-temp {
+				channel = <MT6363_AUXADC_VCORE_TEMP>;
+			};
+
+			vproc-temp {
+				channel = <MT6363_AUXADC_VPROC_TEMP>;
+			};
+
+			vgpu-temp {
+				channel = <MT6363_AUXADC_VGPU_TEMP>;
+			};
+
+			vtref {
+				channel = <MT6363_AUXADC_VTREF>;
+			};
+
+			vsyssns {
+				channel = <MT6363_AUXADC_VSYSSNS>;
+			};
+
+			vin1 {
+				channel = <MT6363_AUXADC_VIN1>;
+			};
+
+			vin2 {
+				channel = <MT6363_AUXADC_VIN2>;
+			};
+
+			vin3 {
+				channel = <MT6363_AUXADC_VIN3>;
+			};
+
+			vin4 {
+				channel = <MT6363_AUXADC_VIN4>;
+			};
+
+			vin5 {
+				channel = <MT6363_AUXADC_VIN5>;
+			};
+
+			vin6 {
+				channel = <MT6363_AUXADC_VIN6>;
+			};
+
+			vin7 {
+				channel = <MT6363_AUXADC_VIN7>;
+			};
+		};
+	};
+};
