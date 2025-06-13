@@ -642,8 +642,7 @@ lava-test-watchdog-genio-520:
     - .lava-test-watchdog
     - .genio-520
 
-# TODO: enable once fixed
-.lava-test-watchdog-genio-700:
+lava-test-watchdog-genio-700:
   extends:
     - .lava-test
     - .lava-test-watchdog
@@ -655,8 +654,7 @@ lava-test-watchdog-genio-720-ufs:
     - .lava-test-watchdog
     - .genio-720-ufs
 
-# TODO: enable once fixed
-.lava-test-watchdog-genio-1200:
+lava-test-watchdog-genio-1200:
   extends:
     - .lava-test
     - .lava-test-watchdog
