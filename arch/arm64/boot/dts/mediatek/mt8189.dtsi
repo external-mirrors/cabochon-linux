@@ -11,6 +11,7 @@
 #include <dt-bindings/interrupt-controller/irq.h>
 #include <dt-bindings/power/mediatek,mt8189-power.h>
 #include <dt-bindings/phy/phy.h>
+#include <dt-bindings/reset/mediatek,mt8189-resets.h>
 
 / {
 	compatible = "mediatek,mt8189";
@@ -619,14 +620,70 @@
 			status = "disabled";
 		};
 
-		clock-controller@112b8000 {
+		ufsphy: ufs-phy@112a0000 {
+			compatible =  "mediatek,mt8189-ufsphy", "mediatek,mt8183-ufsphy";
+			reg = <0 0x112a0000 0 0x10000>;
+			clocks = <&ufscfg_ao CLK_UFSCFG_AO_REG_UNIPRO_SYS>,
+				 <&ufscfg_ao CLK_UFSCFG_AO_REG_U_SAP_CFG>;
+			clock-names = "unipro", "mp";
+			#phy-cells = <0>;
+			status = "disabled";
+		};
+
+		ufshci: ufshci@112b0000 {
+			compatible = "mediatek,mt8189-ufshci";
+			reg = <0 0x112b0000 0 0x2300>;
+			clocks = <&ufscfg_pdn CLK_UFSCFG_REG_UFSHCI_UFS>,
+				 <&ufscfg_pdn CLK_UFSCFG_REG_UFSHCI_AES>,
+				 <&clk26m>,
+				 <&ufscfg_ao CLK_UFSCFG_AO_REG_UNIPRO_SYS>,
+				 <&clk26m>,
+				 <&ufscfg_ao CLK_UFSCFG_AO_REG_U_PHY_TOP_AHB_S_BUS>,
+				 <&ufscfg_ao CLK_UFSCFG_AO_REG_UNIPRO_TX_SYM>,
+				 <&ufscfg_pdn CLK_UFSCFG_REG_UFSHCI_U_AXI>,
+				 <&ufscfg_ao CLK_UFSCFG_AO_REG_UNIPRO_RX_SYM0>,
+				 <&ufscfg_ao CLK_UFSCFG_AO_REG_UNIPRO_RX_SYM1>,
+				 <&ufscfg_pdn CLK_UFSCFG_REG_UFSHCI_U_AHB>;
+			clock-names = "main", "aes", "tick", "unipro_sysclk",
+				      "unipro_tick", "unipro_mp_bclk", "tx_symbol",
+				      "mem_sub", "rx_symbol0", "rx_symbol1", "peri";
+			interrupts = <GIC_SPI 393 IRQ_TYPE_LEVEL_HIGH 0>;
+			operating-points-v2 = <&ufs_opp_table>;
+			phys = <&ufsphy>;
+			resets = <&ufscfg_pdn MT8189_UFSPDN_RST_UFS_UNIPRO>,
+				 <&ufscfg_pdn MT8189_UFSPDN_RST_UFS_CRYPTO>,
+				 <&ufscfg_pdn MT8189_UFSPDN_RST_UFS_HCI>;
+			reset-names = "unipro", "crypto", "hci";
+			mediatek,ufs-disable-mcq;
+			status = "disabled";
+
+			ufs_opp_table: opp-table {
+				compatible = "operating-points-v2";
+
+				opp-208000000 {
+					opp-hz = /bits/ 64 <208000000>, /bits/ 64 <0>,
+						 /bits/ 64 <0>, /bits/ 64 <0>, /bits/ 64 <0>,
+						 /bits/ 64 <0>, /bits/ 64 <0>, /bits/ 64 <0>,
+						 /bits/ 64 <0>, /bits/ 64 <0>,  /bits/ 64 <0>;
+				};
+
+				opp-26000000 {
+					opp-hz = /bits/ 64 <26000000>, /bits/ 64 <0>,
+						 /bits/ 64 <0>, /bits/ 64 <0>, /bits/ 64 <0>,
+						 /bits/ 64 <0>, /bits/ 64 <0>, /bits/ 64 <0>,
+						 /bits/ 64 <0>, /bits/ 64 <0>,  /bits/ 64 <0>;
+				};
+			};
+		};
+
+		ufscfg_ao: clock-controller@112b8000 {
 			compatible = "mediatek,mt8189-ufscfg-ao";
 			reg = <0 0x112b8000 0 0x1000>;
 			#clock-cells = <1>;
 			#reset-cells = <1>;
 		};
 
-		clock-controller@112bb000 {
+		ufscfg_pdn: clock-controller@112bb000 {
 			compatible = "mediatek,mt8189-ufscfg-pdn";
 			reg = <0 0x112bb000 0 0x1000>;
 			#clock-cells = <1>;
