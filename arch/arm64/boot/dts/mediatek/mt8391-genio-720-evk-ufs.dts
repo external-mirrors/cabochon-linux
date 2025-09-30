@@ -4,13 +4,12 @@
  * Author: Louis-Alexis Eyraud <louisalexis.eyraud@collabora.com>
  */
 /dts-v1/;
-
 #include "mt8189.dtsi"
 #include "mt8391-genio-common.dtsi"
 
 / {
-	model = "MediaTek Genio 720 EVK";
-	compatible = "mediatek,mt8391-evk", "mediatek,mt8391",
+	model = "MediaTek Genio-720 EVK UFS";
+	compatible = "mediatek,mt8391-evk-ufs", "mediatek,mt8391",
 		     "mediatek,mt8189";
 };
 
@@ -23,7 +22,7 @@
 };
 
 &mmc0 {
-	status = "okay";
+	status = "disabled";
 };
 
 &mt6319_sid7 {
@@ -31,9 +30,15 @@
 };
 
 &ufshci {
-	status = "disabled";
+	status = "okay";
+	avdd12-supply = <&mt6359_vrf12_ldo_reg>;
+	avdd12-ckbuf-supply = <&mt6359_vbbck_ldo_reg>;
+	avdd18-supply = <&mt6359_vio18_ldo_reg>;
+	vcc-supply = <&mt6359_vemc_1_ldo_reg>;
+	vccq-supply = <&mt6359_vio18_ldo_reg>;
+	vccq2-supply = <&mt6359_vufs_ldo_reg>;
 };
 
 &ufsphy {
-	status = "disabled";
+	status = "okay";
 };

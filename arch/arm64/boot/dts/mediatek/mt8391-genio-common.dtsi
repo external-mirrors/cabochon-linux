@@ -275,7 +275,7 @@
 	pinctrl-1 = <&mmc0_uhs_pins>;
 	vmmc-supply = <&mt6359_vemc_1_ldo_reg>;
 	vqmmc-supply = <&mt6359_vufs_ldo_reg>;
-	status = "okay";
+	status = "disabled";
 };
 
 &mmc1 {
