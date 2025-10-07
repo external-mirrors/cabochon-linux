@@ -14,13 +14,14 @@ properties:
   compatible:
     enum:
       - mediatek,mt8183-ufshci
+      - mediatek,mt8189-ufshci
       - mediatek,mt8192-ufshci
       - mediatek,mt8195-ufshci
       - mediatek,mt8196-ufshci
 
   clocks:
     minItems: 1
-    maxItems: 10
+    maxItems: 11
 
   clock-names:
     minItems: 1
@@ -35,6 +36,7 @@ properties:
       - const: mem_sub
       - const: rx_symbol0
       - const: rx_symbol1
+      - const: peri
 
   operating-points-v2: true
 
@@ -110,6 +112,25 @@ allOf:
             - const: main
         avdd09-1-supply: false
         avdd12-ckbuf-supply: false
+
+  - if:
+      properties:
+        compatible:
+          contains:
+            const: mediatek,mt8189-ufshci
+    then:
+      properties:
+        clocks:
+          minItems: 11
+          maxItems: 11
+        clock-names:
+          minItems: 11
+          maxItems: 11
+        avdd09-supply: false
+        avdd09-1-supply: false
+      required:
+        - operating-points-v2
+
   - if:
       properties:
         compatible:
@@ -134,8 +155,10 @@ allOf:
       properties:
         clocks:
           minItems: 10
+          maxItems: 10
         clock-names:
           minItems: 10
+          maxItems: 10
         avdd09-supply: false
         avdd09-1-supply: false
   - if:
@@ -147,8 +170,10 @@ allOf:
       properties:
         clocks:
           minItems: 10
+          maxItems: 10
         clock-names:
           minItems: 10
+          maxItems: 10
         avdd18-supply: false
       required:
         - operating-points-v2
