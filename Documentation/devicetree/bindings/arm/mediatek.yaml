@@ -446,6 +446,7 @@ properties:
       - items:
           - enum:
               - mediatek,mt8371-evk
+              - mediatek,mt8371-evk-ufs
           - const: mediatek,mt8371
           - const: mediatek,mt8189
       - items:
@@ -458,6 +459,7 @@ properties:
       - items:
           - enum:
               - mediatek,mt8391-evk
+              - mediatek,mt8391-evk-ufs
           - const: mediatek,mt8391
           - const: mediatek,mt8189
       - items:
