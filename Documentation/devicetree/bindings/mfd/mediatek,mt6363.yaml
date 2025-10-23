@@ -31,6 +31,7 @@ properties:
     enum:
       - mediatek,mt6363
       - mediatek,mt6373
+      - mediatek,mt6685
 
   reg:
     maxItems: 1
@@ -54,11 +55,19 @@ patternProperties:
     type: object
     $ref: /schemas/iio/adc/mediatek,mt6359-auxadc.yaml#
 
+  "^clock-controller@[0-9a-f]+$":
+    type: object
+    $ref: /schemas/clock/mediatek,mt6685-clock.yaml#
+
   "^regulators@[0-9a-f]+$":
     type: object
     oneOf:
       - $ref: /schemas/regulator/mediatek,mt6363-regulator.yaml#
       - $ref: /schemas/regulator/mediatek,mt6373-regulator.yaml#
+
+  "^rtc@[0-9a-f]+$":
+    type: object
+    $ref: /schemas/rtc/mediatek,mt6685-rtc.yaml#
 
 required:
   - compatible
@@ -104,6 +113,36 @@ examples:
           compatible = "mediatek,mt6363-auxadc";
           reg = <0x1000>;
           #io-channel-cells = <1>;
+        };
+      };
+    };
+  - |
+    #include <dt-bindings/interrupt-controller/irq.h>
+    #include <dt-bindings/spmi/spmi.h>
+
+    spmi {
+      #address-cells = <2>;
+      #size-cells = <0>;
+
+      pmic@9 {
+        compatible = "mediatek,mt6363";
+        reg = <0x9 SPMI_USID>;
+        interrupts = <9 1 IRQ_TYPE_LEVEL_HIGH>;
+        interrupt-controller;
+        #address-cells = <1>;
+        #interrupt-cells = <3>;
+        #size-cells = <0>;
+
+        clock-controller@514 {
+          compatible = "mediatek,mt6685-sck-top";
+          reg = <0x514>;
+          #clock-cells = <1>;
+        };
+
+        rtc@580 {
+          compatible = "mediatek,mt6685-rtc";
+          reg = <0x580>;
+          interrupts = <9 0 IRQ_TYPE_LEVEL_HIGH>;
         };
       };
     };
