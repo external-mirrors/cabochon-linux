@@ -1,0 +1,34 @@
+// SPDX-License-Identifier: (GPL-2.0 OR MIT)
+/*
+ * Copyright (c) 2025 Collabora Ltd
+ *                    AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
+ */
+#include <dt-bindings/clock/mediatek,mt6685-clock.h>
+#include <dt-bindings/interrupt-controller/irq.h>
+#include <dt-bindings/spmi/spmi.h>
+
+&spmi0 {
+	mt6685: pmic@9 {
+		compatible = "mediatek,mt6685";
+		reg = <0x9 SPMI_USID>;
+		interrupts = <9 1 IRQ_TYPE_NONE>;
+		interrupt-controller;
+		#address-cells = <1>;
+		#interrupt-cells = <2>;
+		#size-cells = <0>;
+
+		mt6685_scktop: clock-controller@514 {
+			compatible = "mediatek,mt6685-sck-top";
+			reg = <0x514>;
+			#clock-cells = <1>;
+		};
+
+		rtc@580 {
+			compatible = "mediatek,mt6685-rtc";
+			reg = <0x580>;
+			interrupt-parent = <&mt6685>;
+			interrupts = <0 IRQ_TYPE_LEVEL_HIGH>;
+			clocks = <&mt6685_scktop CLK_RTC_MCLK>;
+		};
+	};
+};
