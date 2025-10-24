@@ -30,6 +30,11 @@
 #define MTK_SPMI_PMIC_REG_CHIP_ID	0xb
 #define MTK_SPMI_PMIC_RCS_IRQ_DONE	0x41b
 
+/* MT6685 Registers */
+#define MT6685_REG_CHIP_ID		0x8
+#define MT6685_REG_SCK_TOP_INT_CON0	0x528
+#define MT6685_REG_SCK_TOP_INT_STATUS0	0x534
+
 /**
  * struct mtk_spmi_pmic_irq_group - Group of interrupts in SPMI PMIC
  * @num_int_regs: Number of registers for this group of interrupts
@@ -362,6 +367,10 @@ static const struct mtk_spmi_pmic_irq_grp mt6373_irq_groups[] = {
 	MTK_SPMI_PMIC_IRQ_GROUP(MT6373, MISC,	3, 56, 71),
 };
 
+static const struct mtk_spmi_pmic_irq_grp mt6685_irq_groups[] = {
+	MTK_SPMI_PMIC_IRQ_GROUP(MT6685, SCK,	0, 0, 7),
+};
+
 static const struct mtk_spmi_pmic_variant mt6363_variant = {
 	.pmic_irq = mt6363_irq_groups,
 	.num_groups = ARRAY_SIZE(mt6363_irq_groups),
@@ -376,6 +385,14 @@ static const struct mtk_spmi_pmic_variant mt6373_variant = {
 	.con_reg_len = 3,
 	.irq_grp_reg = MT6373_REG_TOP_INT_STATUS1,
 	.chip_id_reg = MTK_SPMI_PMIC_REG_CHIP_ID,
+};
+
+static const struct mtk_spmi_pmic_variant mt6685_variant = {
+	.pmic_irq = mt6685_irq_groups,
+	.num_groups = ARRAY_SIZE(mt6685_irq_groups),
+	.con_reg_len = 5,
+	.irq_grp_reg = 0, /* No TOP Group IRQ register */
+	.chip_id_reg = MT6685_REG_CHIP_ID,
 };
 
 static const struct regmap_config mtk_spmi_regmap_config = {
@@ -409,6 +426,7 @@ static int mtk_spmi_pmic_probe(struct spmi_device *sdev)
 static const struct of_device_id mtk_pmic_spmi_id_table[] = {
 	{ .compatible = "mediatek,mt6363", .data = &mt6363_variant },
 	{ .compatible = "mediatek,mt6373", .data = &mt6373_variant },
+	{ .compatible = "mediatek,mt6685", .data = &mt6685_variant },
 	{ /* sentinel */ }
 };
 MODULE_DEVICE_TABLE(of, mtk_pmic_spmi_id_table);
