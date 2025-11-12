@@ -769,6 +769,8 @@
 			interrupts = <GIC_SPI 311 IRQ_TYPE_LEVEL_HIGH 0>;
 			clocks = <&clk26m>, <&pericfg_ao CLK_PERI_AO_UART0_BCLK>;
 			clock-names = "baud", "bus";
+			dmas = <&apdma 0>, <&apdma 1>;
+			dma-names = "tx", "rx";
 			status = "disabled";
 		};
 
@@ -778,6 +780,8 @@
 			interrupts = <GIC_SPI 312 IRQ_TYPE_LEVEL_HIGH 0>;
 			clocks = <&clk26m>, <&pericfg_ao CLK_PERI_AO_UART1_BCLK>;
 			clock-names = "baud", "bus";
+			dmas = <&apdma 2>, <&apdma 3>;
+			dma-names = "tx", "rx";
 			status = "disabled";
 		};
 
@@ -787,6 +791,8 @@
 			interrupts = <GIC_SPI 313 IRQ_TYPE_LEVEL_HIGH 0>;
 			clocks = <&clk26m>, <&pericfg_ao CLK_PERI_AO_UART2_BCLK>;
 			clock-names = "baud", "bus";
+			dmas = <&apdma 4>, <&apdma 5>;
+			dma-names = "tx", "rx";
 			status = "disabled";
 		};
 
@@ -1009,6 +1015,31 @@
 			reg = <0 0x16640000 0 0x1000>;
 			mediatek,hardware-voter = <&scp_hwv>;
 			#clock-cells = <1>;
+		};
+
+		apdma: dma-controller@16510000 {
+			compatible = "mediatek,mt8196-uart-dma", "mediatek,mt6985-uart-dma";
+			reg = <0 0x16510000 0 0x80>, <0 0x16510080 0 0x80>,
+			      <0 0x16520000 0 0x80>, <0 0x16520080 0 0x80>,
+			      <0 0x16530000 0 0x80>, <0 0x16530080 0 0x80>,
+			      <0 0x16540000 0 0x80>, <0 0x16540080 0 0x80>,
+			      <0 0x16550000 0 0x80>, <0 0x16550080 0 0x80>,
+			      <0 0x16560000 0 0x80>, <0 0x16560080 0 0x80>;
+			interrupts = <GIC_SPI 299 IRQ_TYPE_LEVEL_HIGH 0>,
+				     <GIC_SPI 300 IRQ_TYPE_LEVEL_HIGH 0>,
+				     <GIC_SPI 301 IRQ_TYPE_LEVEL_HIGH 0>,
+				     <GIC_SPI 778 IRQ_TYPE_LEVEL_HIGH 0>,
+				     <GIC_SPI 779 IRQ_TYPE_LEVEL_HIGH 0>,
+				     <GIC_SPI 780 IRQ_TYPE_LEVEL_HIGH 0>,
+				     <GIC_SPI 781 IRQ_TYPE_LEVEL_HIGH 0>,
+				     <GIC_SPI 782 IRQ_TYPE_LEVEL_HIGH 0>,
+				     <GIC_SPI 783 IRQ_TYPE_LEVEL_HIGH 0>,
+				     <GIC_SPI 784 IRQ_TYPE_LEVEL_HIGH 0>,
+				     <GIC_SPI 785 IRQ_TYPE_LEVEL_HIGH 0>,
+				     <GIC_SPI 786 IRQ_TYPE_LEVEL_HIGH 0>;
+			clocks = <&pericfg_ao CLK_PERI_AO_AP_DMA_X32W_BCLK>;
+			#dma-cells = <1>;
+			dma-requests = <12>;
 		};
 
 		ssusb0: usb@16701000 {
