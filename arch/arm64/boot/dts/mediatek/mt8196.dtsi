@@ -796,6 +796,30 @@
 			status = "disabled";
 		};
 
+		/* UART3 is at 0x1604000 but it is special and not yet supported */
+
+		uart4: serial@16040000 {
+			compatible = "mediatek,mt8196-uart", "mediatek,mt6577-uart";
+			reg = <0 0x16040000 0 0x1000>;
+			interrupts = <GIC_SPI 315 IRQ_TYPE_LEVEL_HIGH 0>;
+			clocks = <&clk26m>, <&pericfg_ao CLK_PERI_AO_UART4_BCLK>;
+			clock-names = "baud", "bus";
+			dmas = <&apdma 8>, <&apdma 9>;
+			dma-names = "tx", "rx";
+			status = "disabled";
+		};
+
+		uart5: serial@16050000 {
+			compatible = "mediatek,mt8196-uart", "mediatek,mt6577-uart";
+			reg = <0 0x16050000 0 0x1000>;
+			interrupts = <GIC_SPI 316 IRQ_TYPE_LEVEL_HIGH 0>;
+			clocks = <&clk26m>, <&pericfg_ao CLK_PERI_AO_UART5_BCLK>;
+			clock-names = "baud", "bus";
+			dmas = <&apdma 10>, <&apdma 11>;
+			dma-names = "tx", "rx";
+			status = "disabled";
+		};
+
 		spi0: spi@16110000 {
 			compatible = "mediatek,mt8196-spi", "mediatek,mt6991-spi";
 			reg = <0 0x16110000 0 0x100>;
