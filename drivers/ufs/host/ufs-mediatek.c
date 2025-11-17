@@ -2240,6 +2240,7 @@ static const struct ufs_mtk_soc_data mt8196_data = {
 
 static const struct of_device_id ufs_mtk_of_match[] = {
 	{ .compatible = "mediatek,mt8183-ufshci", .data = &mt8183_data },
+	{ .compatible = "mediatek,mt8189-ufshci", .data = &mt8192_8195_data },
 	{ .compatible = "mediatek,mt8192-ufshci", .data = &mt8192_8195_data },
 	{ .compatible = "mediatek,mt8195-ufshci", .data = &mt8192_8195_data },
 	{ .compatible = "mediatek,mt8196-ufshci", .data = &mt8196_data },
