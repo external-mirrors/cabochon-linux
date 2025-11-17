@@ -846,6 +846,19 @@
 			#interrupt-cells = <2>;
 		};
 
+		pwm: pwm@11008000 {
+			compatible = "mediatek,mt8189-pwm";
+			reg = <0 0x11008000 0 0x1000>;
+			clocks = <&peri_ao CLK_PERAO_PWM_H>,
+				 <&peri_ao CLK_PERAO_PWM_B>,
+				 <&peri_ao CLK_PERAO_PWM_FB1>,
+				 <&peri_ao CLK_PERAO_PWM_FB2>,
+				 <&peri_ao CLK_PERAO_PWM_FB3>;
+			clock-names = "top", "main", "pwm1", "pwm2", "pwm3";
+			#pwm-cells = <2>;
+			status = "disabled";
+		};
+
 		pwrap: pwrap@1cc04000 {
 			compatible = "mediatek,mt8189-pwrap", "mediatek,mt8195-pwrap", "syscon";
 			reg = <0 0x1cc04000 0 0x1000>;
