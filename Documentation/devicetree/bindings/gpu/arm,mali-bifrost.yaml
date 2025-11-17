@@ -47,6 +47,11 @@ properties:
               - mediatek,mt8192-mali
               - mediatek,mt8370-mali
           - const: arm,mali-valhall-jm # Mali Valhall GPU model/revision is fully discoverable
+      - items:
+          - enum:
+              - mediatek,mt8189-mali
+          - const: mediatek,mt8370-mali
+          - const: arm,mali-valhall-jm # Mali Valhall GPU model/revision is fully discoverable
 
   reg:
     maxItems: 1
