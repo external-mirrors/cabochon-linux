@@ -8,24 +8,24 @@
 #include "mt8391-genio-common.dtsi"
 
 / {
-	model = "MediaTek Genio 720 EVK UFS";
-	compatible = "mediatek,mt8391-evk-ufs", "mediatek,mt8391",
+	model = "MediaTek Genio 520 EVK UFS";
+	compatible = "mediatek,mt8371-evk-ufs", "mediatek,mt8371",
 		     "mediatek,mt8189";
 };
 
 &cpu6 {
-	cpu-supply = <&mt6319_sid7_vbuck1>;
+	cpu-supply = <&mt6319_sid6_vbuck1>;
 };
 
 &cpu7 {
-	cpu-supply = <&mt6319_sid7_vbuck1>;
+	cpu-supply = <&mt6319_sid6_vbuck1>;
 };
 
 &mmc0 {
 	status = "disabled";
 };
 
-&mt6319_sid7 {
+&mt6319_sid6 {
 	status = "okay";
 };
 
