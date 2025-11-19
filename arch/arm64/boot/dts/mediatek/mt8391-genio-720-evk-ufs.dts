@@ -8,7 +8,7 @@
 #include "mt8391-genio-common.dtsi"
 
 / {
-	model = "MediaTek Genio-720 EVK UFS";
+	model = "MediaTek Genio 720 EVK UFS";
 	compatible = "mediatek,mt8391-evk-ufs", "mediatek,mt8391",
 		     "mediatek,mt8189";
 };

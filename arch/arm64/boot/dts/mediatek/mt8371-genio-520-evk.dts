@@ -27,6 +27,18 @@
 	cpu-supply = <&mt6319_sid6_vbuck1>;
 };
 
+&mmc0 {
+	status = "okay";
+};
+
 &mt6319_sid6 {
 	status = "okay";
+};
+
+&ufshci {
+	status = "disabled";
+};
+
+&ufsphy {
+	status = "disabled";
 };
