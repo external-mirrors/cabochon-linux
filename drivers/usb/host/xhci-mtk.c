@@ -96,6 +96,10 @@
 #define WC0_IS_P	BIT(12)	/* polarity */
 #define WC0_IS_EN	BIT(6)
 
+/* mt8189*/
+#define PERI_WK_CTRL0_8189	0x0
+#define WC0_IS_EN_P_89		BIT(18)
+
 /* mt8192 */
 #define WC0_SSUSB0_CDEN		BIT(6)
 #define WC0_IS_SPM_EN		BIT(1)
@@ -129,6 +133,7 @@ enum ssusb_uwk_vers {
 	SSUSB_UWK_V1_4,		/* mt8195 IP1 */
 	SSUSB_UWK_V1_5,		/* mt8195 IP2 */
 	SSUSB_UWK_V1_6,		/* mt8195 IP3 */
+	SSUSB_UWK_V1_10 = 110,	/* mt8189 IP all */
 };
 
 /*
@@ -380,6 +385,11 @@ static void usb_wakeup_ip_sleep_set(struct xhci_hcd_mtk *mtk, bool enable)
 		reg = mtk->uwk_reg_base + PERI_WK_CTRL0_8195;
 		msk = WC0_IS_EN_P3_95 | WC0_IS_C_95(0x7) | WC0_IS_P_95;
 		val = enable ? (WC0_IS_EN_P3_95 | WC0_IS_C_95(0x1)) : 0;
+		break;
+	case SSUSB_UWK_V1_10:
+		reg = mtk->uwk_reg_base + PERI_WK_CTRL0_8189;
+		msk = WC0_IS_EN_P_89;
+		val = enable ? msk : 0;
 		break;
 	case SSUSB_UWK_V2:
 		reg = mtk->uwk_reg_base + PERI_SSUSB_SPM_CTRL;
