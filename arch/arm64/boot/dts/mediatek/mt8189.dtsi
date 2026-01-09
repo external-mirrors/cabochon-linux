@@ -9,6 +9,7 @@
 #include <dt-bindings/clock/mediatek,mt8189-clk.h>
 #include <dt-bindings/interrupt-controller/arm-gic.h>
 #include <dt-bindings/interrupt-controller/irq.h>
+#include <dt-bindings/memory/mediatek,mt8189-memory-port.h>
 #include <dt-bindings/power/mediatek,mt8189-power.h>
 #include <dt-bindings/phy/phy.h>
 #include <dt-bindings/reset/mediatek,mt8189-resets.h>
@@ -977,6 +978,95 @@
 			interrupts = <GIC_SPI 212 IRQ_TYPE_LEVEL_HIGH 0>;
 			#size-cells = <0>;
 			status = "disabled";
+		};
+
+		iommu@10330000 {
+			compatible = "mediatek,mt8189-iommu-infra";
+			reg = <0 0x10330000 0 0x1000>;
+			interrupts = <GIC_SPI 553 IRQ_TYPE_LEVEL_HIGH 0>;
+			#iommu-cells = <1>;
+		};
+
+		iommu@1033a000 {
+			compatible = "mediatek,mt8189-iommu-infra";
+			reg = <0 0x1033a000 0 0x1000>;
+			interrupts = <GIC_SPI 543 IRQ_TYPE_LEVEL_HIGH 0>;
+			#iommu-cells = <1>;
+		};
+
+		iommu@1e802000 {
+			compatible = "mediatek,mt8189-iommu-mm";
+			reg = <0 0x1e802000 0 0x5000>;
+			clocks = <&mminfra CLK_MMINFRA_SMI>;
+			clock-names = "bclk";
+			interrupts = <GIC_SPI 278 IRQ_TYPE_LEVEL_HIGH 0>;
+			power-domains = <&spm MT8189_POWER_DOMAIN_MM_INFRA>;
+			#iommu-cells = <1>;
+			mediatek,larbs = <&larb0 &larb1 &larb2 &larb4 &larb7>;
+		};
+
+		disp_smi_common: smi@1e801000 {
+			compatible = "mediatek,mt8189-smi-common";
+			reg = <0 0x1e801000 0 0x1000>;
+			clocks = <&mminfra CLK_MMINFRA_SMI>,
+				 <&mminfra CLK_MMINFRA_SMI>;
+			clock-names = "apb", "smi";
+			power-domains = <&spm MT8189_POWER_DOMAIN_MM_INFRA>;
+		};
+
+		larb0: larb@1401c000 {
+			compatible = "mediatek,mt8189-smi-larb";
+			reg = <0 0x1401c000 0 0x1000>;
+			clocks = <&dispsys CLK_MM_SMI_LARB>,
+				 <&dispsys CLK_MM_SMI_LARB>;
+			clock-names = "apb", "smi";
+			power-domains = <&spm MT8189_POWER_DOMAIN_DISP>;
+			mediatek,larb-id = <SMI_L0_ID>;
+			mediatek,smi = <&disp_smi_common>;
+		};
+
+		larb1: larb@1401d000 {
+			compatible = "mediatek,mt8189-smi-larb";
+			reg = <0 0x1401d000 0 0x1000>;
+			clocks = <&dispsys CLK_MM_SMI_LARB>,
+				 <&dispsys CLK_MM_SMI_LARB>;
+			clock-names = "apb", "smi";
+			power-domains = <&spm MT8189_POWER_DOMAIN_DISP>;
+			mediatek,larb-id = <SMI_L1_ID>;
+			mediatek,smi = <&disp_smi_common>;
+		};
+
+		larb2: larb@1f002000 {
+			compatible = "mediatek,mt8189-smi-larb";
+			reg = <0 0x1f002000 0 0x1000>;
+			clocks = <&mdpsys CLK_MDP_SMI0>,
+				 <&mdpsys CLK_MDP_SMI0>;
+			clock-names = "apb", "smi";
+			power-domains = <&spm MT8189_POWER_DOMAIN_MDP0>;
+			mediatek,larb-id = <SMI_L2_ID>;
+			mediatek,smi = <&disp_smi_common>;
+		};
+
+		larb4: larb@1602e000 {
+			compatible = "mediatek,mt8189-smi-larb";
+			reg = <0 0x1602e000 0 0x1000>;
+			clocks = <&vdec_core CLK_VDEC_CORE_LARB_CKEN>,
+				 <&vdec_core CLK_VDEC_CORE_LARB_CKEN>;
+			clock-names = "apb", "smi";
+			power-domains = <&spm MT8189_POWER_DOMAIN_VDE0>;
+			mediatek,larb-id = <SMI_L4_ID>;
+			mediatek,smi = <&disp_smi_common>;
+		};
+
+		larb7: larb@17010000 {
+			compatible = "mediatek,mt8189-smi-larb";
+			reg = <0 0x17010000 0 0x1000>;
+			clocks = <&venc_gcon CLK_VEN1_CKE0_LARB>,
+				 <&venc_gcon CLK_VEN1_CKE0_LARB>;
+			clock-names = "apb", "smi";
+			power-domains = <&spm MT8189_POWER_DOMAIN_VEN0>;
+			mediatek,larb-id = <SMI_L7_ID>;
+			mediatek,smi = <&disp_smi_common>;
 		};
 
 		mmc0: mmc@11230000 {
