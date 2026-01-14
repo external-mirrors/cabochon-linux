@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0
 // Copyright (C) 2018 Intel Corporation
+// TODO: add regulator stuff to power on/down functions and verify camera works after suspend
 
 #include <linux/acpi.h>
 #include <linux/delay.h>
@@ -7,6 +8,7 @@
 #include <linux/iopoll.h>
 #include <linux/module.h>
 #include <linux/pm_runtime.h>
+#include <linux/regulator/consumer.h>
 #include <media/v4l2-ctrls.h>
 #include <media/v4l2-device.h>
 
@@ -42,6 +44,7 @@ struct dw9807_device {
 	struct v4l2_ctrl_handler ctrls_vcm;
 	struct v4l2_subdev sd;
 	u16 current_val;
+	struct regulator *vdd;
 };
 
 static inline struct dw9807_device *sd_to_dw9807_vcm(
@@ -185,6 +188,15 @@ static int dw9807_probe(struct i2c_client *client)
 	if (dw9807_dev == NULL)
 		return -ENOMEM;
 
+	dw9807_dev->vdd = devm_regulator_get(&client->dev, "vdd");
+	if (IS_ERR(dw9807_dev->vdd))
+		return dev_err_probe(&client->dev, PTR_ERR(dw9807_dev->vdd),
+			"cannot get VDD regulator\n");
+
+	rval = regulator_enable(dw9807_dev->vdd);
+	if (rval)
+		goto err_cleanup;
+
 	v4l2_i2c_subdev_init(&dw9807_dev->sd, client, &dw9807_ops);
 	dw9807_dev->sd.flags |= V4L2_SUBDEV_FL_HAS_DEVNODE;
 	dw9807_dev->sd.internal_ops = &dw9807_int_ops;
@@ -291,6 +303,13 @@ static int  __maybe_unused dw9807_vcm_resume(struct device *dev)
 	return 0;
 }
 
+static const struct i2c_device_id dw9807_id_table[] = {
+	{ "dw9806b" },
+	{ "dw9807" },
+	{ }
+};
+MODULE_DEVICE_TABLE(i2c, dw9807_id_table);
+
 static const struct of_device_id dw9807_of_table[] = {
 	{ .compatible = "dongwoon,dw9807-vcm" },
 	/* Compatibility for older firmware, NEVER USE THIS IN FIRMWARE! */
@@ -312,6 +331,7 @@ static struct i2c_driver dw9807_i2c_driver = {
 	},
 	.probe = dw9807_probe,
 	.remove = dw9807_remove,
+	.id_table = dw9807_id_table,
 };
 
 module_i2c_driver(dw9807_i2c_driver);
