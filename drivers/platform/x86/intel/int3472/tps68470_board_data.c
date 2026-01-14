@@ -41,6 +41,23 @@ static struct regulator_consumer_supply int347a_aux2_consumer_supplies[] = {
 	REGULATOR_SUPPLY("vdddo", "i2c-INT347E:00"),
 };
 
+static struct regulator_consumer_supply imx258a_core_consumer_supplies[] = {
+	REGULATOR_SUPPLY("vdig", "i2c-SONY258A:00"),
+};
+
+static struct regulator_consumer_supply imx258a_ana_consumer_supplies[] = {
+	REGULATOR_SUPPLY("vana", "i2c-SONY258A:00"),
+};
+
+static struct regulator_consumer_supply imx258a_vcm_consumer_supplies[] = {
+	REGULATOR_SUPPLY("vdd", "i2c-SONY258A:00-VCM"),
+};
+
+static struct regulator_consumer_supply imx258a_vsio_consumer_supplies[] = {
+	REGULATOR_SUPPLY("vif", "i2c-SONY258A:00"),
+};
+
+
 static const struct regulator_init_data surface_go_tps68470_core_reg_init_data = {
 	.constraints = {
 		.min_uV = 1200000,
@@ -126,6 +143,70 @@ static const struct tps68470_regulator_platform_data surface_go_tps68470_pdata =
 		[TPS68470_VSIO] = &surface_go_tps68470_vsio_reg_init_data,
 		[TPS68470_AUX1] = &surface_go_tps68470_aux1_reg_init_data,
 		[TPS68470_AUX2] = &surface_go_tps68470_aux2_reg_init_data,
+	},
+};
+
+static const struct regulator_init_data nautilus_tps68470_core_reg_init_data = {
+	.constraints = {
+		.min_uV = 1200000,
+		.max_uV = 1200000,
+		.apply_uV = true,
+		.valid_ops_mask = REGULATOR_CHANGE_STATUS,
+	},
+	.num_consumer_supplies = ARRAY_SIZE(imx258a_core_consumer_supplies),
+	.consumer_supplies = imx258a_core_consumer_supplies,
+};
+
+static const struct regulator_init_data nautilus_tps68470_ana_reg_init_data = {
+	.constraints = {
+		.min_uV = 2815200,
+		.max_uV = 2815200,
+		.apply_uV = true,
+		.valid_ops_mask = REGULATOR_CHANGE_STATUS,
+	},
+	.num_consumer_supplies = ARRAY_SIZE(imx258a_ana_consumer_supplies),
+	.consumer_supplies = imx258a_ana_consumer_supplies,
+};
+
+static const struct regulator_init_data nautilus_tps68470_vcm_reg_init_data = {
+	.constraints = {
+		.min_uV = 2815200,
+		.max_uV = 2815200,
+		.apply_uV = true,
+		.valid_ops_mask = REGULATOR_CHANGE_STATUS,
+	},
+	.num_consumer_supplies = ARRAY_SIZE(imx258a_vcm_consumer_supplies),
+	.consumer_supplies = imx258a_vcm_consumer_supplies,
+};
+
+/* Ensure the always-on VIO regulator has the same voltage as VSIO */
+static const struct regulator_init_data nautilus_tps68470_vio_reg_init_data = {
+	.constraints = {
+		.min_uV = 1800600,
+		.max_uV = 1800600,
+		.apply_uV = true,
+		.always_on = true,
+	},
+};
+
+static const struct regulator_init_data nautilus_tps68470_vsio_reg_init_data = {
+	.constraints = {
+		.min_uV = 1800600,
+		.max_uV = 1800600,
+		.apply_uV = true,
+		.valid_ops_mask = REGULATOR_CHANGE_STATUS,
+	},
+	.num_consumer_supplies = ARRAY_SIZE(imx258a_vsio_consumer_supplies),
+	.consumer_supplies = imx258a_vsio_consumer_supplies,
+};
+
+static const struct tps68470_regulator_platform_data nautilus_pdata = {
+	.reg_init_data = {
+		[TPS68470_CORE] = &nautilus_tps68470_core_reg_init_data,
+		[TPS68470_ANA]  = &nautilus_tps68470_ana_reg_init_data,
+		[TPS68470_VCM]  = &nautilus_tps68470_vcm_reg_init_data,
+		[TPS68470_VIO] = &nautilus_tps68470_vio_reg_init_data,
+		[TPS68470_VSIO] = &nautilus_tps68470_vsio_reg_init_data,
 	},
 };
 
@@ -258,6 +339,23 @@ static struct gpiod_lookup_table dell_7212_int3479_gpios = {
 	}
 };
 
+static struct gpiod_lookup_table samsung_nautilus_galaxybook12_gpios = {
+    .dev_id = "i2c-SONY258A:00",
+    .table = {
+        GPIO_LOOKUP("tps68470-gpio", 9, "reset", GPIO_ACTIVE_HIGH),
+        { }
+    }
+};
+
+static const struct int3472_tps68470_board_data samsung_nautilus_galaxybook12_board_data = {
+    .dev_name = "i2c-INT3472:00",
+    .tps68470_regulator_pdata = &nautilus_pdata,
+    .n_gpiod_lookups = 1,
+    .tps68470_gpio_lookup_tables = {
+        &samsung_nautilus_galaxybook12_gpios ,
+    },
+};
+
 static const struct int3472_tps68470_board_data surface_go_tps68470_board_data = {
 	.dev_name = "i2c-INT3472:05",
 	.tps68470_regulator_pdata = &surface_go_tps68470_pdata,
@@ -315,6 +413,13 @@ static const struct dmi_system_id int3472_tps68470_board_data_table[] = {
 			DMI_EXACT_MATCH(DMI_PRODUCT_NAME, "Latitude 7212 Rugged Extreme Tablet"),
 		},
 		.driver_data = (void *)&dell_7212_tps68470_board_data,
+	},
+	{
+		.matches = {
+			DMI_EXACT_MATCH(DMI_SYS_VENDOR, "Google"),
+			DMI_EXACT_MATCH(DMI_PRODUCT_NAME, "Nautilus"),
+		},
+		.driver_data = (void *)&samsung_nautilus_galaxybook12_board_data,
 	},
 	{ }
 };
