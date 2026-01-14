@@ -247,22 +247,6 @@ out_free_buff:
 	return ret;
 }
 
-static u32 ipu_bridge_parse_rotation(struct acpi_device *adev,
-				     struct ipu_sensor_ssdb *ssdb)
-{
-	switch (ssdb->degree) {
-	case IPU_SENSOR_ROTATION_NORMAL:
-		return 0;
-	case IPU_SENSOR_ROTATION_INVERTED:
-		return 180;
-	default:
-		dev_warn(ADEV_DEV(adev),
-			 "Unknown rotation %d. Assume 0 degree rotation\n",
-			 ssdb->degree);
-		return 0;
-	}
-}
-
 static enum v4l2_fwnode_orientation ipu_bridge_parse_orientation(struct acpi_device *adev)
 {
 	enum v4l2_fwnode_orientation orientation;
@@ -319,7 +303,7 @@ int ipu_bridge_parse_ssdb(struct acpi_device *adev, struct ipu_sensor *sensor)
 	sensor->link = ssdb.link;
 	sensor->lanes = ssdb.lanes;
 	sensor->mclkspeed = ssdb.mclkspeed;
-	sensor->rotation = ipu_bridge_parse_rotation(adev, &ssdb);
+	sensor->rotation = ssdb.degree;
 	sensor->orientation = ipu_bridge_parse_orientation(adev);
 
 	if (ssdb.vcmtype)

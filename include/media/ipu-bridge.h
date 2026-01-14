@@ -13,10 +13,6 @@
 #define IPU_MAX_PORTS				4
 #define MAX_NUM_LINK_FREQS			3
 
-/* Values are educated guesses as we don't have a spec */
-#define IPU_SENSOR_ROTATION_NORMAL		0
-#define IPU_SENSOR_ROTATION_INVERTED		1
-
 #define IPU_SENSOR_CONFIG(_HID, _NR, ...)	\
 	(const struct ipu_sensor_config) {	\
 		.hid = _HID,			\
