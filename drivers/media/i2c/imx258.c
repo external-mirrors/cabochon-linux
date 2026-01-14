@@ -4,6 +4,7 @@
 #include <linux/acpi.h>
 #include <linux/clk.h>
 #include <linux/delay.h>
+#include <linux/gpio/consumer.h>
 #include <linux/i2c.h>
 #include <linux/module.h>
 #include <linux/pm_runtime.h>
@@ -680,6 +681,7 @@ struct imx258 {
 	struct mutex mutex;
 
 	struct clk *clk;
+	struct gpio_desc *reset_gpio;
 	struct regulator_bulk_data supplies[IMX258_NUM_SUPPLIES];
 };
 
@@ -1104,6 +1106,9 @@ static int imx258_power_on(struct device *dev)
 	struct imx258 *imx258 = to_imx258(sd);
 	int ret;
 
+	if (imx258->reset_gpio)
+		gpiod_set_value_cansleep(imx258->reset_gpio, 0);
+
 	ret = regulator_bulk_enable(IMX258_NUM_SUPPLIES,
 				    imx258->supplies);
 	if (ret) {
@@ -1118,6 +1123,11 @@ static int imx258_power_on(struct device *dev)
 		regulator_bulk_disable(IMX258_NUM_SUPPLIES, imx258->supplies);
 	}
 
+	if (imx258->reset_gpio) {
+		gpiod_set_value_cansleep(imx258->reset_gpio, 1);
+		usleep_range(1000, 2000); // TODO: See if this is needed
+	}
+
 	return ret;
 }
 
@@ -1126,6 +1136,8 @@ static int imx258_power_off(struct device *dev)
 	struct v4l2_subdev *sd = dev_get_drvdata(dev);
 	struct imx258 *imx258 = to_imx258(sd);
 
+	if (imx258->reset_gpio)
+		gpiod_set_value_cansleep(imx258->reset_gpio, 0);
 	clk_disable_unprepare(imx258->clk);
 	regulator_bulk_disable(IMX258_NUM_SUPPLIES, imx258->supplies);
 
@@ -1369,6 +1381,11 @@ static int imx258_probe(struct i2c_client *client)
 		dev_err(imx258->dev, "failed to initialize CCI: %d\n", ret);
 		return ret;
 	}
+
+	imx258->reset_gpio = devm_gpiod_get_optional(imx258->dev, "reset", GPIOD_OUT_HIGH);
+	if (IS_ERR(imx258->reset_gpio))
+		return dev_err_probe(imx258->dev, PTR_ERR(imx258->reset_gpio),
+				     "error getting reset gpio\n");
 
 	ret = imx258_get_regulators(imx258);
 	if (ret)
