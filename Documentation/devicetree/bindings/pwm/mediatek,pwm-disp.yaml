@@ -30,6 +30,7 @@ properties:
               - mediatek,mt6893-disp-pwm
               - mediatek,mt8186-disp-pwm
               - mediatek,mt8188-disp-pwm
+              - mediatek,mt8189-disp-pwm
               - mediatek,mt8192-disp-pwm
               - mediatek,mt8195-disp-pwm
               - mediatek,mt8365-disp-pwm
