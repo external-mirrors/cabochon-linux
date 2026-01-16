@@ -604,6 +604,17 @@
 			status = "disabled";
 		};
 
+		disp_pwm0: pwm@1100e000 {
+			compatible = "mediatek,mt8189-disp-pwm", "mediatek,mt8183-disp-pwm";
+			reg = <0 0x1100e000 0 0x1000>;
+			clocks = <&topckgen CLK_TOP_DISP_PWM_SEL>,
+				 <&peri_ao  CLK_PERAO_DISP_PWM0>;
+			interrupts = <GIC_SPI 471 IRQ_TYPE_LEVEL_HIGH 0>;
+			clock-names = "main", "mm";
+			#pwm-cells = <2>;
+			status = "disabled";
+		};
+
 		spi0: spi@11010800 {
 			compatible = "mediatek,mt8189-spi";
 			reg = <0 0x11010800 0 0x100>;
