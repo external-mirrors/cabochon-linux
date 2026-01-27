@@ -751,12 +751,12 @@
 				#power-domain-cells = <1>;
 
 				/* SCPSYS hardware voter power domains */
-				mm_proc_dormant: power-domain@MT8196_POWER_DOMAIN_MM_PROC_DORMANT {
+				power-domain@MT8196_POWER_DOMAIN_MM_PROC_DORMANT {
 					reg = <MT8196_POWER_DOMAIN_MM_PROC_DORMANT>;
 					#power-domain-cells = <0>;
 				};
 
-				ssr: power-domain@MT8196_POWER_DOMAIN_SSR {
+				power-domain@MT8196_POWER_DOMAIN_SSR {
 					reg = <MT8196_POWER_DOMAIN_SSR>;
 					#power-domain-cells = <0>;
 				};
@@ -2078,6 +2078,41 @@
 			interrupts = <GIC_SPI 813 IRQ_TYPE_LEVEL_HIGH 0>;
 			clocks = <&clk13m>;
 		};
+
+		/* High Frame Rate Processor System Controller (HFRPSYS) */
+		hfrpsys: system-controller@31b00000 {
+			compatible = "mediatek,mt8196-hfrpsys", "syscon", "simple-mfd";
+			reg = <0 0x31b00000 0 0x3000>;
+
+			/* HFRPSYS Power Controller with Hardware Voter */
+			hfrp_hwv: power-controller {
+				compatible = "mediatek,mt8196-hwv-hfrp-power-controller";
+				#address-cells = <1>;
+				#size-cells = <0>;
+				#power-domain-cells = <1>;
+
+				/* Power Domains are at end of soc avoiding too far indentation */
+			};
+
+			/* HFRPSYS Power Regulators */
+			regulators {
+				compatible = "mediatek,mt8196-hwv-vmm-regulator";
+				//access-controllers = <&vcp>;
+				access-controller-names = "vcp";
+
+				vmm_vdisp: vdisp {
+					regulator-name = "vdisp";
+					regulator-min-microvolt = <575000>;
+					regulator-max-microvolt = <875000>;
+				};
+
+				vmm_vhwdec: vhwdec {
+					regulator-name = "vdec-vcore";
+					regulator-min-microvolt = <575000>;
+					regulator-max-microvolt = <900000>;
+				};
+			};
+		};
 	};
 
 	sound: mt8196-sound {
@@ -2093,5 +2128,125 @@
 			     <GIC_PPI 11 IRQ_TYPE_LEVEL_HIGH 0>,
 			     <GIC_PPI 10 IRQ_TYPE_LEVEL_HIGH 0>;
 		clock-frequency = <13000000>;
+	};
+};
+
+/* High Frame Rate Processor System Controller (HFRPSYS) Power Domains */
+&hfrp_hwv {
+	power-domain@MT8196_POWER_DOMAIN_DSI_PHY0 {
+		reg = <MT8196_POWER_DOMAIN_DSI_PHY0>;
+		#power-domain-cells = <0>;
+	};
+
+	power-domain@MT8196_POWER_DOMAIN_DSI_PHY1 {
+		reg = <MT8196_POWER_DOMAIN_DSI_PHY1>;
+		#power-domain-cells = <0>;
+	};
+
+	power-domain@MT8196_POWER_DOMAIN_DSI_PHY2 {
+		reg = <MT8196_POWER_DOMAIN_DSI_PHY2>;
+		#power-domain-cells = <0>;
+	};
+
+	power-domain@MT8196_POWER_DOMAIN_MM_INFRA_AO {
+		reg = <MT8196_POWER_DOMAIN_MM_INFRA_AO>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+		#power-domain-cells = <0>;
+
+		power-domain@MT8196_POWER_DOMAIN_MM_INFRA0 {
+			reg = <MT8196_POWER_DOMAIN_MM_INFRA0>;
+			#power-domain-cells = <0>;
+	
+			power-domain@MT8196_POWER_DOMAIN_MM_INFRA1 {
+				reg = <MT8196_POWER_DOMAIN_MM_INFRA1>;
+				#power-domain-cells = <0>;
+
+				power-domain@MT8196_POWER_DOMAIN_CSI_BS_RX {
+					reg = <MT8196_POWER_DOMAIN_CSI_BS_RX>;
+					#power-domain-cells = <0>;
+				};
+
+				power-domain@MT8196_POWER_DOMAIN_CSI_LS_RX {
+					reg = <MT8196_POWER_DOMAIN_CSI_LS_RX>;
+					#power-domain-cells = <0>;
+				};
+
+				power-domain@MT8196_POWER_DOMAIN_DISP_VCORE {
+					reg = <MT8196_POWER_DOMAIN_DISP_VCORE>;
+					#power-domain-cells = <0>;
+
+					power-domain@MT8196_POWER_DOMAIN_DIS0_DORMANT {
+						reg = <MT8196_POWER_DOMAIN_DIS0_DORMANT>;
+						#power-domain-cells = <0>;
+					};
+
+					power-domain@MT8196_POWER_DOMAIN_DIS1_DORMANT {
+						reg = <MT8196_POWER_DOMAIN_DIS1_DORMANT>;
+						#power-domain-cells = <0>;
+					};
+
+					power-domain@MT8196_POWER_DOMAIN_DISP_EDPTX_DORMANT {
+						reg = <MT8196_POWER_DOMAIN_DISP_EDPTX_DORMANT>;
+						#power-domain-cells = <0>;
+					};
+
+					power-domain@MT8196_POWER_DOMAIN_DISP_DPTX_DORMANT {
+						reg = <MT8196_POWER_DOMAIN_DISP_DPTX_DORMANT>;
+						#power-domain-cells = <0>;
+					};
+
+					power-domain@MT8196_POWER_DOMAIN_OVL0_DORMANT {
+						reg = <MT8196_POWER_DOMAIN_OVL0_DORMANT>;
+						#power-domain-cells = <0>;
+					};
+
+					power-domain@MT8196_POWER_DOMAIN_OVL1_DORMANT {
+						reg = <MT8196_POWER_DOMAIN_OVL1_DORMANT>;
+						#power-domain-cells = <0>;
+					};
+
+					power-domain@MT8196_POWER_DOMAIN_MML0_SHUTDOWN {
+						reg = <MT8196_POWER_DOMAIN_MML0_SHUTDOWN>;
+						#power-domain-cells = <0>;
+					};
+
+					power-domain@MT8196_POWER_DOMAIN_MML1_SHUTDOWN {
+						reg = <MT8196_POWER_DOMAIN_MML1_SHUTDOWN>;
+						#power-domain-cells = <0>;
+					};
+				};
+
+				power-domain@MT8196_POWER_DOMAIN_VDE_VCORE0 {
+					reg = <MT8196_POWER_DOMAIN_VDE_VCORE0>;
+					#power-domain-cells = <0>;
+
+					power-domain@MT8196_POWER_DOMAIN_VDE0 {
+						reg = <MT8196_POWER_DOMAIN_VDE0>;
+						#power-domain-cells = <0>;
+					};
+
+					power-domain@MT8196_POWER_DOMAIN_VDE1 {
+						reg = <MT8196_POWER_DOMAIN_VDE1>;
+						#power-domain-cells = <0>;
+					};
+				};
+
+				power-domain@MT8196_POWER_DOMAIN_VEN0 {
+					reg = <MT8196_POWER_DOMAIN_VEN0>;
+					#power-domain-cells = <0>;
+
+					power-domain@MT8196_POWER_DOMAIN_VEN1 {
+						reg = <MT8196_POWER_DOMAIN_VEN1>;
+						#power-domain-cells = <0>;
+
+						power-domain@MT8196_POWER_DOMAIN_VEN2 {
+							reg = <MT8196_POWER_DOMAIN_VEN2>;
+							#power-domain-cells = <0>;
+						};
+					};
+				};
+			};
+		};
 	};
 };
