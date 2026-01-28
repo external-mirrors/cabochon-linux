@@ -324,6 +324,14 @@
 	status = "okay";
 };
 
+&mfg0 {
+	domain-supply = <&mt6359_vproc1_buck_reg>;
+};
+
+&mfg1 {
+	domain-supply = <&mt6359_vsram_proc1_ldo_reg>;
+};
+
 &mmc0 {
 	bus-width = <8>;
 	cap-mmc-highspeed;
