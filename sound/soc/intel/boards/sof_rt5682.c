@@ -717,6 +717,9 @@ static int sof_audio_probe(struct platform_device *pdev)
 		}
 	}
 
+	/* Set card long name based on tplg file name */
+	sof_intel_board_set_longname_from_tplg(pdev, &sof_audio_card_rt5682);
+
 	if (sof_rt5682_quirk & SOF_RT5682_MCLK_EN) {
 		ctx->rt5682.mclk_en = true;
 

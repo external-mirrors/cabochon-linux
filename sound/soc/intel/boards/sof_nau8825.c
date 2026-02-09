@@ -243,6 +243,9 @@ static int sof_audio_probe(struct platform_device *pdev)
 
 	dev_dbg(&pdev->dev, "sof_nau8825_quirk = %lx\n", sof_nau8825_quirk);
 
+	/* Set card long name based on tplg file name */
+	sof_intel_board_set_longname_from_tplg(pdev, &sof_audio_card_nau8825);
+
 	/* initialize ctx with board quirk */
 	ctx = sof_intel_board_get_ctx(&pdev->dev, sof_nau8825_quirk);
 	if (!ctx)

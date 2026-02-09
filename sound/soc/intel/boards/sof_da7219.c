@@ -384,6 +384,9 @@ static int audio_probe(struct platform_device *pdev)
 		}
 	}
 
+	/* Set card long name based on tplg file name */
+	sof_intel_board_set_longname_from_tplg(pdev, &card_da7219);
+
 	if (board_quirk & SOF_DA7219_MCLK_EN)
 		ctx->da7219.mclk_en = true;
 
