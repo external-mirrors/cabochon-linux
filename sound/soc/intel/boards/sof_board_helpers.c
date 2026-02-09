@@ -3,9 +3,11 @@
 // Copyright(c) 2023 Intel Corporation
 
 #include <sound/soc.h>
+#include "../../sof/sof-priv.h"
 #include "../common/soc-intel-quirks.h"
 #include "hda_dsp_common.h"
 #include "sof_board_helpers.h"
+#include "../../sof/intel/shim.h"
 
 /*
  * Intel HDMI DAI Link
@@ -777,6 +779,40 @@ sof_intel_board_get_ctx(struct device *dev, unsigned long board_quirk)
 	return ctx;
 }
 EXPORT_SYMBOL_NS(sof_intel_board_get_ctx, "SND_SOC_INTEL_SOF_BOARD_HELPERS");
+
+int sof_intel_board_set_longname_from_tplg(struct platform_device *pdev,
+        struct snd_soc_card *sof_audio_card)
+{
+	struct snd_sof_dev *sdev = dev_get_drvdata(pdev->dev.parent);
+	const struct sof_intel_dsp_desc *chip_info = get_chip_info(sdev->pdata);
+	enum snd_soc_acpi_intel_codec codec_type, amp_type;
+	const char *long_name, *codec_name, *amp_name;
+	// there is also the case of having an amp with no codec (vell)
+	codec_type = snd_soc_acpi_intel_detect_codec_type(sdev->dev);
+	amp_type = snd_soc_acpi_intel_detect_amp_type(sdev->dev);
+
+	int amp_type_valid = amp_type != CODEC_NONE && amp_type != codec_type;
+
+	codec_name = snd_soc_acpi_intel_get_codec_tplg_suffix(codec_type);
+	if (amp_type_valid) {
+		amp_name = snd_soc_acpi_intel_get_amp_tplg_suffix(amp_type);
+		long_name = devm_kasprintf(&pdev->dev, GFP_KERNEL, "sof-%s-%s-%s",
+		                  chip_info->platform,
+		                  codec_name,
+		                  amp_name);
+	} else {
+		long_name = devm_kasprintf(&pdev->dev, GFP_KERNEL, "sof-%s-%s",
+		                  chip_info->platform,
+		                  codec_name);
+	}
+	if (!long_name)
+		return -ENOMEM;
+
+	sof_audio_card->long_name = long_name;
+
+	return 0;
+}
+EXPORT_SYMBOL_NS(sof_intel_board_set_longname_from_tplg, "SND_SOC_INTEL_SOF_BOARD_HELPERS");
 
 MODULE_DESCRIPTION("ASoC Intel SOF Machine Driver Board Helpers");
 MODULE_AUTHOR("Brent Lu <brent.lu@intel.com>");

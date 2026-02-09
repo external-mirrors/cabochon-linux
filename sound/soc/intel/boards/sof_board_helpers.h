@@ -169,5 +169,7 @@ int sof_intel_board_set_dai_link(struct device *dev, struct snd_soc_card *card,
 				 struct sof_card_private *ctx);
 struct sof_card_private *
 sof_intel_board_get_ctx(struct device *dev, unsigned long board_quirk);
+int sof_intel_board_set_longname_from_tplg(struct platform_device *pdev,
+        	struct snd_soc_card *sof_audio_card);
 
 #endif /* __SOF_INTEL_BOARD_HELPERS_H */
