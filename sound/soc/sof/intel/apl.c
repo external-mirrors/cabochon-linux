@@ -120,3 +120,27 @@ const struct sof_intel_dsp_desc apl_chip_info = {
 	.hw_ip_version = SOF_INTEL_CAVS_1_5_PLUS,
 	.platform = "apl",
 };
+
+const struct sof_intel_dsp_desc glk_chip_info = {
+	/* Geminilake */
+	.cores_num = 2,
+	.init_core_mask = 1,
+	.host_managed_cores_mask = GENMASK(1, 0),
+	.ipc_req = HDA_DSP_REG_HIPCI,
+	.ipc_req_mask = HDA_DSP_REG_HIPCI_BUSY,
+	.ipc_ack = HDA_DSP_REG_HIPCIE,
+	.ipc_ack_mask = HDA_DSP_REG_HIPCIE_DONE,
+	.ipc_ctl = HDA_DSP_REG_HIPCCTL,
+	.rom_status_reg = HDA_DSP_SRAM_REG_ROM_STATUS,
+	.rom_init_timeout	= 150,
+	.ssp_count = APL_SSP_COUNT,
+	.ssp_base_offset = APL_SSP_BASE_OFFSET,
+	.d0i3_offset = SOF_HDA_VS_D0I3C,
+	.quirks = SOF_INTEL_PROCEN_FMT_QUIRK,
+	.check_ipc_irq	= hda_dsp_check_ipc_irq,
+	.cl_init = cl_dsp_init,
+	.power_down_dsp = hda_power_down_dsp,
+	.disable_interrupts = hda_dsp_disable_interrupts,
+	.hw_ip_version = SOF_INTEL_CAVS_1_5_PLUS,
+	.platform = "glk",
+};

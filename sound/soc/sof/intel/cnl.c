@@ -482,6 +482,66 @@ const struct sof_intel_dsp_desc cnl_chip_info = {
 	.platform = "cnl",
 };
 
+const struct sof_intel_dsp_desc cfl_chip_info = {
+	/* Coffeelake */
+	.cores_num = 4,
+	.init_core_mask = 1,
+	.host_managed_cores_mask = GENMASK(3, 0),
+	.ipc_req = CNL_DSP_REG_HIPCIDR,
+	.ipc_req_mask = CNL_DSP_REG_HIPCIDR_BUSY,
+	.ipc_ack = CNL_DSP_REG_HIPCIDA,
+	.ipc_ack_mask = CNL_DSP_REG_HIPCIDA_DONE,
+	.ipc_ctl = CNL_DSP_REG_HIPCCTL,
+	.rom_status_reg = HDA_DSP_SRAM_REG_ROM_STATUS,
+	.rom_init_timeout	= 300,
+	.ssp_count = CNL_SSP_COUNT,
+	.ssp_base_offset = CNL_SSP_BASE_OFFSET,
+	.sdw_shim_base = SDW_SHIM_BASE,
+	.sdw_alh_base = SDW_ALH_BASE,
+	.d0i3_offset = SOF_HDA_VS_D0I3C,
+	.read_sdw_lcount =  hda_sdw_check_lcount_common,
+	.enable_sdw_irq	= hda_common_enable_sdw_irq,
+	.check_sdw_irq	= hda_common_check_sdw_irq,
+	.check_sdw_wakeen_irq = hda_sdw_check_wakeen_irq_common,
+	.sdw_process_wakeen = hda_sdw_process_wakeen_common,
+	.check_ipc_irq	= hda_dsp_check_ipc_irq,
+	.cl_init = cl_dsp_init,
+	.power_down_dsp = hda_power_down_dsp,
+	.disable_interrupts = hda_dsp_disable_interrupts,
+	.hw_ip_version = SOF_INTEL_CAVS_1_8,
+	.platform = "cfl",
+};
+
+const struct sof_intel_dsp_desc cml_chip_info = {
+	/* Cometlake */
+	.cores_num = 4,
+	.init_core_mask = 1,
+	.host_managed_cores_mask = GENMASK(3, 0),
+	.ipc_req = CNL_DSP_REG_HIPCIDR,
+	.ipc_req_mask = CNL_DSP_REG_HIPCIDR_BUSY,
+	.ipc_ack = CNL_DSP_REG_HIPCIDA,
+	.ipc_ack_mask = CNL_DSP_REG_HIPCIDA_DONE,
+	.ipc_ctl = CNL_DSP_REG_HIPCCTL,
+	.rom_status_reg = HDA_DSP_SRAM_REG_ROM_STATUS,
+	.rom_init_timeout	= 300,
+	.ssp_count = CNL_SSP_COUNT,
+	.ssp_base_offset = CNL_SSP_BASE_OFFSET,
+	.sdw_shim_base = SDW_SHIM_BASE,
+	.sdw_alh_base = SDW_ALH_BASE,
+	.d0i3_offset = SOF_HDA_VS_D0I3C,
+	.read_sdw_lcount =  hda_sdw_check_lcount_common,
+	.enable_sdw_irq	= hda_common_enable_sdw_irq,
+	.check_sdw_irq	= hda_common_check_sdw_irq,
+	.check_sdw_wakeen_irq = hda_sdw_check_wakeen_irq_common,
+	.sdw_process_wakeen = hda_sdw_process_wakeen_common,
+	.check_ipc_irq	= hda_dsp_check_ipc_irq,
+	.cl_init = cl_dsp_init,
+	.power_down_dsp = hda_power_down_dsp,
+	.disable_interrupts = hda_dsp_disable_interrupts,
+	.hw_ip_version = SOF_INTEL_CAVS_1_8,
+	.platform = "cml",
+};
+
 /*
  * JasperLake is technically derived from IceLake, and should be in
  * described in icl.c. However since JasperLake was designed with

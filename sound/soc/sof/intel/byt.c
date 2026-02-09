@@ -285,6 +285,7 @@ static const struct sof_intel_dsp_desc byt_chip_info = {
 	.cores_num = 1,
 	.host_managed_cores_mask = 1,
 	.hw_ip_version = SOF_INTEL_BAYTRAIL,
+	.platform = "byt",
 };
 
 /* cherrytrail and braswell ops */
@@ -361,6 +362,7 @@ static const struct sof_intel_dsp_desc cht_chip_info = {
 	.cores_num = 1,
 	.host_managed_cores_mask = 1,
 	.hw_ip_version = SOF_INTEL_BAYTRAIL,
+	.platform = "cht",
 };
 
 /* BYTCR uses different IRQ index */

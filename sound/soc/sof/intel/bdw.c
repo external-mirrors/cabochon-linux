@@ -629,6 +629,7 @@ static const struct sof_intel_dsp_desc bdw_chip_info = {
 	.cores_num = 1,
 	.host_managed_cores_mask = 1,
 	.hw_ip_version = SOF_INTEL_BROADWELL,
+	.platform = "bdw",
 };
 
 static const struct sof_dev_desc sof_acpi_broadwell_desc = {
