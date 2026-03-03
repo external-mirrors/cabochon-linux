@@ -1481,9 +1481,6 @@
 				      "ufs_mem_sub", "crypt_mux",
 				      "crypt_lp", "crypt_perf",
 				      "ufs_rx_symbol0", "ufs_rx_symbol1";
-			freq-table-hz = <0 0>, <0 0>, <0 0>,
-					<0 0>, <0 0>, <0 0>,
-					<0 0>, <0 0>;
 
 			mediatek,ufs-disable-mcq;
 			status = "disabled";
