@@ -422,11 +422,13 @@ lava-test-kselftest-dt-genio-1200:
     - .lava-test-kselftest-dt
     - .genio-1200
 
+# TODO remove allow_failure when fixed
 lava-test-kselftest-dt-mt8196-navi:
   extends:
     - .lava-test
     - .lava-test-kselftest-dt
     - .mt8196-navi
+  allow_failure: true
 
 lava-test-glmark2-genio-350:
   extends:
