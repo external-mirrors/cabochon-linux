@@ -83,6 +83,8 @@ static int stk_panel_on(struct stk_panel *stk)
 	struct mipi_dsi_device *dsi = stk->dsi;
 	struct mipi_dsi_multi_context dsi_ctx = {.dsi = dsi};
 
+	dsi->mode_flags |= MIPI_DSI_MODE_LPM;
+
 	mipi_dsi_dcs_set_display_on_multi(&dsi_ctx);
 
 	mipi_dsi_msleep(&dsi_ctx, 20);
@@ -298,7 +300,9 @@ static int stk_panel_probe(struct mipi_dsi_device *dsi)
 
 	dsi->lanes = 4;
 	dsi->format = MIPI_DSI_FMT_RGB888;
-	dsi->mode_flags = (MIPI_DSI_MODE_VIDEO | MIPI_DSI_MODE_LPM);
+	dsi->mode_flags = MIPI_DSI_MODE_VIDEO |
+			  MIPI_DSI_MODE_LPM |
+			  MIPI_DSI_CLOCK_NON_CONTINUOUS;
 
 	stk = devm_drm_panel_alloc(&dsi->dev, __typeof(*stk), base,
 				  &stk_panel_funcs,
