@@ -27,12 +27,10 @@ static const struct mtk_gate_regs mdp1_cg_regs = {
 };
 
 #define GATE_MDP0(_id, _name, _parent, _shift)				\
-	GATE_MTK_FLAGS(_id, _name, _parent, &mdp0_cg_regs, _shift,	\
-		       &mtk_clk_gate_ops_setclr, CLK_IGNORE_UNUSED)
+	GATE_MTK(_id, _name, _parent, &mdp0_cg_regs, _shift, &mtk_clk_gate_ops_setclr_counted)
 
 #define GATE_MDP1(_id, _name, _parent, _shift)				\
-	GATE_MTK_FLAGS(_id, _name, _parent, &mdp1_cg_regs, _shift,	\
-		       &mtk_clk_gate_ops_setclr, CLK_IGNORE_UNUSED)
+	GATE_MTK(_id, _name, _parent, &mdp1_cg_regs, _shift, &mtk_clk_gate_ops_setclr_counted)
 
 static const struct mtk_gate mdp_clks[] = {
 	/* MDP0 */

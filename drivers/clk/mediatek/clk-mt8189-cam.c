@@ -21,8 +21,7 @@ static const struct mtk_gate_regs cam_m_cg_regs = {
 };
 
 #define GATE_CAM_M(_id, _name, _parent, _shift)				\
-	GATE_MTK_FLAGS(_id, _name, _parent, &cam_m_cg_regs, _shift,	\
-		       &mtk_clk_gate_ops_setclr, CLK_IGNORE_UNUSED)
+	GATE_MTK(_id, _name, _parent, &cam_m_cg_regs, _shift, &mtk_clk_gate_ops_setclr_counted)
 
 static const struct mtk_gate cam_m_clks[] = {
 	GATE_CAM_M(CLK_CAM_M_LARB13, "cam_m_larb13", "cam_sel", 0),
@@ -51,8 +50,7 @@ static const struct mtk_gate_regs cam_ra_cg_regs = {
 };
 
 #define GATE_CAM_RA(_id, _name, _parent, _shift)			\
-	GATE_MTK_FLAGS(_id, _name, _parent, &cam_ra_cg_regs, _shift,	\
-		       &mtk_clk_gate_ops_setclr, CLK_IGNORE_UNUSED)
+	GATE_MTK(_id, _name, _parent, &cam_ra_cg_regs, _shift, &mtk_clk_gate_ops_setclr_counted)
 
 static const struct mtk_gate cam_ra_clks[] = {
 	GATE_CAM_RA(CLK_CAM_RA_CAMSYS_RAWA_LARBX, "cam_ra_camsys_rawa_larbx", "cam_sel", 0),
@@ -72,8 +70,7 @@ static const struct mtk_gate_regs cam_rb_cg_regs = {
 };
 
 #define GATE_CAM_RB(_id, _name, _parent, _shift)			\
-	GATE_MTK_FLAGS(_id, _name, _parent, &cam_rb_cg_regs, _shift,	\
-		       &mtk_clk_gate_ops_setclr, CLK_IGNORE_UNUSED)
+	GATE_MTK(_id, _name, _parent, &cam_rb_cg_regs, _shift, &mtk_clk_gate_ops_setclr_counted)
 
 static const struct mtk_gate cam_rb_clks[] = {
 	GATE_CAM_RB(CLK_CAM_RB_CAMSYS_RAWB_LARBX, "cam_rb_camsys_rawb_larbx", "cam_sel", 0),

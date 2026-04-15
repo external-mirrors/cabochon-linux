@@ -21,8 +21,7 @@ static const struct mtk_gate_regs imgsys1_cg_regs = {
 };
 
 #define GATE_IMGSYS1(_id, _name, _parent, _shift)			\
-	GATE_MTK_FLAGS(_id, _name, _parent, &imgsys1_cg_regs, _shift,	\
-		       &mtk_clk_gate_ops_setclr, CLK_IGNORE_UNUSED)
+	GATE_MTK(_id, _name, _parent, &imgsys1_cg_regs, _shift,	&mtk_clk_gate_ops_setclr_counted)
 
 static const struct mtk_gate imgsys1_clks[] = {
 	GATE_IMGSYS1(CLK_IMGSYS1_LARB9, "imgsys1_larb9", "img1_sel", 0),
@@ -43,8 +42,7 @@ static const struct mtk_gate_regs imgsys2_cg_regs = {
 };
 
 #define GATE_IMGSYS2(_id, _name, _parent, _shift)			\
-	GATE_MTK_FLAGS(_id, _name, _parent, &imgsys2_cg_regs, _shift,	\
-		       &mtk_clk_gate_ops_setclr, CLK_IGNORE_UNUSED)
+	GATE_MTK(_id, _name, _parent, &imgsys2_cg_regs, _shift,	&mtk_clk_gate_ops_setclr_counted)
 
 static const struct mtk_gate imgsys2_clks[] = {
 	GATE_IMGSYS2(CLK_IMGSYS2_LARB9, "imgsys2_larb9", "img1_sel", 0),
@@ -67,8 +65,7 @@ static const struct mtk_gate_regs ipe_cg_regs = {
 };
 
 #define GATE_IPE(_id, _name, _parent, _shift)				\
-	GATE_MTK_FLAGS(_id, _name, _parent, &ipe_cg_regs, _shift,	\
-		       &mtk_clk_gate_ops_setclr, CLK_IGNORE_UNUSED)
+	GATE_MTK(_id, _name, _parent, &ipe_cg_regs, _shift, &mtk_clk_gate_ops_setclr_counted)
 
 static const struct mtk_gate ipe_clks[] = {
 	GATE_IPE(CLK_IPE_LARB19, "ipe_larb19", "ipe_sel", 0),
