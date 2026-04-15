@@ -21,7 +21,7 @@ static const struct mtk_gate_regs gce_d_cg_regs = {
 };
 
 #define GATE_GCE_D(_id, _name, _parent, _shift)		\
-	GATE_MTK(_id, _name, _parent, &gce_d_cg_regs, _shift, &mtk_clk_gate_ops_no_setclr)
+	GATE_MTK(_id, _name, _parent, &gce_d_cg_regs, _shift, &mtk_clk_gate_ops_no_setclr_counted)
 
 static const struct mtk_gate gce_d_clks[] = {
 	GATE_GCE_D(CLK_GCE_D_TOP, "gce_d_top", "mminfra_gce_d", 16),
@@ -39,7 +39,7 @@ static const struct mtk_gate_regs gce_m_cg_regs = {
 };
 
 #define GATE_GCE_M(_id, _name, _parent, _shift)		\
-	GATE_MTK(_id, _name, _parent, &gce_m_cg_regs, _shift, &mtk_clk_gate_ops_no_setclr)
+	GATE_MTK(_id, _name, _parent, &gce_m_cg_regs, _shift, &mtk_clk_gate_ops_no_setclr_counted)
 
 static const struct mtk_gate gce_m_clks[] = {
 	GATE_GCE_M(CLK_GCE_M_TOP, "gce_m_top", "mminfra_gce_m", 16),
@@ -63,10 +63,10 @@ static const struct mtk_gate_regs mminfra_config1_cg_regs = {
 };
 
 #define GATE_MMINFRA_CONFIG0(_id, _name, _parent, _shift)	\
-	GATE_MTK(_id, _name, _parent, &mminfra_config0_cg_regs, _shift, &mtk_clk_gate_ops_setclr)
+	GATE_MTK(_id, _name, _parent, &mminfra_config0_cg_regs, _shift, &mtk_clk_gate_ops_setclr_counted)
 
 #define GATE_MMINFRA_CONFIG1(_id, _name, _parent, _shift)	\
-	GATE_MTK(_id, _name, _parent, &mminfra_config1_cg_regs, _shift, &mtk_clk_gate_ops_setclr)
+	GATE_MTK(_id, _name, _parent, &mminfra_config1_cg_regs, _shift, &mtk_clk_gate_ops_setclr_counted)
 
 static const struct mtk_gate mminfra_config_clks[] = {
 	/* MMINFRA_CONFIG0 */

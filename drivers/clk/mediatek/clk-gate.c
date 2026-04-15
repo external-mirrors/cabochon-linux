@@ -168,12 +168,24 @@ const struct clk_ops mtk_clk_gate_ops_setclr = {
 };
 EXPORT_SYMBOL_GPL(mtk_clk_gate_ops_setclr);
 
+const struct clk_ops mtk_clk_gate_ops_setclr_counted = {
+	.enable		= mtk_cg_enable,
+	.disable	= mtk_cg_disable,
+};
+EXPORT_SYMBOL_GPL(mtk_clk_gate_ops_setclr_counted);
+
 const struct clk_ops mtk_clk_gate_ops_setclr_inv = {
 	.is_enabled	= mtk_cg_bit_is_set,
 	.enable		= mtk_cg_enable_inv,
 	.disable	= mtk_cg_disable_inv,
 };
 EXPORT_SYMBOL_GPL(mtk_clk_gate_ops_setclr_inv);
+
+const struct clk_ops mtk_clk_gate_ops_setclr_inv_counted = {
+	.enable		= mtk_cg_enable_inv,
+	.disable	= mtk_cg_disable_inv,
+};
+EXPORT_SYMBOL_GPL(mtk_clk_gate_ops_setclr_inv_counted);
 
 const struct clk_ops mtk_clk_gate_hwv_ops_setclr = {
 	.is_enabled	= mtk_cg_bit_is_cleared,
@@ -195,6 +207,12 @@ const struct clk_ops mtk_clk_gate_ops_no_setclr = {
 	.disable	= mtk_cg_disable_no_setclr,
 };
 EXPORT_SYMBOL_GPL(mtk_clk_gate_ops_no_setclr);
+
+const struct clk_ops mtk_clk_gate_ops_no_setclr_counted = {
+	.enable		= mtk_cg_enable_no_setclr,
+	.disable	= mtk_cg_disable_no_setclr,
+};
+EXPORT_SYMBOL_GPL(mtk_clk_gate_ops_no_setclr_counted);
 
 const struct clk_ops mtk_clk_gate_ops_no_setclr_inv = {
 	.is_enabled	= mtk_cg_bit_is_set,

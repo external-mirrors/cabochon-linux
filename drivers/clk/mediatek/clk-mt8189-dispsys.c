@@ -27,10 +27,10 @@ static const struct mtk_gate_regs mm1_cg_regs = {
 };
 
 #define GATE_MM0(_id, _name, _parent, _shift)		\
-	GATE_MTK(_id, _name, _parent, &mm0_cg_regs, _shift, &mtk_clk_gate_ops_setclr)
+	GATE_MTK(_id, _name, _parent, &mm0_cg_regs, _shift, &mtk_clk_gate_ops_setclr_counted)
 
 #define GATE_MM1(_id, _name, _parent, _shift)		\
-	GATE_MTK(_id, _name, _parent, &mm1_cg_regs, _shift, &mtk_clk_gate_ops_setclr)
+	GATE_MTK(_id, _name, _parent, &mm1_cg_regs, _shift, &mtk_clk_gate_ops_setclr_counted)
 
 static const struct mtk_gate mm_clks[] = {
 	/* MM0 */

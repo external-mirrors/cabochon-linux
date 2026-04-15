@@ -27,12 +27,10 @@ static const struct mtk_gate_regs vdec_core1_cg_regs = {
 };
 
 #define GATE_VDEC_CORE0(_id, _name, _parent, _shift)				\
-	GATE_MTK_FLAGS(_id, _name, _parent, &vdec_core0_cg_regs, _shift,	\
-		       &mtk_clk_gate_ops_setclr_inv, CLK_IGNORE_UNUSED)
+	GATE_MTK(_id, _name, _parent, &vdec_core0_cg_regs, _shift, &mtk_clk_gate_ops_setclr_inv_counted)
 
 #define GATE_VDEC_CORE1(_id, _name, _parent, _shift)				\
-	GATE_MTK_FLAGS(_id, _name, _parent, &vdec_core1_cg_regs, _shift,	\
-		       &mtk_clk_gate_ops_setclr_inv, CLK_IGNORE_UNUSED)
+	GATE_MTK(_id, _name, _parent, &vdec_core1_cg_regs, _shift, &mtk_clk_gate_ops_setclr_inv_counted)
 
 static const struct mtk_gate vdec_core_clks[] = {
 	/* VDEC_CORE0 */
@@ -54,8 +52,7 @@ static const struct mtk_gate_regs ven1_cg_regs = {
 };
 
 #define GATE_VEN1(_id, _name, _parent, _shift)				\
-	GATE_MTK_FLAGS(_id, _name, _parent, &ven1_cg_regs, _shift,	\
-		       &mtk_clk_gate_ops_setclr_inv, CLK_IGNORE_UNUSED)
+	GATE_MTK(_id, _name, _parent, &ven1_cg_regs, _shift, &mtk_clk_gate_ops_setclr_inv_counted)
 
 static const struct mtk_gate ven1_clks[] = {
 	GATE_VEN1(CLK_VEN1_CKE0_LARB, "ven1_larb", "venc_sel", 0),
