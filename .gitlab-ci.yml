@@ -28,8 +28,10 @@ check-devicetrees:
                mt8365-evk \
                mt8370-genio-510-evk \
                mt8371-genio-520-evk \
+               mt8371-genio-520-evk-ufs \
                mt8390-genio-700-evk \
                mt8391-genio-720-evk \
+               mt8391-genio-720-evk-ufs \
                mt8395-genio-1200-evk \
                mt8395-radxa-nio-12l "
   before_script:
