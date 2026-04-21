@@ -241,6 +241,13 @@ generate-tests:
     GLMARK2_RENDERER: "Mali-G57 MC2 (Panfrost)"
     GLMARK2_MIN_SCORE: 800
 
+.genio-520:
+  extends:
+    - .u-boot
+  variables:
+    DEVICE_TYPE: mt8371-genio-520-evk
+    DTB: mt8371-genio-520-evk
+
 .genio-700:
   extends:
     - .u-boot
@@ -249,6 +256,13 @@ generate-tests:
     DTB: mt8390-genio-700-evk
     GLMARK2_RENDERER: "Mali-G57 MC3 (Panfrost)"
     GLMARK2_MIN_SCORE: 800
+
+.genio-720-ufs:
+  extends:
+    - .u-boot
+  variables:
+    DEVICE_TYPE: mt8391-genio-720-evk-ufs
+    DTB: mt8391-genio-720-evk-ufs
 
 .genio-1200:
   extends:
@@ -385,11 +399,23 @@ lava-test-dmesg-genio-510:
     - .lava-test-dmesg
     - .genio-510
 
+lava-test-dmesg-genio-520:
+  extends:
+    - .lava-test
+    - .lava-test-dmesg
+    - .genio-520
+
 lava-test-dmesg-genio-700:
   extends:
     - .lava-test
     - .lava-test-dmesg
     - .genio-700
+
+lava-test-dmesg-genio-720-ufs:
+  extends:
+    - .lava-test
+    - .lava-test-dmesg
+    - .genio-720-ufs
 
 lava-test-dmesg-genio-1200:
   extends:
@@ -415,11 +441,23 @@ lava-test-kselftest-dt-genio-510:
     - .lava-test-kselftest-dt
     - .genio-510
 
+lava-test-kselftest-dt-genio-520:
+  extends:
+    - .lava-test
+    - .lava-test-kselftest-dt
+    - .genio-520
+
 lava-test-kselftest-dt-genio-700:
   extends:
     - .lava-test
     - .lava-test-kselftest-dt
     - .genio-700
+
+lava-test-kselftest-dt-genio-720-ufs:
+  extends:
+    - .lava-test
+    - .lava-test-kselftest-dt
+    - .genio-720-ufs
 
 lava-test-kselftest-dt-genio-1200:
   extends:
@@ -553,11 +591,25 @@ lava-test-rtcwake-genio-350:
     - .genio-510
 
 # TODO: enable once fixed
+.lava-test-rtcwake-genio-520:
+  extends:
+    - .lava-test
+    - .lava-test-rtcwake
+    - .genio-520
+
+# TODO: enable once fixed
 .lava-test-rtcwake-genio-700:
   extends:
     - .lava-test
     - .lava-test-rtcwake
     - .genio-700
+
+# TODO: enable once fixed
+.lava-test-rtcwake-genio-720-ufs:
+  extends:
+    - .lava-test
+    - .lava-test-rtcwake
+    - .genio-720-ufs
 
 lava-test-rtcwake-genio-1200:
   extends:
@@ -578,12 +630,24 @@ lava-test-watchdog-genio-510:
     - .lava-test-watchdog
     - .genio-510
 
+lava-test-watchdog-genio-520:
+  extends:
+    - .lava-test
+    - .lava-test-watchdog
+    - .genio-520
+
 # TODO: enable once fixed
 .lava-test-watchdog-genio-700:
   extends:
     - .lava-test
     - .lava-test-watchdog
     - .genio-700
+
+lava-test-watchdog-genio-720-ufs:
+  extends:
+    - .lava-test
+    - .lava-test-watchdog
+    - .genio-720-ufs
 
 # TODO: enable once fixed
 .lava-test-watchdog-genio-1200:
@@ -604,3 +668,9 @@ lava-test-wifi-genio-700:
     - .lava-test
     - .lava-test-wifi
     - .genio-700
+
+lava-test-wifi-genio-720-ufs:
+  extends:
+    - .lava-test
+    - .lava-test-wifi
+    - .genio-720-ufs
