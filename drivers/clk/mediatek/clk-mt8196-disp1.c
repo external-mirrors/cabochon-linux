@@ -49,7 +49,8 @@ static const struct mtk_gate_regs mm11_hwv_regs = {
 		.ops = &mtk_clk_gate_ops_setclr,\
 	}
 
-#define GATE_HWV_MM10(_id, _name, _parent, _shift) {	\
+
+#define GATE_HWV_MM10_FLAGS(_id, _name, _parent, _shift, _flags) {\
 		.id = _id,				\
 		.name = _name,				\
 		.parent_name = _parent,			\
@@ -57,8 +58,11 @@ static const struct mtk_gate_regs mm11_hwv_regs = {
 		.hwv_regs = &mm10_hwv_regs,		\
 		.shift = _shift,			\
 		.ops = &mtk_clk_gate_hwv_ops_setclr,	\
-		.flags = CLK_OPS_PARENT_ENABLE,		\
+		.flags = _flags | CLK_OPS_PARENT_ENABLE,\
 	}
+
+#define GATE_HWV_MM10(_id, _name, _parent, _shift)	\
+	GATE_HWV_MM10_FLAGS(_id, _name, _parent, _shift, 0)
 
 #define GATE_MM11(_id, _name, _parent, _shift) {\
 		.id = _id,			\
@@ -70,7 +74,7 @@ static const struct mtk_gate_regs mm11_hwv_regs = {
 		.ops = &mtk_clk_gate_ops_setclr,\
 	}
 
-#define GATE_HWV_MM11(_id, _name, _parent, _shift) {	\
+#define GATE_HWV_MM11_FLAGS(_id, _name, _parent, _shift, _flags) {\
 		.id = _id,				\
 		.name = _name,				\
 		.parent_name = _parent,			\
@@ -78,7 +82,11 @@ static const struct mtk_gate_regs mm11_hwv_regs = {
 		.hwv_regs = &mm11_hwv_regs,		\
 		.shift = _shift,			\
 		.ops = &mtk_clk_gate_hwv_ops_setclr,	\
+		.flags = _flags | CLK_OPS_PARENT_ENABLE,\
 	}
+
+#define GATE_HWV_MM11(_id, _name, _parent, _shift)	\
+	GATE_HWV_MM11_FLAGS(_id, _name, _parent, _shift, 0)
 
 static const struct mtk_gate mm1_clks[] = {
 	/* MM10 */
@@ -107,7 +115,7 @@ static const struct mtk_gate mm1_clks[] = {
 	GATE_HWV_MM10(CLK_MM1_DISP_DSI0, "mm1_CLK0", "disp", 22),
 	GATE_HWV_MM10(CLK_MM1_DISP_DSI1, "mm1_CLK1", "disp", 23),
 	GATE_HWV_MM10(CLK_MM1_DISP_DSI2, "mm1_CLK2", "disp", 24),
-	GATE_HWV_MM10(CLK_MM1_DISP_DVO0, "mm1_disp_dvo0", "disp", 25),
+	GATE_HWV_MM10_FLAGS(CLK_MM1_DISP_DVO0, "mm1_disp_dvo0", "dvo", 25, CLK_SET_RATE_PARENT),
 	GATE_HWV_MM10(CLK_MM1_DISP_GDMA0, "mm1_disp_gdma0", "disp", 26),
 	GATE_HWV_MM10(CLK_MM1_DISP_MERGE0, "mm1_disp_merge0", "disp", 27),
 	GATE_HWV_MM10(CLK_MM1_DISP_MERGE1, "mm1_disp_merge1", "disp", 28),
@@ -131,9 +139,9 @@ static const struct mtk_gate mm1_clks[] = {
 	GATE_HWV_MM11(CLK_MM1_MOD1, "mm1_mod1", "clk26m", 13),
 	GATE_HWV_MM11(CLK_MM1_MOD2, "mm1_mod2", "clk26m", 14),
 	GATE_HWV_MM11(CLK_MM1_MOD3, "mm1_mod3", "clk26m", 15),
-	GATE_HWV_MM11(CLK_MM1_MOD4, "mm1_mod4", "dp0", 16),
-	GATE_HWV_MM11(CLK_MM1_MOD5, "mm1_mod5", "dp1", 17),
-	GATE_HWV_MM11(CLK_MM1_MOD6, "mm1_mod6", "dp1", 18),
+	GATE_HWV_MM11_FLAGS(CLK_MM1_MOD4, "mm1_mod4", "dp0", 16, CLK_SET_RATE_PARENT),
+	GATE_HWV_MM11_FLAGS(CLK_MM1_MOD5, "mm1_mod5", "dp1", 17, CLK_SET_RATE_PARENT),
+	GATE_HWV_MM11_FLAGS(CLK_MM1_MOD6, "mm1_mod6", "dp1", 18, CLK_SET_RATE_PARENT),
 	GATE_HWV_MM11(CLK_MM1_CG0, "mm1_cg0", "disp", 20),
 	GATE_HWV_MM11(CLK_MM1_CG1, "mm1_cg1", "disp", 21),
 	GATE_HWV_MM11(CLK_MM1_CG2, "mm1_cg2", "disp", 22),
