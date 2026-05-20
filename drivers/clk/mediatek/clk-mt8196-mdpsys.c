@@ -21,6 +21,12 @@ static const struct mtk_gate_regs mdp0_cg_regs = {
 	.sta_ofs = 0x100,
 };
 
+static const struct mtk_gate_regs mdp0_s_cg_regs = {
+	.set_ofs = 0x100,
+	.clr_ofs = 0x100,
+	.sta_ofs = 0x100,
+};
+
 static const struct mtk_gate_regs mdp1_cg_regs = {
 	.set_ofs = 0x114,
 	.clr_ofs = 0x118,
@@ -40,6 +46,16 @@ static const struct mtk_gate_regs mdp2_cg_regs = {
 		.regs = &mdp0_cg_regs,			\
 		.shift = _shift,			\
 		.flags = CLK_OPS_PARENT_ENABLE,		\
+		.ops = &mtk_clk_gate_ops_setclr,	\
+	}
+
+#define GATE_MDP0_S(_id, _name, _parent, _shift) {	\
+		.id = _id,				\
+		.name = _name,				\
+		.parent_name = _parent,			\
+		.regs = &mdp0_s_cg_regs,		\
+		.shift = _shift,			\
+		.flags = CLK_IGNORE_UNUSED,		\
 		.ops = &mtk_clk_gate_ops_setclr,	\
 	}
 
@@ -66,6 +82,7 @@ static const struct mtk_gate mdp1_clks[] = {
 	/* MDP1-0 */
 	GATE_MDP0(CLK_MDP1_MDP_MUTEX0, "mdp1_mdp_mutex0", "mdp", 0),
 	GATE_MDP0(CLK_MDP1_SMI0, "mdp1_smi0", "mdp", 1),
+	GATE_MDP0_S(CLK_MDP1_SMI0_SMI, "mdp1_smi0_smi", "mdp1_smi0", 1),
 	GATE_MDP0(CLK_MDP1_APB_BUS, "mdp1_apb_bus", "mdp", 2),
 	GATE_MDP0(CLK_MDP1_MDP_RDMA0, "mdp1_mdp_rdma0", "mdp", 3),
 	GATE_MDP0(CLK_MDP1_MDP_RDMA1, "mdp1_mdp_rdma1", "mdp", 4),
@@ -118,6 +135,7 @@ static const struct mtk_gate mdp_clks[] = {
 	/* MDP0 */
 	GATE_MDP0(CLK_MDP_MDP_MUTEX0, "mdp_mdp_mutex0", "mdp", 0),
 	GATE_MDP0(CLK_MDP_SMI0, "mdp_smi0", "mdp", 1),
+	GATE_MDP0_S(CLK_MDP_SMI0_SMI, "mdp_smi0_smi", "mdp_smi0", 1),
 	GATE_MDP0(CLK_MDP_APB_BUS, "mdp_apb_bus", "mdp", 2),
 	GATE_MDP0(CLK_MDP_MDP_RDMA0, "mdp_mdp_rdma0", "mdp", 3),
 	GATE_MDP0(CLK_MDP_MDP_RDMA1, "mdp_mdp_rdma1", "mdp", 4),
