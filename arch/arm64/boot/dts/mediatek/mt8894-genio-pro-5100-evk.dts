@@ -1,0 +1,483 @@
+// SPDX-License-Identifier: GPL-2.0 OR MIT
+/*
+ * Copyright (C) 2026 Collabora Ltd.
+ * Author: Arnaud Ferraris <arnaud.ferraris@collabora.com>
+ */
+
+/dts-v1/;
+
+#include <dt-bindings/gpio/gpio.h>
+#include "mt8196.dtsi"
+#include "mt6363.dtsi"
+#include "mt6373.dtsi"
+
+/ {
+	model = "MediaTek Genio Pro 5100 EVK";
+	compatible = "mediatek,mt8894-evk", "mediatek,mt8894",
+		     "mediatek,mt8196";
+
+	aliases {
+		serial0 = &uart0;
+	};
+
+	chosen {
+		stdout-path = "serial0:115200n8";
+	};
+
+	memory@80000000 {
+		/* 16GB */
+		device_type = "memory";
+		reg = <0 0x80000000 4 0x00000000>;
+	};
+
+	reserved-memory {
+		#address-cells = <2>;
+		#size-cells = <2>;
+		ranges;
+
+		/* 2 MiB reserved for ARM Trusted Firmware (BL31) */
+		bl31_secmon_reserved: secmon@94600000 {
+			no-map;
+			reg = <0 0x94600000 0x0 0x200000>;
+		};
+	};
+
+	/* system wide 12.0V power rail */
+	vsys_12v: regulator-vsys-12v {
+		compatible = "regulator-fixed";
+		regulator-name = "vsys_12v";
+		regulator-always-on;
+		regulator-boot-on;
+		regulator-min-microvolt = <12000000>;
+		regulator-max-microvolt = <12000000>;
+	};
+
+	/* system wide 5.0V power rail */
+	vsys_5v: regulator-vsys-5v {
+		compatible = "regulator-fixed";
+		regulator-name = "vsys_5v";
+		regulator-min-microvolt = <5000000>;
+		regulator-max-microvolt = <5000000>;
+		enable-active-high;
+		gpio = <&pio 26 GPIO_ACTIVE_HIGH>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&vsys5_pins>;
+		vin-supply = <&vsys_12v>;
+		regulator-always-on;
+	};
+
+	/* system wide 3.3V power rail */
+	vsys_3v3: regulator-vsys-3v3 {
+		compatible = "regulator-fixed";
+		regulator-name = "vsys_3v3";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		enable-active-high;
+		gpio = <&pio 150 GPIO_ACTIVE_HIGH>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&vsys33_pins>;
+		vin-supply = <&vsys_5v>;
+		regulator-always-on;
+	};
+
+	/* separately switched 5.0V power rail */
+	vbus_usb0: regulator-vbus-usb0 {
+		compatible = "regulator-fixed";
+		regulator-name = "vbus_usb0";
+		enable-active-high;
+		gpio = <&pio 140 GPIO_ACTIVE_HIGH>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&usb0_vbus_pins>;
+		vin-supply = <&vsys_5v>;
+	};
+
+	/* separately switched 5.0V power rail */
+	vbus_usb1: regulator-vbus-usb1 {
+		compatible = "regulator-fixed";
+		regulator-name = "vbus_usb1";
+		enable-active-high;
+		gpio = <&pio 252 GPIO_ACTIVE_HIGH>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&usb1_vbus_pins>;
+		vin-supply = <&vsys_5v>;
+	};
+
+	/* separately switched 5.0V power rail */
+	vbus_usb2: regulator-vbus-usb2 {
+		compatible = "regulator-fixed";
+		regulator-name = "vbus_usb2";
+		enable-active-high;
+		gpio = <&pio 255 GPIO_ACTIVE_HIGH>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&usb2_vbus_pins>;
+		vin-supply = <&vsys_5v>;
+	};
+
+	/* separately switched 3.3V power rail */
+	vusb33: regulator-vusb33 {
+		compatible = "regulator-fixed";
+		regulator-name = "vusb33";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		enable-active-high;
+		gpio = <&pio 251 GPIO_ACTIVE_HIGH>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&usb_vusb33_pins>;
+		vin-supply = <&vsys_5v>;
+	};
+};
+
+&mmc1 {
+	bus-width = <4>;
+	cap-sd-highspeed;
+	cd-gpios = <&pio 134 GPIO_ACTIVE_LOW>;
+	cd-debounce-delay-ms = <0>;
+	max-frequency = <200000000>;
+	no-mmc;
+	no-sdio;
+	pinctrl-names = "default", "state_uhs";
+	pinctrl-0 = <&mmc1_pins>;
+	pinctrl-1 = <&mmc1_pins>;
+	vmmc-supply = <&mt6373_vmch_eint_high>;
+	vqmmc-supply = <&mt6373_vmc>;
+	sd-uhs-ddr50;
+	sd-uhs-sdr12;
+	sd-uhs-sdr25;
+	sd-uhs-sdr50;
+	sd-uhs-sdr104;
+	status = "okay";
+};
+
+&mt6363_vaux18 {
+	regulator-name = "avss18_auxadc_mt6363";
+	regulator-min-microvolt = <1800000>;
+	regulator-max-microvolt = <1800000>;
+};
+
+&mt6363_vbuck1 {
+	regulator-name = "dvdd_sram_core";
+	regulator-min-microvolt = <450000>;
+	regulator-max-microvolt = <825000>;
+	regulator-always-on;
+};
+
+&mt6363_vbuck2 {
+	regulator-always-on;
+};
+
+&mt6363_vbuck3 {
+	regulator-always-on;
+};
+
+&mt6363_vbuck4 {
+	regulator-always-on;
+};
+
+&mt6363_vbuck5 {
+	regulator-name = "dvdd_disp";
+	regulator-min-microvolt = <500000>;
+	regulator-max-microvolt = <825000>;
+	regulator-always-on;
+};
+
+&mt6363_vbuck6 {
+	/* VBuck 6+7 are two phases connected together */
+	regulator-name = "dvdd_mm_phase1";
+	regulator-min-microvolt = <462500>;
+	regulator-max-microvolt = <1050000>;
+	regulator-always-on;
+};
+
+&mt6363_vbuck7 {
+	regulator-name = "dvdd_mm_phase2";
+	regulator-always-on;
+};
+
+&mt6363_vemc {
+	regulator-name = "vufs25";
+	regulator-always-on;
+};
+
+&mt6363_vio18 {
+	regulator-name = "vio18";
+	regulator-min-microvolt = <1800000>;
+	regulator-max-microvolt = <1800000>;
+};
+
+&mt6363_vm18 {
+	regulator-name = "emi_vdd1";
+	regulator-always-on;
+};
+
+&mt6363_vrfio18 {
+	regulator-name = "vcn18";
+	regulator-always-on;
+};
+
+&mt6363_vsram_apu {
+	regulator-name = "va10";
+	regulator-always-on;
+};
+
+&mt6363_vsram_cpub {
+	regulator-name = "vio12";
+	regulator-always-on;
+};
+
+&mt6363_vsram_cpul {
+	regulator-name = "va12_3";
+	regulator-always-on;
+};
+
+&mt6363_vsram_cpum {
+	/* TODO: Is this unused? */
+	regulator-always-on;
+};
+
+&mt6363_vsram_mdfe {
+	regulator-always-on;
+};
+
+&mt6363_vsram_modem {
+	regulator-name = "va09";
+	regulator-always-on;
+};
+
+&mt6363_vufs12 {
+	regulator-always-on;
+};
+
+&mt6363_vufs18 {
+	regulator-always-on;
+};
+
+&mt6373_vaux18 {
+	regulator-name = "avss18_auxadc_mt6373";
+	regulator-min-microvolt = <1800000>;
+	regulator-max-microvolt = <1800000>;
+};
+
+&mt6373_vbuck0 {
+	/* VBuck 0-3: Four phases for APU */
+	regulator-name = "dvdd_apu";
+	regulator-always-on;
+};
+
+&mt6373_vbuck1 {
+	regulator-always-on;
+};
+
+&mt6373_vbuck2 {
+	regulator-always-on;
+};
+
+&mt6373_vbuck3 {
+	regulator-always-on;
+};
+
+&mt6373_vbuck4 {
+	regulator-name = "emi_vddq";
+	regulator-always-on;
+};
+
+&mt6373_vbuck5 {
+	regulator-name = "emi_vmddr";
+	regulator-always-on;
+};
+
+&mt6373_vbuck6 {
+	regulator-name = "emi_vdd2l";
+	regulator-always-on;
+};
+
+&mt6373_vbuck7 {
+	regulator-name = "dvdd_gpu";
+	regulator-always-on;
+};
+
+&mt6373_vbuck9 {
+	regulator-name = "vs1_2";
+	regulator-always-on;
+};
+
+&mt6373_vefuse {
+	regulator-min-microvolt = <1800000>;
+	regulator-max-microvolt = <1800000>;
+};
+
+&mt6373_vmc {
+	regulator-min-microvolt = <1200000>;
+	regulator-max-microvolt = <3500000>;
+	regulator-allowed-modes = <0 2>;
+	regulator-always-on;
+};
+
+&mt6373_vmch_eint_high {
+	regulator-min-microvolt = <1200000>;
+	regulator-max-microvolt = <3500000>;
+	regulator-allowed-modes = <0 2>;
+	regulator-always-on;
+};
+
+&pio {
+	mmc1_pins: mmc1-pins {
+		pins-bus {
+			pinmux = <PINMUX_GPIO127__FUNC_MSDC1_DAT0>,
+				 <PINMUX_GPIO128__FUNC_MSDC1_DAT1>,
+				 <PINMUX_GPIO129__FUNC_MSDC1_DAT2>,
+				 <PINMUX_GPIO130__FUNC_MSDC1_DAT3>,
+				 <PINMUX_GPIO126__FUNC_MSDC1_CMD>;
+			input-enable;
+			drive-strength = <6>;
+			bias-pull-up = <MTK_PUPD_SET_R1R0_01>;
+		};
+
+		pins-clk {
+			pinmux = <PINMUX_GPIO125__FUNC_MSDC1_CLK>;
+			drive-strength = <6>;
+			bias-pull-down = <MTK_PUPD_SET_R1R0_10>;
+		};
+
+		pins-insert {
+			pinmux = <PINMUX_GPIO134__FUNC_GPIO134>;
+			input-enable;
+		};
+	};
+
+	usb_vusb33_pins: usb-vusb33-default {
+		pins-regulator {
+			pinmux = <PINMUX_GPIO251__FUNC_GPIO251>;
+			output-high;
+		};
+	};
+
+	usb0_pins: usb0-default {
+		pins-repeater {
+			pinmux = <PINMUX_GPIO72__FUNC_GPIO72>;
+			output-high;
+		};
+	};
+
+	usb0_vbus_pins: usb0-vbus-default {
+		pins-regulator {
+			pinmux = <PINMUX_GPIO140__FUNC_GPIO140>;
+			output-high;
+		};
+	};
+
+	usb1_pins: usb1-default {
+		pins-repeater {
+			pinmux = <PINMUX_GPIO49__FUNC_GPIO49>;
+			output-high;
+		};
+	};
+
+	usb1_vbus_pins: usb1-vbus-default {
+		pins-regulator {
+			pinmux = <PINMUX_GPIO252__FUNC_GPIO252>;
+			output-high;
+		};
+	};
+
+	usb2_pins: usb2-default {
+		pins-repeater {
+			pinmux = <PINMUX_GPIO206__FUNC_GPIO206>;
+			output-high;
+		};
+	};
+
+	usb2_vbus_pins: usb2-vbus-default {
+		pins-regulator {
+			pinmux = <PINMUX_GPIO255__FUNC_GPIO255>;
+			output-high;
+		};
+	};
+
+	vsys5_pins: vsys5-default {
+		pins-regulator {
+			pinmux = <PINMUX_GPIO26__FUNC_GPIO26>;
+			output-high;
+		};
+	};
+
+	vsys33_pins: vsys33-default {
+		pins-regulator {
+			pinmux = <PINMUX_GPIO150__FUNC_GPIO150>;
+			output-high;
+		};
+	};
+};
+
+&ssusb0 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&usb0_pins>;
+	dr_mode = "peripheral";
+	maximum-speed = "high-speed";
+	usb-role-switch;
+	vbus-supply = <&vbus_usb0>;
+	vusb33-supply = <&vsys_3v3>;
+	status = "okay";
+};
+
+&ssusb1 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&usb1_pins>;
+	dr_mode = "host";
+	vbus-supply = <&vbus_usb1>;
+	vusb33-supply = <&vusb33>;
+	status = "okay";
+};
+
+&ssusb2 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&usb2_pins>;
+	dr_mode = "host";
+	vbus-supply = <&vbus_usb2>;
+	vusb33-supply = <&vusb33>;
+	status = "okay";
+};
+
+&u2phy0 {
+	status = "okay";
+};
+
+&u2phy1 {
+	status = "okay";
+};
+
+&u2phy2 {
+	status = "okay";
+};
+
+&u3phy0 {
+	status = "okay";
+};
+
+&uart0 {
+	status = "okay";
+};
+
+&ufsphy {
+	status = "okay";
+
+	/delete-property/ resets;
+};
+
+&ufshci {
+	status = "okay";
+};
+
+&xhci0 {
+	usb2-lpm-disable;
+	status = "okay";
+};
+
+&xhci1 {
+	usb2-lpm-disable;
+	status = "okay";
+};
+
+&xhci2 {
+	usb2-lpm-disable;
+	status = "okay";
+};
