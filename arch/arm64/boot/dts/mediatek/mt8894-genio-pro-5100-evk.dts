@@ -7,6 +7,7 @@
 /dts-v1/;
 
 #include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/leds/common.h>
 #include "mt8196.dtsi"
 #include "mt6363.dtsi"
 #include "mt6373.dtsi"
@@ -66,6 +67,20 @@
 		regulator-always-on;
 	};
 
+	/* system wide 5.0V power rail */
+	vaudio_5v: regulator-vaudio-5v {
+		compatible = "regulator-fixed";
+		regulator-name = "vaudio_5v";
+		regulator-min-microvolt = <5000000>;
+		regulator-max-microvolt = <5000000>;
+		enable-active-high;
+		gpio = <&pio 31 GPIO_ACTIVE_HIGH>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&vaudio5_pins>;
+		vin-supply = <&vsys_12v>;
+		regulator-always-on;
+	};
+
 	/* system wide 3.3V power rail */
 	vsys_3v3: regulator-vsys-3v3 {
 		compatible = "regulator-fixed";
@@ -77,6 +92,20 @@
 		pinctrl-names = "default";
 		pinctrl-0 = <&vsys33_pins>;
 		vin-supply = <&vsys_5v>;
+		regulator-always-on;
+	};
+
+	/* system wide 3.3V power rail */
+	veth_3v3: regulator-veth-3v3 {
+		compatible = "regulator-fixed";
+		regulator-name = "veth_3v3";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		enable-active-high;
+		gpio = <&pio 159 GPIO_ACTIVE_HIGH>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&veth33_pins>;
+		vin-supply = <&vaudio_5v>;
 		regulator-always-on;
 	};
 
@@ -124,6 +153,71 @@
 		pinctrl-names = "default";
 		pinctrl-0 = <&usb_vusb33_pins>;
 		vin-supply = <&vsys_5v>;
+	};
+};
+
+&eth1 {
+	pinctrl-names = "default", "sleep";
+	pinctrl-0 = <&eth1_default_pins>;
+	pinctrl-1 = <&eth1_sleep_pins>;
+	phy-handle = <&eth_phy0>;
+	phy-mode = "rgmii-rxid";
+	snps,reset-delays-us = <0 10000 10000>;
+	snps,reset-gpio = <&pio 226 GPIO_ACTIVE_LOW>;
+	status = "okay";
+
+	mdio {
+		compatible = "snps,dwmac-mdio";
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		eth_phy0: ethernet-phy@0 {
+			compatible = "ethernet-phy-idc0ff.0421";
+			/*
+			 * Board-specific hack, needed due to a schematics error
+			 * (AVDD10 supplies of both Ethernet PHYs are connected
+			 * even though they shouldn't)
+			 */
+			phy-supply = <&veth_3v3>;
+			pinctrl-names = "default";
+			pinctrl-0 = <&eth1_phy_pins>;
+			reg = <0x0>;
+
+			leds {
+				#address-cells = <1>;
+				#size-cells = <0>;
+
+				/* LED_D5 */
+				led@0 {
+					reg = <0>;
+					active-high;
+					color = <LED_COLOR_ID_YELLOW>;
+					default-state = "keep";
+					function = LED_FUNCTION_LAN;
+					function-enumerator = <0>;
+				};
+
+				/* LED_D6 */
+				led@1 {
+					reg = <1>;
+					active-high;
+					color = <LED_COLOR_ID_YELLOW>;
+					default-state = "keep";
+					function = LED_FUNCTION_LAN;
+					function-enumerator = <2>;
+				};
+
+				/* LED_D7 */
+				led@2 {
+					reg = <2>;
+					active-low;
+					color = <LED_COLOR_ID_GREEN>;
+					default-state = "keep";
+					function = LED_FUNCTION_LAN;
+					function-enumerator = <1>;
+				};
+			};
+		};
 	};
 };
 
@@ -320,6 +414,84 @@
 };
 
 &pio {
+	eth1_default_pins: eth1-default-pins {
+		pins-cc {
+			pinmux = <PINMUX_GPIO261__FUNC_GBE1_TXC>,
+				 <PINMUX_GPIO262__FUNC_GBE1_TXEN>,
+				 <PINMUX_GPIO265__FUNC_GBE1_RXC>,
+				 <PINMUX_GPIO266__FUNC_GBE1_RXDV>;
+			drive-strength = <8>;
+		};
+
+		pins-mdio {
+			pinmux = <PINMUX_GPIO228__FUNC_GBE1_MDC>,
+				 <PINMUX_GPIO229__FUNC_GBE1_MDIO>;
+			drive-strength = <8>;
+			input-enable;
+		};
+
+		pins-power {
+			pinmux = <PINMUX_GPIO226__FUNC_GPIO226>;
+			drive-strength = <8>;
+			output-high;
+		};
+
+		pins-rxd {
+			pinmux = <PINMUX_GPIO263__FUNC_GBE1_RXD0>,
+				 <PINMUX_GPIO264__FUNC_GBE1_RXD1>,
+				 <PINMUX_GPIO269__FUNC_GBE1_RXD2>,
+				 <PINMUX_GPIO270__FUNC_GBE1_RXD3>;
+			drive-strength = <8>;
+		};
+
+		pins-txd {
+			pinmux = <PINMUX_GPIO259__FUNC_GBE1_TXD0>,
+				 <PINMUX_GPIO260__FUNC_GBE1_TXD1>,
+				 <PINMUX_GPIO267__FUNC_GBE1_TXD2>,
+				 <PINMUX_GPIO268__FUNC_GBE1_TXD3>;
+			drive-strength = <8>;
+		};
+	};
+
+	eth1_phy_pins: eth1-phy-pins {
+		pins-power {
+			pinmux = <PINMUX_GPIO224__FUNC_GPIO224>,
+				 <PINMUX_GPIO225__FUNC_GPIO225>;
+			drive-strength = <8>;
+			output-high;
+		};
+	};
+
+	eth1_sleep_pins: eth1-sleep-pins {
+		pins-cc {
+			pinmux = <PINMUX_GPIO261__FUNC_GPIO261>,
+				 <PINMUX_GPIO262__FUNC_GPIO262>,
+				 <PINMUX_GPIO265__FUNC_GPIO265>,
+				 <PINMUX_GPIO266__FUNC_GPIO266>;
+		};
+
+		pins-mdio {
+			pinmux = <PINMUX_GPIO228__FUNC_GPIO228>,
+				 <PINMUX_GPIO229__FUNC_GPIO229>;
+			input-disable;
+			bias-disable;
+		};
+
+		pins-rxd {
+			pinmux = <PINMUX_GPIO263__FUNC_GPIO263>,
+				 <PINMUX_GPIO264__FUNC_GPIO264>,
+				 <PINMUX_GPIO269__FUNC_GPIO269>,
+				 <PINMUX_GPIO270__FUNC_GPIO270>;
+		};
+
+		pins-txd {
+			pinmux = <PINMUX_GPIO259__FUNC_GPIO259>,
+				 <PINMUX_GPIO260__FUNC_GPIO260>,
+				 <PINMUX_GPIO267__FUNC_GPIO267>,
+				 <PINMUX_GPIO268__FUNC_GPIO268>;
+		};
+	};
+
 	mmc1_pins: mmc1-pins {
 		pins-bus {
 			pinmux = <PINMUX_GPIO127__FUNC_MSDC1_DAT0>,
@@ -396,6 +568,20 @@
 	vsys5_pins: vsys5-default {
 		pins-regulator {
 			pinmux = <PINMUX_GPIO26__FUNC_GPIO26>;
+			output-high;
+		};
+	};
+
+	vaudio5_pins: vaudio5-default {
+		pins-regulator {
+			pinmux = <PINMUX_GPIO31__FUNC_GPIO31>;
+			output-high;
+		};
+	};
+
+	veth33_pins: veth33-default {
+		pins-regulator {
+			pinmux = <PINMUX_GPIO159__FUNC_GPIO159>;
 			output-high;
 		};
 	};
