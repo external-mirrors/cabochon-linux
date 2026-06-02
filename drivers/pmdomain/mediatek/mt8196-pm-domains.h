@@ -30,6 +30,7 @@
 #define MT8196_SPM_BUS_PROTECT_CON_CLR		0xe0
 #define MT8196_SPM_BUS_PROTECT_RDY		0x208
  #define MT8196_SPM_PROT_EN_BUS_CONN		BIT(1)
+ #define MT8196_SPM_PROT_EN_BUS_PERI_ETHER	BIT(5)
  #define MT8196_SPM_PROT_EN_BUS_SSUSB_DP_PHY_P0	BIT(6)
  #define MT8196_SPM_PROT_EN_BUS_SSUSB_P0	BIT(7)
  #define MT8196_SPM_PROT_EN_BUS_SSUSB_P1	BIT(8)
@@ -93,6 +94,23 @@ static const struct scpsys_domain_data scpsys_domain_data_mt8196[] = {
 		},
 		.caps = MTK_SCPD_KEEP_DEFAULT_OFF,
 		.rtff_type = SCPSYS_RTFF_TYPE_GENERIC,
+	},
+	[MT8196_POWER_DOMAIN_PERI_ETHER] = {
+		.name = "peri-ether",
+		.sta_mask = MT8196_PWR_ACK,
+		.sta2nd_mask = MT8196_PWR_ACK_2ND,
+		.ctl_offs = 0xe14,
+		.pwr_sta_offs = 0xe14,
+		.pwr_sta2nd_offs = 0xe14,
+		.sram_pdn_bits = BIT(8),
+		.sram_pdn_ack_bits = BIT(12),
+		.bp_cfg = {
+			BUS_PROT_WR_IGN(SPM, MT8196_SPM_PROT_EN_BUS_PERI_ETHER,
+					MT8196_SPM_BUS_PROTECT_CON_SET,
+					MT8196_SPM_BUS_PROTECT_CON_CLR,
+					MT8196_SPM_BUS_PROTECT_RDY),
+		},
+		.caps = MTK_SCPD_ALWAYS_ON,
 	},
 	[MT8196_POWER_DOMAIN_SSUSB_DP_PHY_P0] = {
 		.name = "ssusb-dp-phy-p0",
