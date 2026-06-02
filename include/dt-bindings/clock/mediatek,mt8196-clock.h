@@ -140,6 +140,18 @@
 #define CLK_TOP_OSC_D32					127
 #define CLK_TOP_OSC_D40					128
 #define CLK_TOP_SFLASH					129
+#define CLK_TOP_NET1PLL_D4				130
+#define CLK_TOP_NET1PLL_D5				131
+#define CLK_TOP_NET1PLL_D5_D5				132
+#define CLK_TOP_UNIVPLL_D5_D8				133
+#define CLK_TOP_SGMII0_REF_325M				134
+#define CLK_TOP_SGMII0_REG				135
+#define CLK_TOP_SGMII1_REF_325M				136
+#define CLK_TOP_SGMII1_REG				137
+#define CLK_TOP_GMAC_312P5M				138
+#define CLK_TOP_GMAC_125M				139
+#define CLK_TOP_GMAC_RMII				140
+#define CLK_TOP_GMAC_62P4M_PTP				141
 
 /* APMIXEDSYS */
 #define CLK_APMIXED_MAINPLL				0
@@ -381,6 +393,8 @@
 #define CLK_VLP_APLL1_D8				46
 #define CLK_VLP_APLL2_D4				47
 #define CLK_VLP_APLL2_D8				48
+#define CLK_VLP_APLL1_D3				49
+#define CLK_VLP_APLL2_D3				50
 
 /* DISPSYS_CONFIG */
 #define CLK_MM_CONFIG					0
