@@ -108,6 +108,7 @@ struct mediatek_dwmac_variant {
 	u8 dma_bit_mask;
 	bool use_out_op;
 	bool use_stage_fine;
+	bool use_txc_phase;
 };
 
 /* list of clocks required for mac */
@@ -120,6 +121,10 @@ static const char * const mt8195_dwmac_clk_l[] = {
 };
 
 static const char * const mt8189_dwmac_clk_l[] = {
+	"mac_main", "ptp_ref"
+};
+
+static const char * const mt8196_dwmac_clk_l[] = {
 	"mac_main", "ptp_ref"
 };
 
@@ -415,6 +420,9 @@ static int set_delay_v2(struct mediatek_dwmac_plat_data *plat)
 		if (plat->variant->use_stage_fine)
 			gtxc_delay_val |= MT8189_CTRL0_DLY_GTXC_STAGE_FINE;
 
+		if (plat->variant->use_txc_phase)
+			gtxc_delay_val |= MT8195_RGMII_TXC_PHASE_CTRL;
+
 		delay_val |= FIELD_PREP(MT8195_DLY_RXC_ENABLE, !!mac_delay->rx_delay);
 		delay_val |= FIELD_PREP(MT8195_DLY_RXC_STAGES, mac_delay->rx_delay);
 		delay_val |= FIELD_PREP(MT8195_DLY_RXC_INV, mac_delay->rx_inv);
@@ -471,6 +479,18 @@ static const struct mediatek_dwmac_variant mt8195_gmac_variant = {
 	.tx_delay_max = 9280,
 	.dma_bit_mask = 35,
 	.peri_eth_ctrl_offset = MT8195_PERI_ETH_CTRL_BASE,
+};
+
+static const struct mediatek_dwmac_variant mt8196_gmac_variant = {
+	.dwmac_set_phy_interface = set_phy_interface_v2,
+	.dwmac_set_delay = set_delay_v2,
+	.clk_list = mt8196_dwmac_clk_l,
+	.num_clks = ARRAY_SIZE(mt8196_dwmac_clk_l),
+	.rx_delay_max = 9280,
+	.tx_delay_max = 9280,
+	.dma_bit_mask = 35,
+	.use_out_op = true,
+	.use_txc_phase = true,
 };
 
 static int mediatek_dwmac_config_dt(struct mediatek_dwmac_plat_data *plat)
@@ -725,6 +745,8 @@ static const struct of_device_id mediatek_dwmac_match[] = {
 	  .data = &mt8189_gmac_variant },
 	{ .compatible = "mediatek,mt8195-gmac",
 	  .data = &mt8195_gmac_variant },
+	{ .compatible = "mediatek,mt8196-gmac",
+	  .data = &mt8196_gmac_variant },
 	{ }
 };
 
