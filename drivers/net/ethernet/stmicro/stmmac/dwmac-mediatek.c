@@ -136,6 +136,10 @@ static const char * const mt8189_dwmac_clk_l[] = {
 	"mac_main", "ptp_ref"
 };
 
+static const char * const mt8196_dwmac_clk_l[] = {
+	"mac_main", "ptp_ref"
+};
+
 static int mt2712_set_interface(struct mediatek_dwmac_plat_data *plat,
 				u8 phy_intf_sel)
 {
@@ -533,6 +537,20 @@ static const struct mediatek_dwmac_variant mt8195_gmac_variant = {
 	.peri_eth_ctrl_offset = MT8195_PERI_ETH_CTRL_OFFSET,
 };
 
+static const struct mediatek_dwmac_variant mt8196_gmac_variant = {
+	.dwmac_set_phy_interface = mt8195_set_interface,
+	.dwmac_set_delay = mt8195_set_delay,
+	.dwmac_fix_mac_speed = mt8195_fix_mac_speed,
+	.clk_list = mt8196_dwmac_clk_l,
+	.num_clks = ARRAY_SIZE(mt8196_dwmac_clk_l),
+	.rx_delay_max = MT8195_DLY_RXC_MAX,
+	.tx_delay_max = MT8195_DLY_RXC_MAX,
+	.rx_delay_stage_div = MT8195_DLY_RXC_STAGE_DIV,
+	.tx_delay_stage_div = MT8195_DLY_RXC_STAGE_DIV,
+	.dma_bit_mask = 35,
+	.mac_txclk_out_en = true,
+};
+
 static int mediatek_dwmac_config_dt(struct mediatek_dwmac_plat_data *plat)
 {
 	struct mac_delay_struct *mac_delay = &plat->mac_delay;
@@ -788,6 +806,8 @@ static const struct of_device_id mediatek_dwmac_match[] = {
 	  .data = &mt8189_gmac_variant },
 	{ .compatible = "mediatek,mt8195-gmac",
 	  .data = &mt8195_gmac_variant },
+	{ .compatible = "mediatek,mt8196-gmac",
+	  .data = &mt8196_gmac_variant },
 	{ }
 };
 
