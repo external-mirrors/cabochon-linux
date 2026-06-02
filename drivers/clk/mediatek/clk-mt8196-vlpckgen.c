@@ -169,8 +169,10 @@ static DEFINE_SPINLOCK(mt8196_clk_vlp_lock);
 
 static const struct mtk_fixed_factor vlp_divs[] = {
 	FACTOR(CLK_VLP_CLK26M, "vlp_clk26m", "clk26m", 1, 1),
+	FACTOR(CLK_VLP_APLL1_D3, "apll1_d3", "vlp_apll1", 1, 3),
 	FACTOR(CLK_VLP_APLL1_D4, "apll1_d4", "vlp_apll1", 1, 4),
 	FACTOR(CLK_VLP_APLL1_D8, "apll1_d8", "vlp_apll1", 1, 8),
+	FACTOR(CLK_VLP_APLL2_D3, "apll2_d3", "vlp_apll2", 1, 3),
 	FACTOR(CLK_VLP_APLL2_D4, "apll2_d4", "vlp_apll2", 1, 4),
 	FACTOR(CLK_VLP_APLL2_D8, "apll2_d8", "vlp_apll2", 1, 8),
 };
