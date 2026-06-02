@@ -1120,6 +1120,182 @@
 			status = "disabled";
 		};
 
+		eth0: ethernet@165b0000 {
+			compatible = "mediatek,mt8196-gmac", "snps,dwmac-5.10a";
+			reg = <0 0x165b0000 0 0x4000>;
+			interrupts = <GIC_SPI 913 IRQ_TYPE_LEVEL_HIGH 0>;
+			interrupt-names = "macirq";
+			assigned-clocks = <&topckgen CLK_TOP_GMAC_125M>,
+					  <&topckgen CLK_TOP_GMAC_62P4M_PTP>,
+					  <&topckgen CLK_TOP_GMAC_RMII>;
+			assigned-clock-parents = <&topckgen CLK_TOP_NET1PLL_D5>,
+						 <&topckgen CLK_TOP_UNIVPLL_D5_D8>,
+						 <&topckgen CLK_TOP_NET1PLL_D5_D5>;
+			clock-names = "mac_main",
+				      "ptp_ref",
+				      "rmii_internal";
+			clocks = <&topckgen CLK_TOP_GMAC_125M>,
+				 <&topckgen CLK_TOP_GMAC_62P4M_PTP>,
+				 <&topckgen CLK_TOP_GMAC_RMII>;
+			power-domains = <&spm MT8196_POWER_DOMAIN_PERI_ETHER>;
+			mediatek,pericfg = <&pericfg_ao 0x300>;
+			snps,axi-config = <&stmmac_axi_setup_mac0>;
+			snps,mtl-rx-config = <&mtl_rx_setup_mac0>;
+			snps,mtl-tx-config = <&mtl_tx_setup_mac0>;
+			snps,txpbl = <16>;
+			snps,rxpbl = <16>;
+			snps,clk-csr = <0>;
+			status = "disabled";
+
+			stmmac_axi_setup_mac0: stmmac-axi-config-mac0 {
+				snps,wr-osr-lmt = <0x7>;
+				snps,rd-osr-lmt = <0x7>;
+				snps,blen = <0 0 0 0 16 8 4>;
+			};
+
+			mtl_rx_setup_mac0: rx-queues-config-mac0 {
+				snps,rx-queues-to-use = <4>;
+				snps,rx-sched-sp;
+
+				queue0 {
+					snps,dcb-algorithm;
+					snps,map-to-dma-channel = <0x0>;
+				};
+
+				queue1 {
+					snps,dcb-algorithm;
+					snps,map-to-dma-channel = <0x0>;
+				};
+
+				queue2 {
+					snps,dcb-algorithm;
+					snps,map-to-dma-channel = <0x0>;
+				};
+
+				queue3 {
+					snps,dcb-algorithm;
+					snps,map-to-dma-channel = <0x0>;
+				};
+			};
+
+			mtl_tx_setup_mac0: tx-queues-config-mac0 {
+				snps,tx-queues-to-use = <4>;
+				snps,tx-sched-wrr;
+
+				queue0 {
+					snps,weight = <0x10>;
+					snps,dcb-algorithm;
+					snps,priority = <0x0>;
+				};
+
+				queue1 {
+					snps,weight = <0x11>;
+					snps,dcb-algorithm;
+					snps,priority = <0x1>;
+				};
+
+				queue2 {
+					snps,weight = <0x12>;
+					snps,dcb-algorithm;
+					snps,priority = <0x2>;
+				};
+
+				queue3 {
+					snps,weight = <0x13>;
+					snps,dcb-algorithm;
+					snps,priority = <0x3>;
+				};
+			};
+		};
+
+		eth1: ethernet@165c0000 {
+			compatible = "mediatek,mt8196-gmac", "snps,dwmac-5.10a";
+			reg = <0 0x165c0000 0 0x4000>;
+			interrupts = <GIC_SPI 920 IRQ_TYPE_LEVEL_HIGH 0>;
+			interrupt-names = "macirq";
+			assigned-clocks = <&topckgen CLK_TOP_GMAC_125M>,
+					  <&topckgen CLK_TOP_GMAC_62P4M_PTP>,
+					  <&topckgen CLK_TOP_GMAC_RMII>;
+			assigned-clock-parents = <&topckgen CLK_TOP_NET1PLL_D5>,
+						 <&topckgen CLK_TOP_UNIVPLL_D5_D8>,
+						 <&topckgen CLK_TOP_NET1PLL_D5_D5>;
+			clock-names = "mac_main",
+				      "ptp_ref",
+				      "rmii_internal";
+			clocks = <&topckgen CLK_TOP_GMAC_125M>,
+				 <&topckgen CLK_TOP_GMAC_62P4M_PTP>,
+				 <&topckgen CLK_TOP_GMAC_RMII>;
+			power-domains = <&spm MT8196_POWER_DOMAIN_PERI_ETHER>;
+			mediatek,pericfg = <&pericfg_ao 0x310>;
+			snps,axi-config = <&stmmac_axi_setup_mac1>;
+			snps,mtl-rx-config = <&mtl_rx_setup_mac1>;
+			snps,mtl-tx-config = <&mtl_tx_setup_mac1>;
+			snps,txpbl = <16>;
+			snps,rxpbl = <16>;
+			snps,clk-csr = <0>;
+			status = "disabled";
+
+			stmmac_axi_setup_mac1: stmmac-axi-config-mac1 {
+				snps,wr-osr-lmt = <0x7>;
+				snps,rd-osr-lmt = <0x7>;
+				snps,blen = <0 0 0 0 16 8 4>;
+			};
+
+			mtl_rx_setup_mac1: rx-queues-config-mac1 {
+				snps,rx-queues-to-use = <4>;
+				snps,rx-sched-sp;
+
+				queue0 {
+					snps,dcb-algorithm;
+					snps,map-to-dma-channel = <0x0>;
+				};
+
+				queue1 {
+					snps,dcb-algorithm;
+					snps,map-to-dma-channel = <0x0>;
+				};
+
+				queue2 {
+					snps,dcb-algorithm;
+					snps,map-to-dma-channel = <0x0>;
+				};
+
+				queue3 {
+					snps,dcb-algorithm;
+					snps,map-to-dma-channel = <0x0>;
+				};
+			};
+
+			mtl_tx_setup_mac1: tx-queues-config-mac1 {
+				snps,tx-queues-to-use = <4>;
+				snps,tx-sched-wrr;
+
+				queue0 {
+					snps,weight = <0x10>;
+					snps,dcb-algorithm;
+					snps,priority = <0x0>;
+				};
+
+				queue1 {
+					snps,weight = <0x11>;
+					snps,dcb-algorithm;
+					snps,priority = <0x1>;
+				};
+
+				queue2 {
+					snps,weight = <0x12>;
+					snps,dcb-algorithm;
+					snps,priority = <0x2>;
+				};
+
+				queue3 {
+					snps,weight = <0x13>;
+					snps,dcb-algorithm;
+					snps,priority = <0x3>;
+				};
+			};
+		};
+
 		pericfg_ao: clock-controller@16640000 {
 			compatible = "mediatek,mt8196-pericfg-ao", "syscon";
 			reg = <0 0x16640000 0 0x1000>;
@@ -1643,6 +1819,13 @@
 				power-domain@MT8196_POWER_DOMAIN_CONN {
 					reg = <MT8196_POWER_DOMAIN_CONN>;
 					#power-domain-cells = <0>;
+				};
+
+				power-domain@MT8196_POWER_DOMAIN_PERI_ETHER {
+					reg = <MT8196_POWER_DOMAIN_PERI_ETHER>;
+					#power-domain-cells = <0>;
+					clocks = <&topckgen CLK_TOP_GMAC_125M>;
+					clock-names = "bus";
 				};
 
 				power-domain@MT8196_POWER_DOMAIN_SSUSB_P0 {
@@ -2270,7 +2453,7 @@
 			#address-cells = <1>;
 			#size-cells = <0>;
 			#power-domain-cells = <0>;
-	
+
 			power-domain@MT8196_POWER_DOMAIN_MM_INFRA1 {
 				reg = <MT8196_POWER_DOMAIN_MM_INFRA1>;
 				#address-cells = <1>;
