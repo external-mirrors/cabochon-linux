@@ -53,10 +53,13 @@ properties:
     maxItems: 1
 
   mediatek,pericfg:
-    $ref: /schemas/types.yaml#/definitions/phandle
-    description:
-      The phandle to the syscon node that control ethernet
-      interface and timing delay.
+    $ref: /schemas/types.yaml#/definitions/phandle-array
+    description: phandle link and register offset to the peripheral configuration registers.
+    items:
+      - items:
+          - description: The phandle to the syscon node that control ethernet
+                         interface and timing delay.
+          - description: The offset to the ethernet control register
 
   mediatek,tx-delay-ps:
     description:
@@ -212,7 +215,7 @@ examples:
                                  <&topckgen CLK_TOP_APLL1_D3>,
                                  <&topckgen CLK_TOP_ETHERPLL_50M>;
         power-domains = <&scpsys MT2712_POWER_DOMAIN_AUDIO>;
-        mediatek,pericfg = <&pericfg>;
+        mediatek,pericfg = <&pericfg 0>;
         mediatek,tx-delay-ps = <1530>;
         snps,txpbl = <1>;
         snps,rxpbl = <1>;
