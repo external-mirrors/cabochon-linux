@@ -1310,7 +1310,7 @@
 						 <&topckgen CLK_TOP_ETHPLL_D8>,
 						 <&topckgen CLK_TOP_ETHPLL_D10>;
 			power-domains = <&spm MT8195_POWER_DOMAIN_ETHER>;
-			mediatek,pericfg = <&infracfg_ao>;
+			mediatek,pericfg = <&infracfg_ao 0xfd0>;
 			snps,axi-config = <&stmmac_axi_setup>;
 			snps,mtl-rx-config = <&mtl_rx_setup>;
 			snps,mtl-tx-config = <&mtl_tx_setup>;

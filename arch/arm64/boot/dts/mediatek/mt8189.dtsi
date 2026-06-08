@@ -784,7 +784,7 @@
 			interrupts = <GIC_SPI 475 IRQ_TYPE_LEVEL_HIGH 0>;
 			interrupt-names = "macirq";
 			power-domains = <&spm MT8189_POWER_DOMAIN_PCIE>;
-			mediatek,pericfg = <&peri_ao>;
+			mediatek,pericfg = <&peri_ao 0x270>;
 			snps,axi-config = <&stmmac_axi_setup>;
 			snps,mtl-rx-config = <&mtl_rx_setup>;
 			snps,mtl-tx-config = <&mtl_tx_setup>;
