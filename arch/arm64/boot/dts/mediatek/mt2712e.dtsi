@@ -750,7 +750,7 @@
 					 <&topckgen CLK_TOP_APLL1_D3>,
 					 <&topckgen CLK_TOP_ETHERPLL_50M>;
 		power-domains = <&scpsys MT2712_POWER_DOMAIN_AUDIO>;
-		mediatek,pericfg = <&pericfg>;
+		mediatek,pericfg = <&pericfg 0>;
 		snps,axi-config = <&stmmac_axi_setup>;
 		snps,mtl-rx-config = <&mtl_rx_setup>;
 		snps,mtl-tx-config = <&mtl_tx_setup>;
@@ -1133,4 +1133,3 @@
 		#clock-cells = <1>;
 	};
 };
-
