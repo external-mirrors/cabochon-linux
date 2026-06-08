@@ -99,6 +99,7 @@ struct mediatek_dwmac_plat_data {
 	bool rmii_clk_from_mac;
 	bool rmii_rxc;
 	bool mac_wol;
+	u32 peri_offset;
 };
 
 struct mediatek_dwmac_variant {
@@ -305,7 +306,6 @@ static int mt8195_set_interface(struct mediatek_dwmac_plat_data *plat,
 				u8 phy_intf_sel)
 {
 	u32 intf_val = FIELD_PREP(MT8195_ETH_INTF_SEL, phy_intf_sel);
-	u32 reg_offset = plat->variant->peri_eth_ctrl_offset;
 
 	if (phy_intf_sel == PHY_INTF_SEL_RMII) {
 		if (plat->rmii_clk_from_mac)
@@ -321,7 +321,7 @@ static int mt8195_set_interface(struct mediatek_dwmac_plat_data *plat,
 		intf_val |= MT8189_CTRL0_TXC_OUT_OP_EN;
 
 	regmap_write(plat->peri_regmap,
-		     reg_offset + MT8195_PERI_ETH_CTRL0,
+		     plat->peri_offset + MT8195_PERI_ETH_CTRL0,
 		     intf_val);
 
 	return 0;
@@ -332,7 +332,6 @@ static int mt8195_set_delay(struct mediatek_dwmac_plat_data *plat)
 	u16 rx_delay_stage_div = plat->variant->rx_delay_stage_div;
 	u16 tx_delay_stage_div = plat->variant->tx_delay_stage_div;
 	struct mac_delay_struct *mac_delay = &plat->mac_delay;
-	u32 reg_offset = plat->variant->peri_eth_ctrl_offset;
 	u32 rx_delay_stage_val;
 	u32 tx_delay_stage_val;
 	u32 gtxc_delay_val = 0;
@@ -438,17 +437,17 @@ static int mt8195_set_delay(struct mediatek_dwmac_plat_data *plat)
 	}
 
 	regmap_update_bits(plat->peri_regmap,
-			   reg_offset + MT8195_PERI_ETH_CTRL0,
+			   plat->peri_offset + MT8195_PERI_ETH_CTRL0,
 			   MT8195_RGMII_TXC_PHASE_CTRL |
 			   MT8195_DLY_GTXC_INV |
 			   MT8195_DLY_GTXC_ENABLE |
 			   MT8195_DLY_GTXC_STAGES,
 			   gtxc_delay_val);
 	regmap_write(plat->peri_regmap,
-		     reg_offset + MT8195_PERI_ETH_CTRL1,
+		     plat->peri_offset + MT8195_PERI_ETH_CTRL1,
 		     delay_val);
 	regmap_write(plat->peri_regmap,
-		     reg_offset + MT8195_PERI_ETH_CTRL2,
+		     plat->peri_offset + MT8195_PERI_ETH_CTRL2,
 		     rmii_delay_val);
 
 	return 0;
@@ -460,7 +459,7 @@ static void mt8195_fix_mac_speed(void *priv, phy_interface_t interface,
 	struct mediatek_dwmac_plat_data *priv_plat = priv;
 	const struct mediatek_dwmac_variant *variant;
 	struct mac_delay_struct *mac_delay;
-	u32 tx_delay_stage_val, reg_offset;
+	u32 tx_delay_stage_val;
 	u32 reg_val = 0;
 
 	if (!priv_plat)
@@ -496,9 +495,8 @@ static void mt8195_fix_mac_speed(void *priv, phy_interface_t interface,
 				      mac_delay->tx_inv);
 	}
 
-	reg_offset = variant->peri_eth_ctrl_offset + MT8195_PERI_ETH_CTRL0;
 	regmap_update_bits(priv_plat->peri_regmap,
-			   reg_offset,
+			   priv_plat->peri_offset + MT8195_PERI_ETH_CTRL0,
 			   MT8195_RGMII_TXC_PHASE_CTRL |
 			   MT8195_DLY_GTXC_ENABLE |
 			   MT8195_DLY_GTXC_INV |
@@ -540,10 +538,19 @@ static int mediatek_dwmac_config_dt(struct mediatek_dwmac_plat_data *plat)
 	struct mac_delay_struct *mac_delay = &plat->mac_delay;
 	u32 tx_delay_ps, rx_delay_ps;
 
-	plat->peri_regmap = syscon_regmap_lookup_by_phandle(plat->np, "mediatek,pericfg");
+	plat->peri_regmap = syscon_regmap_lookup_by_phandle_args(plat->np,
+								 "mediatek,pericfg",
+								 1,
+								 &plat->peri_offset);
 	if (IS_ERR(plat->peri_regmap)) {
-		dev_err(plat->dev, "Failed to get pericfg syscon\n");
-		return PTR_ERR(plat->peri_regmap);
+		// Fall back to the previous behaviour (offset read from variant data)
+		plat->peri_offset = plat->variant->peri_eth_ctrl_offset;
+		plat->peri_regmap = syscon_regmap_lookup_by_phandle(plat->np,
+								    "mediatek,pericfg");
+		if (IS_ERR(plat->peri_regmap)) {
+			dev_err(plat->dev, "Failed to get pericfg syscon\n");
+			return PTR_ERR(plat->peri_regmap);
+		}
 	}
 
 	if (!of_property_read_u32(plat->np, "mediatek,tx-delay-ps", &tx_delay_ps)) {
