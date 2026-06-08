@@ -110,6 +110,15 @@ extern const struct clk_ops mtk_mux_gate_hwv_fenc_clr_set_upd_ops;
 			_width, _gate, _upd_ofs, _upd,			\
 			CLK_SET_RATE_PARENT)
 
+
+#define MUX_GATE_CLR_SET_UPD_AO(_id, _name, _parents, _mux_ofs,		\
+			_mux_set_ofs, _mux_clr_ofs, _shift, _width,	\
+			_gate, _upd_ofs, _upd)				\
+		MUX_GATE_CLR_SET_UPD_FLAGS(_id, _name, _parents,	\
+			_mux_ofs, _mux_set_ofs, _mux_clr_ofs, _shift,	\
+			_width, _gate, _upd_ofs, _upd,			\
+			CLK_SET_RATE_PARENT | CLK_IS_CRITICAL)
+
 #define MUX_GATE_CLR_SET_UPD_INDEXED(_id, _name, _parents, _paridx,	\
 			_mux_ofs, _mux_set_ofs, _mux_clr_ofs, _shift,	\
 			_width, _gate, _upd_ofs, _upd)			\
