@@ -25,14 +25,8 @@ static const struct mtk_gate_regs pext_cg_regs = {
 	.sta_ofs = 0x14,
 };
 
-#define GATE_PEXT(_id, _name, _parent, _shift) {\
-		.id = _id,			\
-		.name = _name,			\
-		.parent_name = _parent,		\
-		.regs = &pext_cg_regs,		\
-		.shift = _shift,		\
-		.ops = &mtk_clk_gate_ops_setclr,\
-	}
+#define GATE_PEXT(_id, _name, _parent, _shift)	\
+	GATE_MTK(_id, _name, _parent, &pext_cg_regs, _shift, &mtk_clk_gate_ops_setclr)
 
 static const struct mtk_gate pext_clks[] = {
 	GATE_PEXT(CLK_PEXT_PEXTP_MAC_P0_TL, "pext_pm0_tl", "tl", 0),
