@@ -283,7 +283,9 @@ static const struct component_ops mtk_disp_exdma_component_ops = {
 
 static int mtk_disp_exdma_probe(struct platform_device *pdev)
 {
+	struct platform_device *larb_pdev;
 	struct device *dev = &pdev->dev;
+	struct device_node *larb_node;
 	struct mtk_disp_exdma *priv;
 	int ret = 0;
 
@@ -298,6 +300,17 @@ static int mtk_disp_exdma_probe(struct platform_device *pdev)
 	priv->clk = devm_clk_get(dev, NULL);
 	if (IS_ERR(priv->clk))
 		return dev_err_probe(dev, PTR_ERR(priv->clk), "Cannot get clocks\n");
+
+	larb_node = of_parse_phandle(dev->of_node, "mediatek,larb", 0);
+	if (!larb_node)
+		return dev_err_probe(dev, -ENODEV, "LARB required but not found.\n");
+
+	larb_pdev = of_find_device_by_node(larb_node);
+	of_node_put(larb_node);
+	if (!larb_pdev)
+		return -EPROBE_DEFER;
+
+	device_link_add(dev, &larb_pdev->dev, DL_FLAG_PM_RUNTIME | DL_FLAG_STATELESS);
 
 #if IS_REACHABLE(CONFIG_MTK_CMDQ)
 	ret = cmdq_dev_get_client_reg(dev, &priv->cmdq_reg, 0);
