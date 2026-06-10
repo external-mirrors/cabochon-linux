@@ -67,6 +67,25 @@
 		pinctrl-0 = <&pcie_3v3_en_pins>;
 		vin-supply = <&reg_vsys>;
 	};
+
+	reg_can_5v: regulator-can-5v {
+		compatible = "regulator-fixed";
+		regulator-name = "can_5v";
+		regulator-min-microvolt = <5000000>;
+		regulator-max-microvolt = <5000000>;
+		gpio = <&pio 57 GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+		pinctrl-names = "default";
+		pinctrl-0 = <&can_vdd_en_pins>;
+		vin-supply = <&reg_vsys>;
+	};
+
+	can_clk: can-clk {
+		compatible = "fixed-clock";
+		#clock-cells = <0>;
+		clock-frequency = <20000000>;
+		clock-output-names = "can-clk";
+	};
 };
 
 &auxadc {
@@ -339,6 +358,33 @@
 };
 
 &pio {
+	can_vdd_en_pins: can-vdd-en-pins {
+		pins {
+			pinmux = <PINMUX_GPIO57__FUNC_GPIO57>;
+			output-high;
+		};
+	};
+
+	can0_default_pins: can0-default-pins {
+		pins-irq {
+			pinmux = <PINMUX_GPIO76__FUNC_GPIO76>;
+			input-enable;
+		};
+
+		pins-stby {
+			pinmux = <PINMUX_GPIO45__FUNC_GPIO45>;
+			output-low;
+		};
+	};
+
+	can0_sleep_pins: can0-sleep-pins {
+		pins-stby {
+			pinmux = <PINMUX_GPIO45__FUNC_GPIO45>;
+			output-high;
+		};
+	};
+
+
 	eth_default_pins: eth-default-pins {
 		pins-cc {
 			pinmux = <PINMUX_GPIO127__FUNC_GBE_TXC>,
@@ -609,6 +655,20 @@
 		};
 	};
 
+	spi0_pins: spi0-pins {
+		pins-bus {
+			pinmux = <PINMUX_GPIO69__FUNC_SPIM0_CSB>,
+				 <PINMUX_GPIO70__FUNC_SPIM0_CLK>,
+				 <PINMUX_GPIO71__FUNC_SPIM0_MO>,
+				 <PINMUX_GPIO72__FUNC_SPIM0_MI>;
+			drive-strength = <6>;
+		};
+
+		pins-cs {
+			pinmux = <PINMUX_GPIO82__FUNC_GPIO82>;
+		};
+	};
+
 	uart0_pins: uart0-pins {
 		pins {
 			pinmux = <PINMUX_GPIO31__FUNC_UTXD0>,
@@ -685,6 +745,29 @@
 		home {
 			linux,keycodes = <KEY_HOME>;
 		};
+	};
+};
+
+&spi0 {
+	pinctrl-0 = <&spi0_pins>;
+	pinctrl-names = "default";
+	#address-cells = <1>;
+	#size-cells = <0>;
+	cs-gpios = <&pio 82 GPIO_ACTIVE_LOW>;
+	mediatek,pad-select = <0>;
+	status = "okay";
+
+	can0: can@0 {
+		compatible = "microchip,mcp2518fd";
+		reg = <0>;
+		clocks = <&can_clk>;
+		spi-max-frequency = <20000000>;
+		interrupts-extended = <&pio 76 IRQ_TYPE_LEVEL_LOW>;
+		vdd-supply = <&reg_can_5v>;
+		xceiver-supply = <&reg_can_5v>;
+		pinctrl-names = "default", "sleep";
+		pinctrl-0 = <&can0_default_pins>;
+		pinctrl-1 = <&can0_sleep_pins>;
 	};
 };
 
