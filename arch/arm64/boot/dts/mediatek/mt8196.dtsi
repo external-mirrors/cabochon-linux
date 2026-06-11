@@ -500,6 +500,13 @@
 			#clock-cells = <1>;
 		};
 
+		topckgen_gp2: clock-controller@1000c000 {
+			compatible = "mediatek,mt8196-topckgen-gp2", "syscon";
+			reg = <0 0x1000c000 0 0x800>;
+			mediatek,hardware-voter = <&hfrpsys_hwv>;
+			#clock-cells = <1>;
+		};
+
 		apmixedsys_gp2: clock-controller@1000c800 {
 			compatible = "mediatek,mt8196-apmixedsys-gp2", "syscon";
 			reg = <0 0x1000c800 0 0x1000>;
@@ -558,6 +565,39 @@
 			compatible = "mediatek,mt8196-imp-iic-wrap-e", "syscon";
 			reg = <0 0x120c0000 0 0x1000>;
 			#clock-cells = <1>;
+		};
+
+		mipi_tx_config0: dsi-phy@130b0000 {
+			compatible = "mediatek,mt8196-mipi-tx";
+			reg = <0 0x130b0000 0 0x1000>;
+			clocks = <&clk26m>;
+			clock-output-names = "mipi_tx0_pll";
+			power-domains = <&hpm_hwv MT8196_POWER_DOMAIN_DSI_PHY0>;
+			#clock-cells = <0>;
+			#phy-cells = <0>;
+			status = "disabled";
+		};
+
+		mipi_tx_config1: dsi-phy@130c0000 {
+			compatible = "mediatek,mt8196-mipi-tx";
+			reg = <0 0x130c0000 0 0x1000>;
+			clocks = <&clk26m>;
+			clock-output-names = "mipi_tx1_pll";
+			power-domains = <&hpm_hwv MT8196_POWER_DOMAIN_DSI_PHY1>;
+			#clock-cells = <0>;
+			#phy-cells = <0>;
+			status = "disabled";
+		};
+
+		mipi_tx_config2: dsi-phy@130d0000 {
+			compatible = "mediatek,mt8196-mipi-tx";
+			reg = <0 0x130d0000 0 0x1000>;
+			clocks = <&clk26m>;
+			clock-output-names = "mipi_tx2_pll";
+			power-domains = <&hpm_hwv MT8196_POWER_DOMAIN_DSI_PHY2>;
+			#clock-cells = <0>;
+			#phy-cells = <0>;
+			status = "disabled";
 		};
 
 		i2c0: i2c@13130000 {
@@ -817,6 +857,52 @@
 			clock-names = "baud", "bus";
 			dmas = <&apdma 10>, <&apdma 11>;
 			dma-names = "tx", "rx";
+			status = "disabled";
+		};
+
+		disp_pwm0: pwm@160b0000 {
+			compatible = "mediatek,mt8196-disp-pwm", "mediatek,mt8183-disp-pwm";
+			reg = <0 0x160b0000 0 0x1000>;
+			interrupts = <GIC_SPI 254 IRQ_TYPE_LEVEL_HIGH 0>;
+			clocks = <&topckgen CLK_TOP_DISP_PWM>, <&clk26m>;
+			clock-names = "main", "mm";
+			#pwm-cells = <2>;
+			status = "disabled";
+		};
+
+		disp_pwm1: pwm@160c0000 {
+			compatible = "mediatek,mt8196-disp-pwm", "mediatek,mt8183-disp-pwm";
+			reg = <0 0x160c0000 0 0x1000>;
+			clocks = <&topckgen CLK_TOP_DISP_PWM>;
+			clock-names = "main";
+			#pwm-cells = <2>;
+			status = "disabled";
+		};
+
+		disp_pwm2: pwm@160d0000 {
+			compatible = "mediatek,mt8196-disp-pwm", "mediatek,mt8183-disp-pwm";
+			reg = <0 0x160d0000 0 0x1000>;
+			clocks = <&topckgen CLK_TOP_DISP_PWM>;
+			clock-names = "main";
+			#pwm-cells = <2>;
+			status = "disabled";
+		};
+
+		disp_pwm3: pwm@160e0000 {
+			compatible = "mediatek,mt8196-disp-pwm", "mediatek,mt8183-disp-pwm";
+			reg = <0 0x160e0000 0 0x1000>;
+			clocks = <&topckgen CLK_TOP_DISP_PWM>;
+			clock-names = "main";
+			#pwm-cells = <2>;
+			status = "disabled";
+		};
+
+		disp_pwm4: pwm@160f0000 {
+			compatible = "mediatek,mt8196-disp-pwm", "mediatek,mt8183-disp-pwm";
+			reg = <0 0x160f0000 0 0x1000>;
+			clocks = <&topckgen CLK_TOP_DISP_PWM>;
+			clock-names = "main";
+			#pwm-cells = <2>;
 			status = "disabled";
 		};
 
@@ -1659,297 +1745,6 @@
 			};
 		};
 
-		thermal_zones: thermal-zones {
-			cpu6-0-thermal {
-				polling-delay = <1000>;
-				thermal-sensors = <&lvts_mcu MT8196_MCU_MEDIUM_CPU6_0>;
-				trips {
-					cpu6_0_crit: trip-crit {
-						temperature = <118800>;
-						hysteresis = <2000>;
-						type = "critical";
-					};
-				};
-			};
-
-			cpu6-1-thermal {
-				polling-delay = <1000>;
-				thermal-sensors = <&lvts_mcu MT8196_MCU_MEDIUM_CPU6_1>;
-				trips {
-					cpu6_1_crit: trip-crit {
-						temperature = <118800>;
-						hysteresis = <2000>;
-						type = "critical";
-					};
-				};
-			};
-
-			dsu2-thermal {
-				polling-delay = <1000>;
-				thermal-sensors = <&lvts_mcu MT8196_MCU_DSU2>;
-				trips {
-					dsu2_crit: trip-crit {
-						temperature = <118800>;
-						hysteresis = <2000>;
-						type = "critical";
-					};
-				};
-			};
-
-			dsu3-thermal {
-				polling-delay = <1000>;
-				thermal-sensors = <&lvts_mcu MT8196_MCU_DSU3>;
-				trips {
-					dsu3_crit: trip-crit {
-						temperature = <118800>;
-						hysteresis = <2000>;
-						type = "critical";
-					};
-				};
-			};
-
-			cpu3-thermal {
-				polling-delay = <1000>;
-				thermal-sensors = <&lvts_mcu MT8196_MCU_LITTLE_CPU3>;
-				trips {
-					cpu3_crit: trip-crit {
-						temperature = <118800>;
-						hysteresis = <2000>;
-						type = "critical";
-					};
-				};
-			};
-
-			cpu0-thermal {
-				polling-delay = <1000>;
-				thermal-sensors = <&lvts_mcu MT8196_MCU_LITTLE_CPU0>;
-				trips {
-					cpu0_crit: trip-crit {
-						temperature = <118800>;
-						hysteresis = <2000>;
-						type = "critical";
-					};
-				};
-			};
-
-			cpu1-thermal {
-				polling-delay = <1000>;
-				thermal-sensors = <&lvts_mcu MT8196_MCU_LITTLE_CPU1>;
-				trips {
-					cpu1_crit: trip-crit {
-						temperature = <118800>;
-						hysteresis = <2000>;
-						type = "critical";
-					};
-				};
-			};
-
-			cpu2-thermal {
-				polling-delay = <1000>;
-				thermal-sensors = <&lvts_mcu MT8196_MCU_LITTLE_CPU2>;
-				trips {
-					cpu2_crit: trip-crit {
-						temperature = <118800>;
-						hysteresis = <2000>;
-						type = "critical";
-					};
-				};
-			};
-
-			cpu4-0-thermal {
-				polling-delay = <1000>;
-				thermal-sensors = <&lvts_mcu MT8196_MCU_MEDIUM_CPU4_0>;
-				trips {
-					cpu4_0_crit: trip-crit {
-						temperature = <118800>;
-						hysteresis = <2000>;
-						type = "critical";
-					};
-				};
-			};
-
-			cpu4-1-thermal {
-				polling-delay = <1000>;
-				thermal-sensors = <&lvts_mcu MT8196_MCU_MEDIUM_CPU4_1>;
-				trips {
-					cpu4_1_crit: trip-crit {
-						temperature = <118800>;
-						hysteresis = <2000>;
-						type = "critical";
-					};
-				};
-			};
-
-			cpu5-0-thermal {
-				polling-delay = <1000>;
-				thermal-sensors = <&lvts_mcu MT8196_MCU_MEDIUM_CPU5_0>;
-				trips {
-					cpu5_0_crit: trip-crit {
-						temperature = <118800>;
-						hysteresis = <2000>;
-						type = "critical";
-					};
-				};
-			};
-
-			cpu5-1-thermal {
-				polling-delay = <1000>;
-				thermal-sensors = <&lvts_mcu MT8196_MCU_MEDIUM_CPU5_1>;
-				trips {
-					cpu5_1_crit: trip-crit {
-						temperature = <118800>;
-						hysteresis = <2000>;
-						type = "critical";
-					};
-				};
-			};
-
-			dsu0-thermal {
-				polling-delay = <1000>;
-				thermal-sensors = <&lvts_mcu MT8196_MCU_DSU0>;
-				trips {
-					dsu0_crit: trip-crit {
-						temperature = <118800>;
-						hysteresis = <2000>;
-						type = "critical";
-					};
-				};
-			};
-
-			dsu1-thermal {
-				polling-delay = <1000>;
-				thermal-sensors = <&lvts_mcu MT8196_MCU_DSU1>;
-				trips {
-					dsu1_crit: trip-crit {
-						temperature = <118800>;
-						hysteresis = <2000>;
-						type = "critical";
-					};
-				};
-			};
-
-			cpu7-0-thermal {
-				polling-delay = <1000>;
-				thermal-sensors = <&lvts_mcu MT8196_MCU_BIG_CPU7_0>;
-				trips {
-					cpu7_0_crit: trip-crit {
-						temperature = <118800>;
-						hysteresis = <2000>;
-						type = "critical";
-					};
-				};
-			};
-
-			cpu7-1-thermal {
-				polling-delay = <1000>;
-				thermal-sensors = <&lvts_mcu MT8196_MCU_BIG_CPU7_1>;
-				trips {
-					cpu7_1_crit: trip-crit {
-						temperature = <118800>;
-						hysteresis = <2000>;
-						type = "critical";
-					};
-				};
-			};
-
-			soc-top0-thermal {
-				polling-delay = <1000>;
-				thermal-sensors = <&lvts_ap MT8196_AP_TOP0>;
-
-				trips {
-					soc_top0_crit: trip-crit {
-						temperature = <118800>;
-						hysteresis = <2000>;
-						type = "critical";
-					};
-				};
-			};
-
-			soc-top1-thermal {
-				polling-delay = <1000>;
-				thermal-sensors = <&lvts_ap MT8196_AP_TOP1>;
-				trips {
-					soc_top1_crit: trip-crit {
-						temperature = <118800>;
-						hysteresis = <2000>;
-						type = "critical";
-					};
-				};
-			};
-
-			soc-top2-thermal {
-				polling-delay = <1000>;
-				thermal-sensors = <&lvts_ap MT8196_AP_TOP2>;
-				trips {
-					soc_top2_crit: trip-crit {
-						temperature = <118800>;
-						hysteresis = <2000>;
-						type = "critical";
-					};
-				};
-			};
-
-			soc-top3-thermal {
-				polling-delay = <1000>;
-				thermal-sensors = <&lvts_ap MT8196_AP_TOP3>;
-				trips {
-					soc_top3_crit: trip-crit {
-						temperature = <118800>;
-						hysteresis = <2000>;
-						type = "critical";
-					};
-				};
-			};
-
-			soc-bot0-thermal {
-				polling-delay = <1000>;
-				thermal-sensors = <&lvts_ap MT8196_AP_BOT0>;
-				trips {
-					soc_bot0_crit: trip-crit {
-						temperature = <118800>;
-						hysteresis = <2000>;
-						type = "critical";
-					};
-				};
-			};
-
-			soc-bot1-thermal {
-				polling-delay = <1000>;
-				thermal-sensors = <&lvts_ap MT8196_AP_BOT1>;
-				trips {
-					soc_bot1_crit: trip-crit {
-						temperature = <118800>;
-						hysteresis = <2000>;
-						type = "critical";
-					};
-				};
-			};
-
-			soc-bot2-thermal {
-				polling-delay = <1000>;
-				thermal-sensors = <&lvts_ap MT8196_AP_BOT2>;
-				trips {
-					soc_bot2_crit: trip-crit {
-						temperature = <118800>;
-						hysteresis = <2000>;
-						type = "critical";
-					};
-				};
-			};
-
-			soc-bot3-thermal {
-				polling-delay = <1000>;
-				thermal-sensors = <&lvts_ap MT8196_AP_BOT3>;
-				trips {
-					soc_bot3_crit: trip-crit {
-						temperature = <118800>;
-						hysteresis = <2000>;
-						type = "critical";
-					};
-				};
-			};
-		};
-
 		scp_bus: bus@1c00d000 {
 			compatible = "simple-bus";
 			reg = <0 0x1c00d000 0 0x1000>;
@@ -2080,12 +1875,12 @@
 		};
 
 		/* High Frame Rate Processor System Controller (HFRPSYS) */
-		hfrpsys: system-controller@31b00000 {
+		hfrpsys_hwv: system-controller@31b00000 {
 			compatible = "mediatek,mt8196-hfrpsys", "syscon", "simple-mfd";
-			reg = <0 0x31b00000 0 0x3000>;
+			reg = <0 0x31b00000 0 0x6000>;
 
 			/* HFRPSYS Power Controller with Hardware Voter */
-			hfrp_hwv: power-controller {
+			hpm_hwv: power-controller {
 				compatible = "mediatek,mt8196-hwv-hfrp-power-controller";
 				#address-cells = <1>;
 				#size-cells = <0>;
@@ -2113,11 +1908,327 @@
 				};
 			};
 		};
+
+		system-controller@31b50000 {
+			compatible = "mediatek,mt8196-hfrpsys", "syscon", "simple-mfd";
+			reg = <0 0x31b50000 0 0x1000>;
+
+			/* HFRPSYS Power Manager */
+			hpm: power-controller {
+				compatible = "mediatek,mt8196-hfrp-power-controller";
+				#address-cells = <1>;
+				#size-cells = <0>;
+				#power-domain-cells = <1>;
+
+				power-domain@MT8196_POWER_DOMAIN_EDPTX {
+					reg = <MT8196_POWER_DOMAIN_EDPTX>;
+					clocks = <&topckgen_gp2 CLK_TOP2_DVO>;
+					clock-names = "power";
+					#power-domain-cells = <0>;
+				};
+
+				power-domain@MT8196_POWER_DOMAIN_DPTX {
+					reg = <MT8196_POWER_DOMAIN_DPTX>;
+					#power-domain-cells = <0>;
+				};
+			};
+		};
 	};
 
 	sound: mt8196-sound {
 		mediatek,platform = <&afe>;
 		status = "disabled";
+	};
+
+	thermal_zones: thermal-zones {
+		cpu6-0-thermal {
+			polling-delay = <1000>;
+			thermal-sensors = <&lvts_mcu MT8196_MCU_MEDIUM_CPU6_0>;
+			trips {
+				cpu6_0_crit: trip-crit {
+					temperature = <118800>;
+					hysteresis = <2000>;
+					type = "critical";
+				};
+			};
+		};
+
+		cpu6-1-thermal {
+			polling-delay = <1000>;
+			thermal-sensors = <&lvts_mcu MT8196_MCU_MEDIUM_CPU6_1>;
+			trips {
+				cpu6_1_crit: trip-crit {
+					temperature = <118800>;
+					hysteresis = <2000>;
+					type = "critical";
+				};
+			};
+		};
+
+		dsu2-thermal {
+			polling-delay = <1000>;
+			thermal-sensors = <&lvts_mcu MT8196_MCU_DSU2>;
+			trips {
+				dsu2_crit: trip-crit {
+					temperature = <118800>;
+					hysteresis = <2000>;
+					type = "critical";
+				};
+			};
+		};
+
+		dsu3-thermal {
+			polling-delay = <1000>;
+			thermal-sensors = <&lvts_mcu MT8196_MCU_DSU3>;
+			trips {
+				dsu3_crit: trip-crit {
+					temperature = <118800>;
+					hysteresis = <2000>;
+					type = "critical";
+				};
+			};
+		};
+
+		cpu3-thermal {
+			polling-delay = <1000>;
+			thermal-sensors = <&lvts_mcu MT8196_MCU_LITTLE_CPU3>;
+			trips {
+				cpu3_crit: trip-crit {
+					temperature = <118800>;
+					hysteresis = <2000>;
+					type = "critical";
+				};
+			};
+		};
+
+		cpu0-thermal {
+			polling-delay = <1000>;
+			thermal-sensors = <&lvts_mcu MT8196_MCU_LITTLE_CPU0>;
+			trips {
+				cpu0_crit: trip-crit {
+					temperature = <118800>;
+					hysteresis = <2000>;
+					type = "critical";
+				};
+			};
+		};
+
+		cpu1-thermal {
+			polling-delay = <1000>;
+			thermal-sensors = <&lvts_mcu MT8196_MCU_LITTLE_CPU1>;
+			trips {
+				cpu1_crit: trip-crit {
+					temperature = <118800>;
+					hysteresis = <2000>;
+					type = "critical";
+				};
+			};
+		};
+
+		cpu2-thermal {
+			polling-delay = <1000>;
+			thermal-sensors = <&lvts_mcu MT8196_MCU_LITTLE_CPU2>;
+			trips {
+				cpu2_crit: trip-crit {
+					temperature = <118800>;
+					hysteresis = <2000>;
+					type = "critical";
+				};
+			};
+		};
+
+		cpu4-0-thermal {
+			polling-delay = <1000>;
+			thermal-sensors = <&lvts_mcu MT8196_MCU_MEDIUM_CPU4_0>;
+			trips {
+				cpu4_0_crit: trip-crit {
+					temperature = <118800>;
+					hysteresis = <2000>;
+					type = "critical";
+				};
+			};
+		};
+
+		cpu4-1-thermal {
+			polling-delay = <1000>;
+			thermal-sensors = <&lvts_mcu MT8196_MCU_MEDIUM_CPU4_1>;
+			trips {
+				cpu4_1_crit: trip-crit {
+					temperature = <118800>;
+					hysteresis = <2000>;
+					type = "critical";
+				};
+			};
+		};
+
+		cpu5-0-thermal {
+			polling-delay = <1000>;
+			thermal-sensors = <&lvts_mcu MT8196_MCU_MEDIUM_CPU5_0>;
+			trips {
+				cpu5_0_crit: trip-crit {
+					temperature = <118800>;
+					hysteresis = <2000>;
+					type = "critical";
+				};
+			};
+		};
+
+		cpu5-1-thermal {
+			polling-delay = <1000>;
+			thermal-sensors = <&lvts_mcu MT8196_MCU_MEDIUM_CPU5_1>;
+			trips {
+				cpu5_1_crit: trip-crit {
+					temperature = <118800>;
+					hysteresis = <2000>;
+					type = "critical";
+				};
+			};
+		};
+
+		dsu0-thermal {
+			polling-delay = <1000>;
+			thermal-sensors = <&lvts_mcu MT8196_MCU_DSU0>;
+			trips {
+				dsu0_crit: trip-crit {
+					temperature = <118800>;
+					hysteresis = <2000>;
+					type = "critical";
+				};
+			};
+		};
+
+		dsu1-thermal {
+			polling-delay = <1000>;
+			thermal-sensors = <&lvts_mcu MT8196_MCU_DSU1>;
+			trips {
+				dsu1_crit: trip-crit {
+					temperature = <118800>;
+					hysteresis = <2000>;
+					type = "critical";
+				};
+			};
+		};
+
+		cpu7-0-thermal {
+			polling-delay = <1000>;
+			thermal-sensors = <&lvts_mcu MT8196_MCU_BIG_CPU7_0>;
+			trips {
+				cpu7_0_crit: trip-crit {
+					temperature = <118800>;
+					hysteresis = <2000>;
+					type = "critical";
+				};
+			};
+		};
+
+		cpu7-1-thermal {
+			polling-delay = <1000>;
+			thermal-sensors = <&lvts_mcu MT8196_MCU_BIG_CPU7_1>;
+			trips {
+				cpu7_1_crit: trip-crit {
+					temperature = <118800>;
+					hysteresis = <2000>;
+					type = "critical";
+				};
+			};
+		};
+
+		soc-top0-thermal {
+			polling-delay = <1000>;
+			thermal-sensors = <&lvts_ap MT8196_AP_TOP0>;
+
+			trips {
+				soc_top0_crit: trip-crit {
+					temperature = <118800>;
+					hysteresis = <2000>;
+					type = "critical";
+				};
+			};
+		};
+
+		soc-top1-thermal {
+			polling-delay = <1000>;
+			thermal-sensors = <&lvts_ap MT8196_AP_TOP1>;
+			trips {
+				soc_top1_crit: trip-crit {
+					temperature = <118800>;
+					hysteresis = <2000>;
+					type = "critical";
+				};
+			};
+		};
+
+		soc-top2-thermal {
+			polling-delay = <1000>;
+			thermal-sensors = <&lvts_ap MT8196_AP_TOP2>;
+			trips {
+				soc_top2_crit: trip-crit {
+					temperature = <118800>;
+					hysteresis = <2000>;
+					type = "critical";
+				};
+			};
+		};
+
+		soc-top3-thermal {
+			polling-delay = <1000>;
+			thermal-sensors = <&lvts_ap MT8196_AP_TOP3>;
+			trips {
+				soc_top3_crit: trip-crit {
+					temperature = <118800>;
+					hysteresis = <2000>;
+					type = "critical";
+				};
+			};
+		};
+
+		soc-bot0-thermal {
+			polling-delay = <1000>;
+			thermal-sensors = <&lvts_ap MT8196_AP_BOT0>;
+			trips {
+				soc_bot0_crit: trip-crit {
+					temperature = <118800>;
+					hysteresis = <2000>;
+					type = "critical";
+				};
+			};
+		};
+
+		soc-bot1-thermal {
+			polling-delay = <1000>;
+			thermal-sensors = <&lvts_ap MT8196_AP_BOT1>;
+			trips {
+				soc_bot1_crit: trip-crit {
+					temperature = <118800>;
+					hysteresis = <2000>;
+					type = "critical";
+				};
+			};
+		};
+
+		soc-bot2-thermal {
+			polling-delay = <1000>;
+			thermal-sensors = <&lvts_ap MT8196_AP_BOT2>;
+			trips {
+				soc_bot2_crit: trip-crit {
+					temperature = <118800>;
+					hysteresis = <2000>;
+					type = "critical";
+				};
+			};
+		};
+
+		soc-bot3-thermal {
+			polling-delay = <1000>;
+			thermal-sensors = <&lvts_ap MT8196_AP_BOT3>;
+			trips {
+				soc_bot3_crit: trip-crit {
+					temperature = <118800>;
+					hysteresis = <2000>;
+					type = "critical";
+				};
+			};
+		};
 	};
 
 	timer {
@@ -2132,7 +2243,7 @@
 };
 
 /* High Frame Rate Processor System Controller (HFRPSYS) Power Domains */
-&hfrp_hwv {
+&hpm_hwv {
 	power-domain@MT8196_POWER_DOMAIN_DSI_PHY0 {
 		reg = <MT8196_POWER_DOMAIN_DSI_PHY0>;
 		#power-domain-cells = <0>;
@@ -2156,10 +2267,14 @@
 
 		power-domain@MT8196_POWER_DOMAIN_MM_INFRA0 {
 			reg = <MT8196_POWER_DOMAIN_MM_INFRA0>;
+			#address-cells = <1>;
+			#size-cells = <0>;
 			#power-domain-cells = <0>;
 	
 			power-domain@MT8196_POWER_DOMAIN_MM_INFRA1 {
 				reg = <MT8196_POWER_DOMAIN_MM_INFRA1>;
+				#address-cells = <1>;
+				#size-cells = <0>;
 				#power-domain-cells = <0>;
 
 				power-domain@MT8196_POWER_DOMAIN_CSI_BS_RX {
@@ -2174,6 +2289,8 @@
 
 				power-domain@MT8196_POWER_DOMAIN_DISP_VCORE {
 					reg = <MT8196_POWER_DOMAIN_DISP_VCORE>;
+					#address-cells = <1>;
+					#size-cells = <0>;
 					#power-domain-cells = <0>;
 
 					power-domain@MT8196_POWER_DOMAIN_DIS0_DORMANT {
@@ -2219,6 +2336,8 @@
 
 				power-domain@MT8196_POWER_DOMAIN_VDE_VCORE0 {
 					reg = <MT8196_POWER_DOMAIN_VDE_VCORE0>;
+					#address-cells = <1>;
+					#size-cells = <0>;
 					#power-domain-cells = <0>;
 
 					power-domain@MT8196_POWER_DOMAIN_VDE0 {
@@ -2234,10 +2353,14 @@
 
 				power-domain@MT8196_POWER_DOMAIN_VEN0 {
 					reg = <MT8196_POWER_DOMAIN_VEN0>;
+					#address-cells = <1>;
+					#size-cells = <0>;
 					#power-domain-cells = <0>;
 
 					power-domain@MT8196_POWER_DOMAIN_VEN1 {
 						reg = <MT8196_POWER_DOMAIN_VEN1>;
+						#address-cells = <1>;
+						#size-cells = <0>;
 						#power-domain-cells = <0>;
 
 						power-domain@MT8196_POWER_DOMAIN_VEN2 {
