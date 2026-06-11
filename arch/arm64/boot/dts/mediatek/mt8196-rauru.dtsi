@@ -29,12 +29,31 @@
 		reg = <0 0x80000000 0 0>;
 	};
 
+	backlight: backlight {
+		compatible = "pwm-backlight";
+		pinctrl-names = "default";
+		pinctrl-0 = <&backlight_en_pin>;
+		pwms = <&disp_pwm0 0 500000>;
+		power-supply = <&ppvar_sys>;
+		enable-gpios = <&pio 216 GPIO_ACTIVE_HIGH>;
+		brightness-levels = <0 1023>;
+		num-interpolated-steps = <1023>;
+		default-brightness-level = <576>;
+	};
+
 	nau8318: codec {
 		compatible = "nuvoton,nau8318";
 		#sound-dai-cells = <0>;
 		enable-gpios = <&pio 174 GPIO_ACTIVE_HIGH>;
 
 		status = "disabled";
+	};
+
+	dmic_codec: dmic-codec {
+		compatible = "dmic-codec";
+		#sound-dai-cells = <0>;
+		num-channels = <2>;
+		wakeup-delay-ms = <100>;
 	};
 
 	/* system wide LDO 3.3V power rail */
@@ -1129,6 +1148,13 @@
 		};
 	};
 
+	backlight_en_pin: backlight-en-pins {
+		pins-enable {
+			pinmux = <PINMUX_GPIO216__FUNC_GPIO216>;
+			output-low;
+		};
+	};
+
 	pcie0_pins: pcie0-pins {
 		pins-bus {
 			pinmux = <PINMUX_GPIO241__FUNC_PCIE_PERSTN>,
@@ -1177,6 +1203,7 @@
 		pinctrl-names = "default";
 		pinctrl-0 = <&ec_ap_pins>;
 		spi-max-frequency = <3000000>;
+		#thermal-sensor-cells = <1>;
 
 		i2c_tunnel: i2c-tunnel {
 			compatible = "google,cros-ec-i2c-tunnel";
