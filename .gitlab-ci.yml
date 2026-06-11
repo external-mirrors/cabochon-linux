@@ -1,5 +1,8 @@
 default:
   image: debian:testing
+  retry:
+    max: 1
+    when: unknown_failure
 
 stages:
   - build
