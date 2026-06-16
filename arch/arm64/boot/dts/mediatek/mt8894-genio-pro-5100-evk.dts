@@ -18,6 +18,8 @@
 		     "mediatek,mt8196";
 
 	aliases {
+		i2c6 = &i2c6;
+		i2c9 = &i2c9;
 		serial0 = &uart0;
 	};
 
@@ -153,6 +155,53 @@
 		pinctrl-names = "default";
 		pinctrl-0 = <&usb_vusb33_pins>;
 		vin-supply = <&vsys_5v>;
+	};
+};
+
+&i2c6 {
+	clock-frequency = <400000>;
+	pinctrl-names = "default";
+	pinctrl-0 = <&i2c6_pins>;
+	status = "okay";
+
+	usb1_redriver: redriver@43 {
+		compatible = "nxp,ptn3222";
+		reg = <0x43>;
+		#phy-cells = <0>;
+		reset-gpios = <&pio 49 GPIO_ACTIVE_LOW>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&usb1_redriver_pins>;
+		vdd3v3-supply = <&vusb33>;
+		vdd1v8-supply = <&mt6363_vio18>;
+	};
+
+	usb2_redriver: redriver@4f {
+		compatible = "nxp,ptn3222";
+		reg = <0x4f>;
+		#phy-cells = <0>;
+		reset-gpios = <&pio 206 GPIO_ACTIVE_LOW>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&usb2_redriver_pins>;
+		vdd3v3-supply = <&vusb33>;
+		vdd1v8-supply = <&mt6363_vio18>;
+	};
+};
+
+&i2c9 {
+	clock-frequency = <400000>;
+	pinctrl-names = "default";
+	pinctrl-0 = <&i2c9_pins>;
+	status = "okay";
+
+	usb0_redriver: redriver@4f {
+		compatible = "nxp,ptn3222";
+		reg = <0x4f>;
+		#phy-cells = <0>;
+		reset-gpios = <&pio 72 GPIO_ACTIVE_LOW>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&usb0_redriver_pins>;
+		vdd3v3-supply = <&vusb33>;
+		vdd1v8-supply = <&mt6363_vio18>;
 	};
 };
 
@@ -492,6 +541,24 @@
 		};
 	};
 
+	i2c6_pins: i2c6-pins {
+		pins-bus {
+			pinmux = <PINMUX_GPIO104__FUNC_SCL6>,
+				 <PINMUX_GPIO105__FUNC_SDA6>;
+			bias-disable;
+			drive-strength = <4>;
+		};
+	};
+
+	i2c9_pins: i2c9-pins {
+		pins-bus {
+			pinmux = <PINMUX_GPIO202__FUNC_SCL9>,
+				 <PINMUX_GPIO203__FUNC_SDA9>;
+			bias-disable;
+			drive-strength = <4>;
+		};
+	};
+
 	mmc1_pins: mmc1-pins {
 		pins-bus {
 			pinmux = <PINMUX_GPIO127__FUNC_MSDC1_DAT0>,
@@ -523,8 +590,8 @@
 		};
 	};
 
-	usb0_pins: usb0-default {
-		pins-repeater {
+	usb0_redriver_pins: usb0-redriver-default {
+		pins-reset {
 			pinmux = <PINMUX_GPIO72__FUNC_GPIO72>;
 			output-high;
 		};
@@ -537,8 +604,8 @@
 		};
 	};
 
-	usb1_pins: usb1-default {
-		pins-repeater {
+	usb1_redriver_pins: usb1-redriver-default {
+		pins-reset {
 			pinmux = <PINMUX_GPIO49__FUNC_GPIO49>;
 			output-high;
 		};
@@ -551,8 +618,8 @@
 		};
 	};
 
-	usb2_pins: usb2-default {
-		pins-repeater {
+	usb2_redriver_pins: usb2-redriver-default {
+		pins-reset {
 			pinmux = <PINMUX_GPIO206__FUNC_GPIO206>;
 			output-high;
 		};
@@ -595,32 +662,31 @@
 };
 
 &ssusb0 {
-	pinctrl-names = "default";
-	pinctrl-0 = <&usb0_pins>;
 	dr_mode = "peripheral";
 	maximum-speed = "high-speed";
 	usb-role-switch;
 	vbus-supply = <&vbus_usb0>;
 	vusb33-supply = <&vsys_3v3>;
 	mediatek,force-vbus;
+	phys = <&u2port0 PHY_TYPE_USB2>, <&u3port0 PHY_TYPE_USB3>,
+	       <&usb0_redriver>;
 	status = "okay";
 };
 
 &ssusb1 {
-	pinctrl-names = "default";
-	pinctrl-0 = <&usb1_pins>;
 	dr_mode = "host";
 	vbus-supply = <&vbus_usb1>;
 	vusb33-supply = <&vusb33>;
+	phys = <&u2port1 PHY_TYPE_USB2>, <&usb1_redriver>;
 	status = "okay";
 };
 
 &ssusb2 {
-	pinctrl-names = "default";
-	pinctrl-0 = <&usb2_pins>;
 	dr_mode = "host";
 	vbus-supply = <&vbus_usb2>;
 	vusb33-supply = <&vusb33>;
+	phys = <&u2port2 PHY_TYPE_USB2>, <&u3port1 PHY_TYPE_USB3>,
+	       <&usb2_redriver>;
 	status = "okay";
 };
 
