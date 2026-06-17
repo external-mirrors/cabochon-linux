@@ -226,7 +226,7 @@ static int mtk_vdisp_ctrl_probe(struct platform_device *pdev)
 	config.dev = dev;
 	config.driver_data = priv;
 
-	regmap = syscon_regmap_lookup_by_phandle(np, "mediatek,hw-ccf");
+	regmap = syscon_regmap_lookup_by_phandle(np, "mediatek,hardware-voter");
 	if (IS_ERR(regmap))
 		return PTR_ERR(regmap);
 	priv->hwccf_regmap = regmap;

@@ -424,6 +424,8 @@ static unsigned int mtk_crtc_get_controller_map_idx(struct mtk_crtc *mtk_crtc,
 	return 0;
 }
 
+void mtk_mmsys_default_config(struct device *dev);
+
 static int mtk_crtc_ddp_hw_init(struct mtk_crtc *mtk_crtc)
 {
 	struct drm_crtc *crtc = &mtk_crtc->base;
@@ -480,6 +482,17 @@ static int mtk_crtc_ddp_hw_init(struct mtk_crtc *mtk_crtc)
 	if (ret < 0) {
 		drm_err(dev, "Failed to enable component clocks: %d\n", ret);
 		goto err_mutex_unprepare;
+	}
+
+	for (i = 0; i < mtk_crtc->num_controllers; i++) {
+		u8 controller_num = mtk_crtc->controller_idmap[i];
+		struct mtk_drm_private *priv;
+
+		priv = mtk_crtc_get_controller_priv(mtk_crtc, controller_num);
+		if (!priv)
+			return -ENODEV;
+
+		mtk_mmsys_default_config(priv->mmsys_dev);
 	}
 
 	for (i = 0; i < mtk_crtc->ddp_comp_nr - 1; i++) {
