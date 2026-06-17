@@ -67,6 +67,8 @@ struct mtk_drm_private {
 	struct device_node *mutex_node;
 	struct device *mutex_dev;
 	struct device *mmsys_dev;
+	struct device_node *vdisp_ao_node;
+	struct device *vdisp_ao_dev;
 	struct mtk_drm_comp_list hlist;
 	struct mtk_mmsys_driver_data *data;
 	struct drm_atomic_commit *suspend_state;

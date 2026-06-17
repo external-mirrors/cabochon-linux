@@ -566,6 +566,26 @@ static int mtk_drm_bind(struct device *dev)
 	private->mtk_drm_bound = true;
 	private->dev = dev;
 
+	if (private->vdisp_ao_node) {
+		pdev = of_find_device_by_node(private->vdisp_ao_node);
+		if (!pdev) {
+			dev_err(dev, "Waiting for vdisp_ao device %pOF\n",
+				private->vdisp_ao_node);
+			of_node_put(private->mutex_node);
+			of_node_put(private->vdisp_ao_node);
+			return -EPROBE_DEFER;
+		}
+
+		if (!platform_get_drvdata(pdev)) {
+			dev_err(dev, "Waiting for vdisp_ao to register %pOF\n",
+				private->vdisp_ao_node);
+			of_node_put(private->mutex_node);
+			of_node_put(private->vdisp_ao_node);
+			return -EPROBE_DEFER;
+		}
+		private->vdisp_ao_dev = &pdev->dev;
+	}
+
 	if (!mtk_drm_get_all_drm_priv(dev))
 		return 0;
 
@@ -780,6 +800,8 @@ static const struct of_device_id mtk_ddp_comp_dt_ids[] = {
 	  .data = (void *)MTK_DISP_DVO },
 	{ .compatible = "mediatek,mt8196-edp-dvo",
 	  .data = (void *)MTK_DISP_DVO },
+	{ .compatible = "mediatek,mt8196-vdisp-ao",
+	  .data = (void *)MTK_DISP_VDISP_AO },
 	{ }
 };
 
@@ -1297,6 +1319,12 @@ static int mtk_drm_register_sibling(struct device *dev, struct mtk_drm_private *
 			private->mutex_node = of_node_get(node);
 			dev_dbg(dev, "get mutex for mmsys %d", private->data->mmsys_id);
 		}
+		return 0;
+	}
+
+	if (comp_type == MTK_DISP_VDISP_AO) {
+		private->vdisp_ao_node = of_node_get(node);
+		dev_dbg(dev, "get vdisp_ao node");
 		return 0;
 	}
 

@@ -14,6 +14,7 @@
 #include <linux/of.h>
 #include <linux/of_platform.h>
 #include <linux/platform_device.h>
+#include <linux/pm_runtime.h>
 #include <linux/reset-controller.h>
 #include <linux/soc/mediatek/mtk-mmsys.h>
 
@@ -26,6 +27,7 @@
 #include "mt8188-mmsys.h"
 #include "mt8192-mmsys.h"
 #include "mt8195-mmsys.h"
+#include "mt8196-mmsys.h"
 #include "mt8365-mmsys.h"
 
 #define MMSYS_SW_RESET_PER_REG 32
@@ -155,6 +157,44 @@ static const struct mtk_mmsys_driver_data mt8195_vppsys0_driver_data = {
 static const struct mtk_mmsys_driver_data mt8195_vppsys1_driver_data = {
 	.clk_driver = "clk-mt8195-vpp1",
 	.is_vppsys = true,
+};
+
+static const struct mtk_mmsys_driver_data mt8196_dispsys0_driver_data = {
+	.clk_driver = "clk-mt8196-disp0",
+	.routes = mmsys_mt8196_disp0_routing_table,
+	.num_routes = ARRAY_SIZE(mmsys_mt8196_disp0_routing_table),
+	.def_config = mmsys_mt8196_disp0_default_table,
+	.num_def_config = ARRAY_SIZE(mmsys_mt8196_disp0_default_table),
+};
+
+static const struct mtk_mmsys_driver_data mt8196_dispsys1_driver_data = {
+	.clk_driver = "clk-mt8196-disp1",
+	.routes = mmsys_mt8196_disp1_routing_table,
+	.num_routes = ARRAY_SIZE(mmsys_mt8196_disp1_routing_table),
+	.def_config = mmsys_mt8196_disp1_default_table,
+	.num_def_config = ARRAY_SIZE(mmsys_mt8196_disp1_default_table),
+};
+
+static const struct mtk_mmsys_driver_data mt8196_ovlsys0_driver_data = {
+	.clk_driver = "clk-mt8196-ovl0",
+	.routes = mmsys_mt8196_ovl0_routing_table,
+	.num_routes = ARRAY_SIZE(mmsys_mt8196_ovl0_routing_table),
+	.def_config = mmsys_mt8196_ovl0_default_table,
+	.num_def_config = ARRAY_SIZE(mmsys_mt8196_ovl0_default_table),
+};
+
+static const struct mtk_mmsys_driver_data mt8196_ovlsys1_driver_data = {
+	.clk_driver = "clk-mt8196-ovl1",
+	.routes = mmsys_mt8196_ovl1_routing_table,
+	.num_routes = ARRAY_SIZE(mmsys_mt8196_ovl1_routing_table),
+	.def_config = mmsys_mt8196_ovl0_default_table,
+	.num_def_config = ARRAY_SIZE(mmsys_mt8196_ovl0_default_table),
+};
+
+static const struct mtk_mmsys_driver_data mt8196_vdisp_ao_driver_data = {
+	.clk_driver = "clk-mt8196-vdisp-ao",
+	.def_config = mmsys_mt8196_vdisp_ao_default_table,
+	.num_def_config = ARRAY_SIZE(mmsys_mt8196_vdisp_ao_default_table),
 };
 
 static const struct mtk_mmsys_driver_data mt8365_mmsys_driver_data = {
@@ -389,6 +429,21 @@ void mtk_mmsys_vpp_rsz_dcm_config(struct device *dev, bool enable,
 }
 EXPORT_SYMBOL_GPL(mtk_mmsys_vpp_rsz_dcm_config);
 
+void mtk_mmsys_default_config(struct device *dev)
+{
+	struct mtk_mmsys *mmsys = dev_get_drvdata(dev);
+	const struct mtk_mmsys_default *def_config = mmsys->data->def_config;
+	int i;
+
+	if (!mmsys->data->num_def_config)
+		return;
+
+	for (i = 0; i < mmsys->data->num_def_config; i++)
+		mtk_mmsys_update_bits(mmsys, def_config[i].addr, def_config[i].mask,
+				      def_config[i].val, NULL);
+}
+EXPORT_SYMBOL_GPL(mtk_mmsys_default_config);
+
 static int mtk_mmsys_reset_update(struct reset_controller_dev *rcdev, unsigned long id,
 				  bool assert)
 {
@@ -502,23 +557,31 @@ static int mtk_mmsys_probe(struct platform_device *pdev)
 	ret = devm_of_platform_populate(dev);
 	if (ret) {
 		dev_err(dev, "Failed to populate child devices: %d\n", ret);
-		platform_device_unregister(clks);
-		return ret;
+		goto error;
 	}
 
 	if (mmsys->data->is_vppsys)
-		goto out_probe_done;
+		return 0;
 
 	drm = platform_device_register_data(&pdev->dev, "mediatek-drm",
 					    PLATFORM_DEVID_AUTO, NULL, 0);
 	if (IS_ERR(drm)) {
-		platform_device_unregister(clks);
-		return PTR_ERR(drm);
+		ret = PTR_ERR(drm);
+		goto error;
 	}
 	mmsys->drm_pdev = drm;
 
-out_probe_done:
+	ret = devm_pm_runtime_enable(dev);
+	if (ret)
+		goto error_pm;
+
 	return 0;
+
+error_pm:
+	platform_device_unregister(drm);
+error:
+	platform_device_unregister(clks);
+	return ret;
 }
 
 static void mtk_mmsys_remove(struct platform_device *pdev)
@@ -551,6 +614,11 @@ static const struct of_device_id of_match_mtk_mmsys[] = {
 	{ .compatible = "mediatek,mt8195-vdosys1", .data = &mt8195_vdosys1_driver_data },
 	{ .compatible = "mediatek,mt8195-vppsys0", .data = &mt8195_vppsys0_driver_data },
 	{ .compatible = "mediatek,mt8195-vppsys1", .data = &mt8195_vppsys1_driver_data },
+	{ .compatible = "mediatek,mt8196-dispsys0", .data = &mt8196_dispsys0_driver_data },
+	{ .compatible = "mediatek,mt8196-dispsys1", .data = &mt8196_dispsys1_driver_data },
+	{ .compatible = "mediatek,mt8196-ovlsys0", .data = &mt8196_ovlsys0_driver_data },
+	{ .compatible = "mediatek,mt8196-ovlsys1", .data = &mt8196_ovlsys1_driver_data },
+	{ .compatible = "mediatek,mt8196-vdisp-ao", .data = &mt8196_vdisp_ao_driver_data },
 	{ .compatible = "mediatek,mt8365-mmsys", .data = &mt8365_mmsys_driver_data },
 	{ /* sentinel */ }
 };

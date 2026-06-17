@@ -104,6 +104,12 @@ struct mtk_mmsys_routes {
 	u32 val;
 };
 
+struct mtk_mmsys_default {
+	u32 addr;
+	u32 val;
+	u32 mask;
+};
+
 /**
  * struct mtk_mmsys_driver_data - Settings of the mmsys
  * @clk_driver: Clock driver name that the mmsys is using
@@ -141,6 +147,8 @@ struct mtk_mmsys_driver_data {
 	const u32 num_resets;
 	const bool is_vppsys;
 	const u8 vsync_len;
+	const struct mtk_mmsys_default *def_config;
+	const unsigned int num_def_config;
 };
 
 /*
