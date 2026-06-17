@@ -1,0 +1,259 @@
+// SPDX-License-Identifier: (GPL-2.0 OR MIT)
+/*
+ * Copyright (c) 2024 MediaTek Inc.
+ * Copyright (c) 2026 Collabora Ltd
+ *                    AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
+ *
+ *
+ * NOTE: THIS IS A STOPGAP HACKY SOLUTION TO BRING UP THIS PLATFORM UNTIL
+ *       FULL UPSTREAMING IS DONE.
+ *
+ *       THIS DEVICETREE CONTAINS DOWNSTREAM NODES THAT WILL NEVER BE
+ *       UPSTREAMED AS-IS AND WILL BE SUBJECT TO BIG CHANGES.
+ *
+ */
+
+#include <dt-bindings/clock/mediatek,mt8196-clock.h>
+#include <dt-bindings/reset/mediatek,mt8196-resets.h>
+#include <dt-bindings/interrupt-controller/arm-gic.h>
+#include <dt-bindings/interrupt-controller/irq.h>
+#include <dt-bindings/phy/phy.h>
+#include <dt-bindings/power/mediatek,mt8196-power.h>
+#include <dt-bindings/reset/mediatek,mt8196-resets.h>
+#include <dt-bindings/thermal/mediatek,lvts-thermal.h>
+
+/ {
+	reserved-memory {
+		#address-cells = <2>;
+		#size-cells = <2>;
+		ranges;
+
+		gpueb_shared_memory: memory@a0000000 {
+			reg = <0x0 0xa0000000 0x0 0x4000>;
+		};
+
+		/* GPUEB MCU's private carveout - not available to AP */
+		memory@a0004000 {
+			reg = <0x0 0xa0004000 0x0 0x1fc000>;
+			no-map;
+		};
+
+		vcp_resv_mem: vcp-reserved-memory@a0200000 {
+			compatible = "mediatek,me-vcp-reserved";
+			reg = <0 0xa0200000 0 0x01e00000>; /* 30MB */
+			iommu-addresses = <0 0x00000000 1 0x40000000>; /* 1G */
+			no-map;
+		};
+	};
+
+	soc {
+
+		vcp: vcp@31800000 {
+			compatible = "mediatek,vcp";
+			reg = <0 0x31800000 0 0x60000>, /* sram */
+			      <0 0x31a04000 0 0xa000>, /* cfg */
+			      <0 0x31bd0000 0 0x1000>, /* cfg core */
+			      <0 0x31b80000 0 0x50000>, /* mbox base */
+			      <0 0x31a70020 0 0x100>, /* mbox init */
+			      <0 0x1c00091c 0 0x4>; /* vcp rdy */
+			reg-names = "sram",
+				    "cfg",
+				    "cfg_core",
+				    "mbox_base",
+				    "mbox_init",
+				    "vcp_vlp_ao_rsvd7";
+
+			interrupts = <GIC_SPI 787 IRQ_TYPE_LEVEL_HIGH 0>,
+				     <GIC_SPI 789 IRQ_TYPE_LEVEL_HIGH 0>,
+				     <GIC_SPI 790 IRQ_TYPE_LEVEL_HIGH 0>,
+				     <GIC_SPI 791 IRQ_TYPE_LEVEL_HIGH 0>,
+				     <GIC_SPI 792 IRQ_TYPE_LEVEL_HIGH 0>,
+				     <GIC_SPI 793 IRQ_TYPE_LEVEL_HIGH 0>;
+			interrupt-names = "wdt",
+					  "mbox0",
+					  "mbox1",
+					  "mbox2",
+					  "mbox3",
+					  "mbox4";
+
+			power-domains = <&spm_hwv MT8196_POWER_DOMAIN_MM_PROC_DORMANT>;
+			iommus = <&mm_smmu 160>;
+			memory-region = <&vcp_resv_mem>;
+
+			vcp-mem-tbl = <0 0x1a00000>, /* VCP_RTOS_MEM_ID 26MB */
+				      <1 0x30000>, /* VDEC_MEM_ID 192KB */
+				      <2 0x12000>, /* VENC_MEM_ID 72KB */
+				      <3 0x1000>, /* MMDVFS_VCP_MEM_ID 4KB */
+				      <4 0x1000>, /* MMDVFS_MMUP_MEM_ID 4KB */
+				      <5 0x1000>; /* MMQOS_MEM_ID 4KB */
+
+			vcp@0 {
+				compatible = "mediatek,vcp-core";
+				twohart = <1>;
+				sram-offset = <0x0>;
+			};
+
+			vcp@31000 {
+				compatible = "mediatek,mmup-core";
+				twohart = <0>;
+				sram-offset = <0x031000>;
+			};
+
+			send_table: mtk-send-table {
+				mbox0-0 {
+					mbox-id = <0>;
+					chan-id = <0>;
+					msg-size = <18>;
+				};
+				mbox1-15 {
+					mbox-id = <1>;
+					chan-id = <15>;
+					msg-size = <8>;
+				};
+				mbox1-16 {
+					mbox-id = <1>;
+					chan-id = <16>;
+					msg-size = <18>;
+				};
+				mbox1-9 {
+					mbox-id = <1>;
+					chan-id = <9>;
+					msg-size = <2>;
+				};
+				mbox2-11 {
+					mbox-id = <2>;
+					chan-id = <11>;
+					msg-size = <18>;
+				};
+				mbox2-2 {
+					mbox-id = <2>;
+					chan-id = <2>;
+					msg-size = <2>;
+				};
+				mbox2-3 {
+					mbox-id = <2>;
+					chan-id = <3>;
+					msg-size = <3>;
+				};
+				mbox2-32 {
+					mbox-id = <2>;
+					chan-id = <32>;
+					msg-size = <2>;
+				};
+				mbox3-33 {
+					mbox-id = <3>;
+					chan-id = <33>;
+					msg-size = <2>;
+				};
+				mbox3-13 {
+					mbox-id = <3>;
+					chan-id = <13>;
+					msg-size = <2>;
+				};
+				mbox3-35 {
+					mbox-id = <3>;
+					chan-id = <35>;
+					msg-size = <2>;
+				};
+				mbox4-20 {
+					mbox-id = <4>;
+					chan-id = <20>;
+					msg-size = <2>;
+				};
+				mbox4-21 {
+					mbox-id = <4>;
+					chan-id = <21>;
+					msg-size = <3>;
+				};
+				mbox4-23 {
+					mbox-id = <4>;
+					chan-id = <23>;
+					msg-size = <2>;
+				};
+			};
+
+			recv_table: mtk-recv-table {
+				mbox0-1 {
+					mbox-id = <0>;
+					chan-id = <1>;
+					msg-size = <18>;
+					recv-opt = <0>;
+				};
+				mbox1-15 {
+					mbox-id = <1>;
+					chan-id = <15>;
+					msg-size = <8>;
+					recv-opt = <1>;
+				};
+				mbox1-17 {
+					mbox-id = <1>;
+					chan-id = <17>;
+					msg-size = <18>;
+					recv-opt = <0>;
+				};
+				mbox1-10 {
+					mbox-id = <1>;
+					chan-id = <10>;
+					msg-size = <2>;
+					recv-opt = <0>;
+				};
+				mbox2-12 {
+					mbox-id = <2>;
+					chan-id = <12>;
+					msg-size = <18>;
+					recv-opt = <0>;
+				};
+				mbox2-5 {
+					mbox-id = <2>;
+					chan-id = <5>;
+					msg-size = <1>;
+					recv-opt = <0>;
+				};
+				mbox2-2 {
+					mbox-id = <2>;
+					chan-id = <2>;
+					msg-size = <1>;
+					recv-opt = <1>;
+				};
+				mbox3-34 {
+					mbox-id = <3>;
+					chan-id = <34>;
+					msg-size = <2>;
+					recv-opt = <0>;
+				};
+				mbox3-14 {
+					mbox-id = <3>;
+					chan-id = <14>;
+					msg-size = <2>;
+					recv-opt = <0>;
+				};
+				mbox4-26 {
+					mbox-id = <4>;
+					chan-id = <26>;
+					msg-size = <1>;
+					recv-opt = <0>;
+				};
+				mbox4-20 {
+					mbox-id = <4>;
+					chan-id = <20>;
+					msg-size = <1>;
+					recv-opt = <1>;
+				};
+			};
+		};
+
+		vdisp_ctrl: vdisp-ctrl { /* huge hack */
+			compatible = "mediatek,mt8196-vdisp-ctrl";
+			mediatek,hw-ccf = <&hfrpsys_hwv>;
+			mediatek,vcp = <&vcp>;
+
+			vdisp: vdisp {
+				regulator-name = "vdisp";
+
+				regulator-always-on;
+			};
+		};
+
+
+	};
+};
