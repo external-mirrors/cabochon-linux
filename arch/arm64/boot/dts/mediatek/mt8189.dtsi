@@ -435,6 +435,24 @@
 			#clock-cells = <1>;
 		};
 
+		camsys_main: clock-controller@1a000000 {
+			compatible = "mediatek,mt8189-camsys-main";
+			reg = <0 0x1a000000 0 0x1000>;
+			#clock-cells = <1>;
+		};
+
+		camsys_rawa: clock-controller@1a04f000 {
+			compatible = "mediatek,mt8189-camsys-rawa";
+			reg = <0 0x1a04f000 0 0x1000>;
+			#clock-cells = <1>;
+		};
+
+		camsys_rawb: clock-controller@1a06f000 {
+			compatible = "mediatek,mt8189-camsys-rawb";
+			reg = <0 0x1a06f000 0 0x1000>;
+			#clock-cells = <1>;
+		};
+
 		clock-controller@d01a000 {
 			compatible = "mediatek,mt8189-dbg-ao";
 			reg = <0 0xd01a000 0 0x1000>;
@@ -447,9 +465,27 @@
 			#clock-cells = <1>;
 		};
 
+		dispsys: clock-controller@14000000 {
+			compatible = "mediatek,mt8189-dispsys";
+			reg = <0 0x14000000 0 0x1000>;
+			#clock-cells = <1>;
+		};
+
 		clock-controller@1c00f000 {
 			compatible = "mediatek,mt8189-dvfsrc-top";
 			reg = <0 0x1c00f000 0 0x1000>;
+			#clock-cells = <1>;
+		};
+
+		clock-controller@1e980000 {
+			compatible = "mediatek,mt8189-gce-d";
+			reg = <0 0x1e980000 0 0x1000>;
+			#clock-cells = <1>;
+		};
+
+		clock-controller@1e990000 {
+			compatible = "mediatek,mt8189-gce-m";
+			reg = <0 0x1e990000 0 0x1000>;
 			#clock-cells = <1>;
 		};
 
@@ -477,9 +513,45 @@
 			#clock-cells = <1>;
 		};
 
+		imgsys1: clock-controller@15020000 {
+			compatible = "mediatek,mt8189-imgsys1";
+			reg = <0 0x15020000 0 0x1000>;
+			#clock-cells = <1>;
+		};
+
+		imgsys2: clock-controller@15820000 {
+			compatible = "mediatek,mt8189-imgsys2";
+			reg = <0 0x15820000 0 0x1000>;
+			#clock-cells = <1>;
+		};
+
 		infra_ao: clock-controller@10001000 {
 			compatible = "mediatek,mt8189-infra-ao", "syscon";
 			reg = <0 0x10001000 0 0x1000>;
+			#clock-cells = <1>;
+		};
+
+		ipesys: clock-controller@1b000000 {
+			compatible = "mediatek,mt8189-ipesys";
+			reg = <0 0x1b000000 0 0x1000>;
+			#clock-cells = <1>;
+		};
+
+		mdpsys: clock-controller@1f000100 {
+			compatible = "mediatek,mt8189-mdpsys";
+			reg = <0 0x1f000100 0 0x20>;
+			#clock-cells = <1>;
+		};
+
+		mfgcfg: clock-controller@13fbf000 {
+			compatible = "mediatek,mt8189-mfgcfg";
+			reg = <0 0x13fbf000 0 0x1000>;
+			#clock-cells = <1>;
+		};
+
+		mminfra: clock-controller@1e800000 {
+			compatible = "mediatek,mt8189-mm-infra";
+			reg = <0 0x1e800000 0 0x1000>;
 			#clock-cells = <1>;
 		};
 
@@ -520,6 +592,18 @@
 			reg = <0 0x112bb000 0 0x1000>;
 			#clock-cells = <1>;
 			#reset-cells = <1>;
+		};
+
+		vdec_core: clock-controller@1602f000 {
+			compatible = "mediatek,mt8189-vdec-core";
+			reg = <0 0x1602f000 0 0x1000>;
+			#clock-cells = <1>;
+		};
+
+		venc_gcon: clock-controller@17000000 {
+			compatible = "mediatek,mt8189-venc";
+			reg = <0 0x17000000 0 0x1000>;
+			#clock-cells = <1>;
 		};
 
 		clock-controller@1c000800 {
