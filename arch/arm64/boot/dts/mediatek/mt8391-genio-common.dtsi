@@ -54,8 +54,31 @@
 		regulator-boot-on;
 	};
 
+	reg_ext_3v3: regulator-0 {
+		compatible = "regulator-fixed";
+		regulator-name = "ext_3v3";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		gpio = <&pio 81 GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+		regulator-always-on;
+		pinctrl-names = "default";
+		pinctrl-0 = <&ext_3v3_en_pins>;
+		vin-supply = <&reg_vsys>;
+	};
+
+	/* ext_3v3 and vraspi_5v are enabled by the same GPIO*/
+	reg_vraspi_5v: regulator-1 {
+		compatible = "regulator-fixed";
+		regulator-name = "vraspi_5v";
+		regulator-min-microvolt = <5000000>;
+		regulator-max-microvolt = <5000000>;
+		regulator-always-on;
+		vin-supply = <&reg_vsys>;
+	};
+
 	/* used by PCIe Wi-Fi Module */
-	reg_wifi_3v3: regulator-1 {
+	reg_wifi_3v3: regulator-2 {
 		compatible = "regulator-fixed";
 		regulator-name = "wifi_3v3";
 		regulator-min-microvolt = <3300000>;
@@ -68,7 +91,7 @@
 		vin-supply = <&reg_vsys>;
 	};
 
-	reg_can_5v: regulator-can-5v {
+	reg_can_5v: regulator-3 {
 		compatible = "regulator-fixed";
 		regulator-name = "can_5v";
 		regulator-min-microvolt = <5000000>;
@@ -451,6 +474,13 @@
 				 <PINMUX_GPIO120__FUNC_GPIO120>,
 				 <PINMUX_GPIO121__FUNC_GPIO121>,
 				 <PINMUX_GPIO122__FUNC_GPIO122>;
+		};
+	};
+
+	ext_3v3_en_pins: ext-3v3-en-pins {
+		pins {
+			pinmux = <PINMUX_GPIO81__FUNC_GPIO81>;
+			output-high;
 		};
 	};
 
