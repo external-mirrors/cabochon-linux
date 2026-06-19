@@ -24,8 +24,99 @@
 	#size-cells = <2>;
 
 	aliases {
+		blender0 = &ovl0_blender0;
+		blender1 = &ovl0_blender1;
+		blender2 = &ovl0_blender2;
+		blender3 = &ovl0_blender3;
+		blender4 = &ovl0_blender4;
+		blender5 = &ovl0_blender5;
+		blender6 = &ovl0_blender6;
+		blender7 = &ovl0_blender7;
+		blender8 = &ovl0_blender8;
+		blender9 = &ovl0_blender9;
+		blender10 = &ovl1_blender0;
+		blender11 = &ovl1_blender1;
+		blender12 = &ovl1_blender2;
+		blender13 = &ovl1_blender3;
+		blender14 = &ovl1_blender4;
+		blender15 = &ovl1_blender5;
+		blender16 = &ovl1_blender6;
+		blender17 = &ovl1_blender7;
+		blender18 = &ovl1_blender8;
+		blender19 = &ovl1_blender9;
+		ccorr0 = &ccorr0;
+		ccorr1 = &ccorr1;
+		ccorr2 = &ccorr2;
+		ccorr3 = &ccorr3;
+		dither0 = &dither0;
+		dither1 = &dither1;
+		dither2 = &disp1_dither2;
+		dp-intf0 = &dp_intf0;
+		dp-intf1 = &dp_intf1;
+		dsc0 = &dsc0;
+		dsc1 = &dsc1;
+		dvo0 = &dvo0;
+		exdma2 = &ovl0_exdma2;
+		exdma3 = &ovl0_exdma3;
+		exdma4 = &ovl0_exdma4;
+		exdma5 = &ovl0_exdma5;
+		exdma6 = &ovl0_exdma6;
+		exdma7 = &ovl0_exdma7;
+		exdma8 = &ovl0_exdma8;
+		exdma9 = &ovl0_exdma9;
+		exdma12 = &ovl1_exdma2;
+		exdma13 = &ovl1_exdma3;
+		exdma14 = &ovl1_exdma4;
+		exdma15 = &ovl1_exdma5;
+		exdma16 = &ovl1_exdma6;
+		exdma17 = &ovl1_exdma7;
+		exdma18 = &ovl1_exdma8;
+		exdma19 = &ovl1_exdma9;
+		gamma0 = &gamma0;
+		gamma1 = &gamma1;
+		i2c0 = &i2c0;
+		i2c1 = &i2c1;
+		i2c2 = &i2c2;
+		i2c3 = &i2c3;
+		i2c4 = &i2c4;
+		i2c5 = &i2c5;
+		i2c6 = &i2c6;
+		i2c7 = &i2c7;
+		i2c8 = &i2c8;
+		i2c9 = &i2c9;
+		i2c10 = &i2c10;
+		i2c11 = &i2c11;
+		i2c12 = &i2c12;
+		i2c13 = &i2c13;
+		i2c14 = &i2c14;
+		mmc1 = &mmc1;
+		mmc2 = &mmc2;
+		mutex0 = &disp0_mutex;
+		mutex1 = &disp1_mutex;
+		mutex2 = &ovl0_mutex;
+		mutex3 = &ovl1_mutex;
+		outproc0 = &ovl0_outproc0;
+		outproc1 = &ovl0_outproc1;
+		outproc2 = &ovl0_outproc2;
+		outproc3 = &ovl0_outproc3;
+		outproc4 = &ovl0_outproc4;
+		outproc5 = &ovl0_outproc5;
+		outproc6 = &ovl1_outproc0;
+		outproc7 = &ovl1_outproc1;
+		outproc8 = &ovl1_outproc2;
+		outproc9 = &ovl1_outproc3;
+		outproc10 = &ovl1_outproc4;
+		outproc11 = &ovl1_outproc5;
+		postmask0 = &postmask0;
+		postmask1 = &postmask1;
+		resizer0 = &mdp_rsz0;
+		resizer1 = &mdp_rsz1;
+		resizer2 = &ovl0_rsz0;
+		resizer4 = &ovl1_rsz0;
 		spmi0 = &spmi0;
 		spmi1 = &spmi1;
+		tdshp0 = &tdshp0;
+		tdshp1 = &tdshp1;
 	};
 
 	cpus {
@@ -2356,7 +2447,6 @@
 					port@1 {
 						reg = <1>;
 						ccorr0_out: endpoint {
-							//remote-endpoint = <&gamma0_in>;
 							remote-endpoint = <&ccorr1_in>;
 						};
 					};
@@ -2584,7 +2674,7 @@
 			};
 		};
 
-		dispsys1: clock-controller@32400000 {
+		dispsys1: display-controller@32400000 {
 			compatible = "mediatek,mt8196-dispsys1";
 			reg = <0 0x32400000 0 0x1000>;
 			ranges = <0 0 0 0x32400000 0 0x200000>;
@@ -2616,14 +2706,14 @@
 							remote-endpoint = <&dl_out_async0_1>;
 							mediatek,port-id = <1>;
 						};
-
+/*
 						dl_in_async1_2: endpoint@1 {
 							reg = <1>;
 							clocks = <&dispsys1 CLK_MM1_DISP_DLI_ASYNC22>;
 							//remote-endpoint = <&dsc0_in>;
 							mediatek,port-id = <2>;
 						};
-
+*/
 						dl_in_async1_3: endpoint@2 {
 							reg = <2>;
 							clocks = <&dispsys1 CLK_MM1_DISP_DLI_ASYNC23>;
@@ -2642,11 +2732,13 @@
 							clocks = <&dispsys1 CLK_MM1_DISPSYS1_CONFIG>;
 							mediatek,port-id = <1>;
 						};
+/*
 						dl_out_async1_1: endpoint@1 {
 							reg = <1>;
 							clocks = <&dispsys1 CLK_MM1_DISPSYS1_CONFIG>;
 							mediatek,port-id = <1>;
 						};
+*/
 					};
 
 					port@2 {
@@ -2659,13 +2751,13 @@
 							remote-endpoint = <&dvo0_in>;
 							mediatek,port-id = <1>;
 						};
-
+/*
 						dl_in_relay1_2: endpoint@1 {
 							reg = <1>;
 							//remote-endpoint = <&dsc0_in>;
 							mediatek,port-id = <2>;
 						};
-
+*/
 						dl_in_relay1_3: endpoint@2 {
 							reg = <2>;
 							remote-endpoint = <&dsc1_in>;
@@ -2681,9 +2773,11 @@
 						dl_out_relay1_1: endpoint@0 {
 							reg = <0>;
 						};
+/*
 						dl_out_relay1_2: endpoint@1 {
 							reg = <1>;
 						};
+*/
 					};
 				};
 			};
@@ -2885,7 +2979,7 @@
 			};
 		};
 
-		ovlsys0: clock-controller@32800000 {
+		ovlsys0: display-controller@32800000 {
 			compatible = "mediatek,mt8196-ovlsys0";
 			reg = <0 0x32800000 0 0x1000>;
 			mboxes = <&gce0 0 CMDQ_THR_PRIO_4>, <&gce0 1 CMDQ_THR_PRIO_4>,
@@ -2905,11 +2999,12 @@
 					reg = <0>;
 					remote-endpoint = <&ovl0_resizer0_in>;
 				};
-
+/*
 				ovlsys0_ep_ext: endpoint@1 {
 					reg = <1>;
 					remote-endpoint = <&exdma0_6_in>;
 				};
+*/
 			};
 
 			direct-link@260 {
@@ -3134,7 +3229,7 @@
 
 						exdma0_6_in: endpoint@1 {
 							reg = <1>;
-							remote-endpoint = <&ovlsys0_ep_ext>;
+							//remote-endpoint = <&ovlsys0_ep_ext>;
 						};
 					};
 
@@ -3663,7 +3758,7 @@
 			};
 		};
 
-		ovlsys1: clock-controller@32c00000 {
+		ovlsys1: display-controller@32c00000 {
 			compatible = "mediatek,mt8196-ovlsys1";
 			reg = <0 0x32c00000 0 0x1000>;
 			#address-cells = <2>;
@@ -4692,31 +4787,49 @@
 
 					power-domain@MT8196_POWER_DOMAIN_DIS0_DORMANT {
 						reg = <MT8196_POWER_DOMAIN_DIS0_DORMANT>;
+						clocks = <&vdisp_ao CLK_MM_V_DISP_VDISP_AO_CONFIG>,
+							 <&vdisp_ao CLK_MM_V_DISP_DPC>;
+						clock-names = "cfg", "dpc";
 						#power-domain-cells = <0>;
 					};
 
 					power-domain@MT8196_POWER_DOMAIN_DIS1_DORMANT {
 						reg = <MT8196_POWER_DOMAIN_DIS1_DORMANT>;
+						clocks = <&vdisp_ao CLK_MM_V_DISP_VDISP_AO_CONFIG>,
+							 <&vdisp_ao CLK_MM_V_DISP_DPC>;
+						clock-names = "cfg", "dpc";
 						#power-domain-cells = <0>;
 					};
 
 					power-domain@MT8196_POWER_DOMAIN_DISP_EDPTX_DORMANT {
 						reg = <MT8196_POWER_DOMAIN_DISP_EDPTX_DORMANT>;
+						clocks = <&vdisp_ao CLK_MM_V_DISP_VDISP_AO_CONFIG>,
+							 <&vdisp_ao CLK_MM_V_DISP_DPC>;
+						clock-names = "cfg", "dpc";
 						#power-domain-cells = <0>;
 					};
 
 					power-domain@MT8196_POWER_DOMAIN_DISP_DPTX_DORMANT {
 						reg = <MT8196_POWER_DOMAIN_DISP_DPTX_DORMANT>;
+						clocks = <&vdisp_ao CLK_MM_V_DISP_VDISP_AO_CONFIG>,
+							 <&vdisp_ao CLK_MM_V_DISP_DPC>;
+						clock-names = "cfg", "dpc";
 						#power-domain-cells = <0>;
 					};
 
 					power-domain@MT8196_POWER_DOMAIN_OVL0_DORMANT {
 						reg = <MT8196_POWER_DOMAIN_OVL0_DORMANT>;
+						clocks = <&vdisp_ao CLK_MM_V_DISP_VDISP_AO_CONFIG>,
+							 <&vdisp_ao CLK_MM_V_DISP_DPC>;
+						clock-names = "cfg", "dpc";
 						#power-domain-cells = <0>;
 					};
 
 					power-domain@MT8196_POWER_DOMAIN_OVL1_DORMANT {
 						reg = <MT8196_POWER_DOMAIN_OVL1_DORMANT>;
+						clocks = <&vdisp_ao CLK_MM_V_DISP_VDISP_AO_CONFIG>,
+							 <&vdisp_ao CLK_MM_V_DISP_DPC>;
+						clock-names = "cfg", "dpc";
 						#power-domain-cells = <0>;
 					};
 
