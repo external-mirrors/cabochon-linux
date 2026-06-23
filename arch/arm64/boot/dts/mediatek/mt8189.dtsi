@@ -1048,11 +1048,134 @@
 			};
 		};
 
+		ssusb0: usb@11201000 {
+			compatible = "mediatek,mt8189-mtu3", "mediatek,mtu3";
+			reg = <0 0x11201000 0 0x2e00>, <0 0x11203e00 0 0x0100>;
+			reg-names = "mac", "ippc";
+			ranges = <0 0 0 0x11200000 0 0x3f00>;
+
+			#address-cells = <2>;
+			clocks = <&peri_ao CLK_PERAO_SSUSB0_SYS>,
+				 <&peri_ao CLK_PERAO_SSUSB0_REF>,
+				 <&peri_ao CLK_PERAO_SSUSB0_H>,
+				 <&peri_ao CLK_PERAO_SSUSB0_F>,
+				 <&peri_ao CLK_PERAO_SSUSB0_XHCI>,
+				 <&peri_ao CLK_PERAO_SSUSB0_FRMCNT>;
+			clock-names = "sys_ck", "ref_ck", "mcu_ck",
+				      "dma_ck", "xhci_ck", "frmcnt_ck";
+			interrupts = <GIC_SPI 384 IRQ_TYPE_LEVEL_HIGH 0>;
+			#size-cells = <2>;
+			phys = <&u2port0 PHY_TYPE_USB2>, <&u3port0 PHY_TYPE_USB3>;
+			power-domains = <&spm MT8189_POWER_DOMAIN_SSUSB>;
+			wakeup-source;
+			mediatek,syscon-wakeup = <&peri_ao 0x214 110>;
+			status = "disabled";
+
+			xhci0: usb@0 {
+				compatible =  "mediatek,mt8189-xhci", "mediatek,mtk-xhci";
+				reg = <0 0 0 0x1000>;
+				reg-names = "mac";
+				interrupts = <GIC_SPI 385 IRQ_TYPE_LEVEL_HIGH 0>;
+				clocks = <&peri_ao CLK_PERAO_SSUSB0_SYS>;
+				clock-names = "sys_ck";
+				status = "disabled";
+			};
+		};
+
 		timer@1cc10000 {
 			compatible = "mediatek,mt8189-timer", "mediatek,mt6765-timer";
 			reg = <0 0x1cc10000 0 0x1000>;
 			clocks = <&clk13m>;
 			interrupts = <GIC_SPI 249 IRQ_TYPE_LEVEL_HIGH 0>;
+		};
+
+		u2phy1: xs-phy@11e90000 {
+			compatible = "mediatek,mt8189-xsphy", "mediatek,xsphy";
+			ranges = <0x0 0x0 0x11e90000 0x700>;
+			#address-cells = <1>;
+			#size-cells = <1>;
+			status = "disabled";
+
+			u2port1: usb-phy@0 {
+				reg = <0x0 0x700>;
+				clocks = <&topckgen CLK_TOP_USB2_PHY_RF_P1_EN>;
+				clock-names = "ref";
+				#phy-cells = <1>;
+			};
+		};
+
+		u2phy2: xs-phy@11ef0000 {
+			compatible = "mediatek,mt8189-xsphy", "mediatek,xsphy";
+			ranges = <0x0 0x0 0x11ef0000 0x700>;
+			#address-cells = <1>;
+			#size-cells = <1>;
+			status = "disabled";
+
+			u2port2: usb-phy@0 {
+				reg = <0 0x700>;
+				clocks = <&topckgen CLK_TOP_USB2_PHY_RF_P2_EN>;
+				clock-names = "ref";
+				#phy-cells = <1>;
+			};
+		};
+
+		u2phy4: xs-phy@11b10000 {
+			compatible = "mediatek,mt8189-xsphy", "mediatek,xsphy";
+			ranges = <0x0 0x0 0x11b10000 0x700>;
+			#address-cells = <1>;
+			#size-cells = <1>;
+			status = "disabled";
+
+			u2port4: usb-phy@0 {
+				reg = <0x0 0x700>;
+				clocks = <&topckgen CLK_TOP_USB2_PHY_RF_P4_EN>;
+				clock-names = "ref";
+				#phy-cells = <1>;
+			};
+		};
+
+		u3phy0: xs-phy@11e80000 {
+			compatible = "mediatek,mt8189-xsphy", "mediatek,xsphy";
+			ranges = <0x0 0x0 0x11e80000 0x3900>;
+			#address-cells = <1>;
+			#size-cells = <1>;
+			status = "disabled";
+
+			u2port0: usb-phy@0 {
+				reg = <0x0 0x400>;
+				clocks = <&topckgen CLK_TOP_USB2_PHY_RF_P0_EN>;
+				clock-names = "ref";
+				#phy-cells = <1>;
+			};
+
+			u3port0: usb-phy@3400 {
+				reg = <0x3400 0x500>;
+				clocks = <&topckgen CLK_TOP_USB2_PHY_RF_P0_EN>;
+				clock-names = "ref";
+				#phy-cells = <1>;
+			};
+		};
+
+		u3phy3: t-phy@11b00000 {
+			compatible = "mediatek,mt8189-tphy", "mediatek,generic-tphy-v3";
+			ranges = <0x0 0x0 0x11b00000 0x1000>;
+			#address-cells = <1>;
+			#size-cells = <1>;
+			status = "disabled";
+
+			u2port3: usb-phy@0 {
+				reg = <0 0x400>;
+				clocks = <&topckgen CLK_TOP_USB2_PHY_RF_P3_EN>;
+				clock-names = "ref";
+				#phy-cells = <1>;
+			};
+
+			u3port3: usb-phy@700 {
+				reg = <0x700 0x700>;
+				clocks = <&topckgen CLK_TOP_USB2_PHY_RF_P3_EN>;
+				clock-names = "ref";
+				#phy-cells = <1>;
+			};
 		};
 
 		uart0: serial@11001000 {
@@ -1152,6 +1275,90 @@
 				 <&ufscfg_pdn MT8189_UFSPDN_RST_UFS_HCI>;
 			reset-names = "unipro", "crypto", "hci";
 			mediatek,ufs-disable-mcq;
+			status = "disabled";
+		};
+
+		xhci1: usb@11210000 {
+			compatible =  "mediatek,mt8189-xhci", "mediatek,mtk-xhci";
+			reg = <0 0x11210000 0 0x1000>, <0 0x11213e00 0 0x0100>;
+			reg-names = "mac", "ippc";
+
+			clocks = <&peri_ao CLK_PERAO_SSUSB1_SYS>,
+				 <&peri_ao CLK_PERAO_SSUSB1_REF>,
+				 <&peri_ao CLK_PERAO_SSUSB1_H>,
+				 <&peri_ao CLK_PERAO_SSUSB1_F>,
+				 <&peri_ao CLK_PERAO_SSUSB1_XHCI>,
+				 <&peri_ao CLK_PERAO_SSUSB1_FRMCNT>;
+			clock-names = "sys_ck", "ref_ck", "mcu_ck",
+				      "dma_ck", "xhci_ck", "frmcnt_ck";
+			interrupts = <GIC_SPI 386 IRQ_TYPE_LEVEL_HIGH 0>;
+			phys = <&u2port1 PHY_TYPE_USB2>;
+			power-domains = <&spm MT8189_POWER_DOMAIN_SSUSB>;
+			wakeup-source;
+			mediatek,syscon-wakeup = <&peri_ao 0x21c 110>;
+			status = "disabled";
+		};
+
+		xhci2: usb@11220000 {
+			compatible =  "mediatek,mt8189-xhci", "mediatek,mtk-xhci";
+			reg = <0 0x11220000 0 0x1000>, <0 0x11223e00 0 0x0100>;
+			reg-names = "mac", "ippc";
+
+			clocks = <&peri_ao CLK_PERAO_SSUSB2_SYS>,
+				 <&peri_ao CLK_PERAO_SSUSB2_REF>,
+				 <&peri_ao CLK_PERAO_SSUSB2_H>,
+				 <&peri_ao CLK_PERAO_SSUSB2_F>,
+				 <&peri_ao CLK_PERAO_SSUSB2_XHCI>,
+				 <&peri_ao CLK_PERAO_SSUSB2_FRMCNT>;
+			clock-names = "sys_ck", "ref_ck", "mcu_ck",
+				      "dma_ck", "xhci_ck", "frmcnt_ck";
+			interrupts = <GIC_SPI 472 IRQ_TYPE_LEVEL_HIGH 0>;
+			phys = <&u2port2 PHY_TYPE_USB2>;
+			power-domains = <&spm MT8189_POWER_DOMAIN_SSUSB>;
+			wakeup-source;
+			mediatek,syscon-wakeup = <&peri_ao 0x27c 110>;
+			status = "disabled";
+		};
+
+		xhci3: usb@11260000 {
+			compatible =  "mediatek,mt8189-xhci", "mediatek,mtk-xhci";
+			reg = <0 0x11260000 0 0x2e00>, <0 0x11263e00 0 0x0100>;
+			reg-names = "mac", "ippc";
+
+			clocks = <&peri_ao CLK_PERAO_SSUSB3_SYS>,
+				 <&peri_ao CLK_PERAO_SSUSB3_REF>,
+				 <&peri_ao CLK_PERAO_SSUSB3_H>,
+				 <&peri_ao CLK_PERAO_SSUSB3_F>,
+				 <&peri_ao CLK_PERAO_SSUSB3_XHCI>,
+				 <&peri_ao CLK_PERAO_SSUSB3_FRMCNT>;
+			clock-names = "sys_ck", "ref_ck", "mcu_ck",
+				      "dma_ck", "xhci_ck", "frmcnt_ck";
+			interrupts = <GIC_SPI 473 IRQ_TYPE_LEVEL_HIGH 0>;
+			phys = <&u2port3 PHY_TYPE_USB2>, <&u3port3 PHY_TYPE_USB3>;
+			power-domains = <&spm MT8189_POWER_DOMAIN_SSUSB>;
+			wakeup-source;
+			mediatek,syscon-wakeup = <&peri_ao 0x284 110>;
+			status = "disabled";
+		};
+
+		xhci4: usb@11270000 {
+			compatible = "mediatek,mt8189-xhci", "mediatek,mtk-xhci";
+			reg = <0 0x11270000 0 0x1000>, <0 0x11273e00 0 0x0100>;
+			reg-names = "mac", "ippc";
+
+			clocks = <&peri_ao CLK_PERAO_SSUSB4_SYS>,
+				 <&peri_ao CLK_PERAO_SSUSB4_REF>,
+				 <&peri_ao CLK_PERAO_SSUSB4_H>,
+				 <&peri_ao CLK_PERAO_SSUSB4_F>,
+				 <&peri_ao CLK_PERAO_SSUSB4_XHCI>,
+				 <&peri_ao CLK_PERAO_SSUSB4_FRMCNT>;
+			clock-names = "sys_ck", "ref_ck", "mcu_ck",
+				      "dma_ck", "xhci_ck", "frmcnt_ck";
+			interrupts = <GIC_SPI 474 IRQ_TYPE_LEVEL_HIGH 0>;
+			phys = <&u2port4 PHY_TYPE_USB2>;
+			power-domains = <&spm MT8189_POWER_DOMAIN_SSUSB>;
+			wakeup-source;
+			mediatek,syscon-wakeup = <&peri_ao 0x28c 110>;
 			status = "disabled";
 		};
 
