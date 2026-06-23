@@ -11,6 +11,7 @@
 #include <dt-bindings/interrupt-controller/irq.h>
 #include <dt-bindings/leds/common.h>
 #include <dt-bindings/spmi/spmi.h>
+#include <dt-bindings/usb/pd.h>
 #include "mt8189-pinfunc.h"
 
 / {
@@ -100,6 +101,32 @@
 		enable-active-high;
 		pinctrl-names = "default";
 		pinctrl-0 = <&can_vdd_en_pins>;
+		vin-supply = <&reg_vsys>;
+	};
+
+	usb_p1_vbus: regulator-4 {
+		compatible = "regulator-fixed";
+		regulator-name = "vbus_p1";
+		regulator-min-microvolt = <5000000>;
+		regulator-max-microvolt = <5000000>;
+		gpio = <&pio 84 GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+		regulator-always-on;
+		pinctrl-names = "default";
+		pinctrl-0 = <&usb_p1_vbus_pins>;
+		vin-supply = <&reg_vsys>;
+	};
+
+	usb_p3_vbus: regulator-5 {
+		compatible = "regulator-fixed";
+		regulator-name = "vbus_p3";
+		regulator-min-microvolt = <5000000>;
+		regulator-max-microvolt = <5000000>;
+		gpio = <&pio 86 GPIO_ACTIVE_HIGH>;
+		regulator-always-on;
+		enable-active-high;
+		pinctrl-names = "default";
+		pinctrl-0 = <&usb_p3_vbus_pins>;
 		vin-supply = <&reg_vsys>;
 	};
 
@@ -234,6 +261,46 @@
 	pinctrl-names = "default";
 	pinctrl-0 = <&i2c5_pins>;
 	status = "okay";
+
+	rt1715@4e {
+		compatible = "richtek,rt1715";
+		reg = <0x4e>;
+		interrupts-extended = <&pio 8 IRQ_TYPE_LEVEL_LOW>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&tcpci_int_pins>;
+		vbus-supply = <&usb_p3_vbus>;
+
+		/* This is effectively a Type A port but physically exposed
+		 * with Type C connector
+		 */
+		connector {
+			compatible = "usb-c-connector";
+			label = "USB-C";
+			data-role = "host";
+			power-role = "source";
+			source-pdos = <PDO_FIXED(5000, 2000, PDO_FIXED_DATA_SWAP)>;
+
+			ports {
+				#address-cells = <1>;
+				#size-cells = <0>;
+
+				port@0 {
+					reg = <0>;
+					typec_con_hs: endpoint {
+						remote-endpoint = <&xhci3_hs_ep>;
+					};
+				};
+
+				port@1 {
+					reg = <1>;
+					typec_con_ss: endpoint {
+						remote-endpoint = <&xhci3_ss_ep>;
+					};
+				};
+			};
+
+		};
+	};
 };
 
 &i2c6 {
@@ -699,6 +766,14 @@
 		};
 	};
 
+	tcpci_int_pins: tcpci-int-pins {
+		pins-int-n {
+			pinmux = <PINMUX_GPIO8__FUNC_GPIO8>;
+			bias-pull-up;
+			input-enable;
+		};
+	};
+
 	uart0_pins: uart0-pins {
 		pins {
 			pinmux = <PINMUX_GPIO31__FUNC_UTXD0>,
@@ -738,6 +813,26 @@
 		pins-rtscts {
 			pinmux = <PINMUX_GPIO14__FUNC_UCTS3>,
 				 <PINMUX_GPIO15__FUNC_URTS3>;
+		};
+	};
+
+	usb0_default_pins: usb0-default-pins {
+		pins-vbus-valid {
+			pinmux = <PINMUX_GPIO83__FUNC_VBUSVALID>;
+		};
+	};
+
+	usb_p1_vbus_pins: usb-p1-vbus-pins {
+		pins {
+			pinmux = <PINMUX_GPIO84__FUNC_GPIO84>;
+			output-high;
+		};
+	};
+
+	usb_p3_vbus_pins: usb-p3-vbus-pins {
+		pins {
+			pinmux = <PINMUX_GPIO86__FUNC_GPIO86>;
+			output-high;
 		};
 	};
 };
@@ -890,6 +985,15 @@
 	};
 };
 
+&ssusb0 {
+	dr_mode = "otg";
+	usb-role-switch;
+	vusb33-supply = <&mt6359_vusb_ldo_reg>;
+	pinctrl-names = "default";
+	pinctrl-0 = <&usb0_default_pins>;
+	status = "disabled";
+};
+
 &uart0 {
 	pinctrl-0 = <&uart0_pins>;
 	pinctrl-names = "default";
@@ -911,5 +1015,73 @@
 &uart3 {
 	pinctrl-0 = <&uart3_pins>;
 	pinctrl-names = "default";
+	status = "okay";
+};
+
+&u2phy1 {
+	status = "okay";
+};
+
+&u2phy2 {
+	status = "okay";
+};
+
+&u2phy4 {
+	status = "okay";
+};
+
+&u3phy0 {
+	status = "disabled";
+};
+
+&u3phy3 {
+	status = "okay";
+};
+
+&xhci0 {
+	vusb33-supply = <&mt6359_vusb_ldo_reg>;
+	status = "disabled";
+};
+
+&xhci1 {
+	vusb33-supply = <&mt6359_vusb_ldo_reg>;
+	vbus-supply = <&usb_p1_vbus>;
+	status = "okay";
+};
+
+&xhci2 {
+	vusb33-supply = <&mt6359_vusb_ldo_reg>;
+	status = "okay";
+};
+
+&xhci3 {
+	vusb33-supply = <&mt6359_vusb_ldo_reg>;
+	status = "okay";
+
+	ports {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		port@0 {
+			reg = <0>;
+
+			xhci3_hs_ep: endpoint {
+				remote-endpoint = <&typec_con_hs>;
+			};
+		};
+
+		port@1 {
+			reg = <1>;
+
+			xhci3_ss_ep: endpoint {
+				remote-endpoint = <&typec_con_ss>;
+			};
+		};
+	};
+};
+
+&xhci4 {
+	vusb33-supply = <&mt6359_vusb_ldo_reg>;
+	usb2-lpm-disable;
 	status = "okay";
 };
