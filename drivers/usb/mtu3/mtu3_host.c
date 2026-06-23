@@ -30,6 +30,10 @@
 #define WC0_IS_P	BIT(12)	/* polarity */
 #define WC0_IS_EN	BIT(6)
 
+/* mt8189 */
+#define PERI_WK_CTRL0_8189	0x0
+#define WC0_IS_EN_P_89		BIT(18)
+
 /* mt8192 */
 #define WC0_SSUSB0_CDEN		BIT(6)
 #define WC0_IS_SPM_EN		BIT(1)
@@ -70,6 +74,7 @@ enum ssusb_uwk_vers {
 	SSUSB_UWK_V1_7, 	/* mt8196 IP0 */
 	SSUSB_UWK_V1_8, 	/* mt8196 IP1 */
 	SSUSB_UWK_V1_9, 	/* mt8196 IP2 */
+	SSUSB_UWK_V1_10,	/* mt8189 all */
 };
 
 /*
@@ -124,6 +129,11 @@ static void ssusb_wakeup_ip_sleep_set(struct ssusb_mtk *ssusb, bool enable)
 	case SSUSB_UWK_V1_9:
 		reg = ssusb->uwk_reg_base + PERI_WK_CTRL1_8196;
 		msk = WC1_IS_EN_P2_96;
+		val = enable ? msk : 0;
+		break;
+	case SSUSB_UWK_V1_10:
+		reg = ssusb->uwk_reg_base + PERI_WK_CTRL0_8189;
+		msk = WC0_IS_EN_P_89;
 		val = enable ? msk : 0;
 		break;
 	case SSUSB_UWK_V2:
