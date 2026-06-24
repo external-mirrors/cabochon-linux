@@ -111,6 +111,19 @@ properties:
     $ref: /schemas/graph.yaml#/properties/port
     description: Super Speed (SS) Output endpoint to a Type-C connector
 
+  ports:
+    $ref: /schemas/graph.yaml#/properties/ports
+    description: Output endpoint list to a Type-C connector
+
+    properties:
+      port@0:
+        $ref: /schemas/graph.yaml#/properties/port
+        description: High Speed (HS) Output endpoint.
+
+      port@1:
+        $ref: /schemas/graph.yaml#/properties/port
+        description: Super Speed (SS) Output endpoint.
+
   vusb33-supply:
     description: Regulator of USB AVDD3.3v
 
