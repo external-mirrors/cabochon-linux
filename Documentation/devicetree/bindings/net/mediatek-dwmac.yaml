@@ -39,6 +39,10 @@ properties:
           - const: snps,dwmac-5.10a
       - items:
           - enum:
+              - mediatek,mt8196-gmac
+          - const: snps,dwmac-5.10a
+      - items:
+          - enum:
               - mediatek,mt8188-gmac
           - const: mediatek,mt8195-gmac
           - const: snps,dwmac-5.10a
