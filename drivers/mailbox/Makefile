@@ -67,7 +67,7 @@ obj-$(CONFIG_MTK_GPUEB_MBOX)	+= mtk-gpueb-mailbox.o
 
 obj-$(CONFIG_MTK_TINYSYS_MHU_MBOX)	+= mtk-tinysys-mhu-mailbox.o
 
-obj-$(CONFIG_MTK_VCP_MBOX)	+= mtk-vcp-mailbox.o
+obj-$(CONFIG_MTK_TINYSYS_IPI_MBOX)	+= mtk-tinysys-ipi-mailbox.o
 
 obj-$(CONFIG_ZYNQMP_IPI_MBOX)	+= zynqmp-ipi-mailbox.o
 
