@@ -373,6 +373,9 @@ struct mtu3 {
 	u8 address;
 	u8 test_mode_nr;
 	u32 hw_version;
+
+	// FIXME: hack for MT8894 NFF board, to be re-engineered
+	bool force_vbus;
 };
 
 static inline struct mtu3 *gadget_to_mtu3(struct usb_gadget *g)

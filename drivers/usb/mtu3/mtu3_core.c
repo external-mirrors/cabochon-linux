@@ -659,8 +659,11 @@ static void mtu3_regs_init(struct mtu3 *mtu)
 
 	/* U2/U3 detected by HW */
 	mtu3_writel(mbase, U3D_DEVICE_CONF, 0);
-	/* vbus detected by HW */
-	mtu3_clrbits(mbase, U3D_MISC_CTRL, VBUS_FRC_EN | VBUS_ON);
+	if (mtu->force_vbus)
+		mtu3_setbits(mbase, U3D_MISC_CTRL, VBUS_FRC_EN | VBUS_ON);
+	else	/* vbus detected by HW */
+		mtu3_clrbits(mbase, U3D_MISC_CTRL, VBUS_FRC_EN | VBUS_ON);
+
 	/* use new QMU format when HW version >= 0x1003 */
 	if (mtu->gen2cp)
 		mtu3_writel(mbase, U3D_QFCR, ~0x0);
@@ -923,6 +926,7 @@ int ssusb_gadget_init(struct ssusb_mtk *ssusb)
 {
 	struct device *dev = ssusb->dev;
 	struct platform_device *pdev = to_platform_device(dev);
+	struct device_node *node = pdev->dev.of_node;
 	struct mtu3 *mtu = NULL;
 	int ret = -ENOMEM;
 
@@ -955,6 +959,7 @@ int ssusb_gadget_init(struct ssusb_mtk *ssusb)
 	ssusb->u3d = mtu;
 	mtu->ssusb = ssusb;
 	mtu->max_speed = usb_get_maximum_speed(dev);
+	mtu->force_vbus = of_property_read_bool(node, "mediatek,force-vbus");
 
 	dev_dbg(dev, "mac_base=0x%p, ippc_base=0x%p\n",
 		mtu->mac_base, mtu->ippc_base);
