@@ -1,0 +1,27 @@
+// SPDX-License-Identifier: (GPL-2.0 OR MIT)
+/*
+ * Copyright (c) 2025 Collabora Ltd.
+ * Author: Louis-Alexis Eyraud <louisalexis.eyraud@collabora.com>
+ */
+/dts-v1/;
+
+#include "mt8189.dtsi"
+#include "mt8391-genio-common.dtsi"
+
+/ {
+	model = "MediaTek Genio 720 EVK";
+	compatible = "mediatek,mt8391-evk", "mediatek,mt8391",
+		     "mediatek,mt8189";
+};
+
+&cpu6 {
+	cpu-supply = <&mt6319_sid7_vbuck1>;
+};
+
+&cpu7 {
+	cpu-supply = <&mt6319_sid7_vbuck1>;
+};
+
+&mt6319_sid7 {
+	status = "okay";
+};
