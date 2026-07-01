@@ -602,6 +602,7 @@
 	usb-role-switch;
 	vbus-supply = <&vbus_usb0>;
 	vusb33-supply = <&vsys_3v3>;
+	mediatek,force-vbus;
 	status = "okay";
 };
 
