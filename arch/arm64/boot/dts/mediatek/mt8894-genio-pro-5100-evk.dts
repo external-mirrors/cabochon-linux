@@ -18,9 +18,13 @@
 		     "mediatek,mt8196";
 
 	aliases {
+		i2c2 = &i2c2;
 		i2c6 = &i2c6;
 		i2c9 = &i2c9;
 		serial0 = &uart0;
+		serial2 = &uart2;
+		serial4 = &uart4;
+		spi3 = &spi3;
 		spi4 = &spi4;
 	};
 
@@ -80,6 +84,53 @@
 		gpio = <&pio 31 GPIO_ACTIVE_HIGH>;
 		pinctrl-names = "default";
 		pinctrl-0 = <&vaudio5_pins>;
+		vin-supply = <&vsys_12v>;
+		regulator-always-on;
+	};
+
+	vraspi: regulator-raspi {
+		compatible = "regulator-fixed";
+		regulator-name = "vraspi";
+		enable-active-high;
+		gpio = <&pio 139 GPIO_ACTIVE_HIGH>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&vraspi_pins>;
+		vin-supply = <&vvideo_5v>;
+		regulator-always-on;
+	};
+
+	/* Used by all the 3v3 IOs in the Raspberry Pi connector */
+	vraspi_3v3: regulator-raspi-3v3 {
+		compatible = "regulator-fixed";
+		regulator-name = "vraspi_3v3";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		vin-supply = <&vraspi>;
+		regulator-always-on;
+		regulator-boot-on;
+	};
+
+	/* Provides the 5v supply for Raspberry Pi connector */
+	vraspi_5v: regulator-raspi-5v {
+		compatible = "regulator-fixed";
+		regulator-name = "vraspi_5v";
+		regulator-min-microvolt = <5000000>;
+		regulator-max-microvolt = <5000000>;
+		vin-supply = <&vraspi>;
+		regulator-always-on;
+		regulator-boot-on;
+	};
+
+	/* system wide 5.0V power rail */
+	vvideo_5v: regulator-video-5v {
+		compatible = "regulator-fixed";
+		regulator-name = "vvideo_5v";
+		regulator-min-microvolt = <5000000>;
+		regulator-max-microvolt = <5000000>;
+		enable-active-high;
+		gpio = <&pio 36 GPIO_ACTIVE_HIGH>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&video5_pins>;
 		vin-supply = <&vsys_12v>;
 		regulator-always-on;
 	};
@@ -176,6 +227,13 @@
 		pinctrl-0 = <&can_vdd_en_pins>;
 		vin-supply = <&vaudio_5v>;
 	};
+};
+
+&i2c2 {
+	clock-frequency = <400000>;
+	pinctrl-names = "default";
+	pinctrl-0 = <&i2c2_pins>;
+	status = "okay";
 };
 
 &i2c6 {
@@ -588,6 +646,15 @@
 		};
 	};
 
+	i2c2_pins: i2c2-pins {
+		pins-bus {
+			pinmux = <PINMUX_GPIO164__FUNC_SCP_SCL0>,
+				 <PINMUX_GPIO165__FUNC_SCP_SDA0>;
+			bias-disable;
+			drive-strength = <4>;
+		};
+	};
+
 	i2c6_pins: i2c6-pins {
 		pins-bus {
 			pinmux = <PINMUX_GPIO104__FUNC_SCL6>,
@@ -630,12 +697,43 @@
 		};
 	};
 
+	/* SPI3: Raspberry Pi & JTAG header (GPIO106-109) */
+	spi3_pins: spi3-pins {
+		pins-bus {
+			pinmux = <PINMUX_GPIO106__FUNC_SPI3_B_CLK>,
+				 <PINMUX_GPIO107__FUNC_SPI3_B_CSB>,
+				 <PINMUX_GPIO108__FUNC_SPI3_B_MO>,
+				 <PINMUX_GPIO109__FUNC_SPI3_B_MI>;
+			bias-disable;
+		};
+	};
+
 	spi4_pins: spi4-pins {
 		pins-bus {
 			pinmux = <PINMUX_GPIO114__FUNC_SPI4_A_CLK>,
 				 <PINMUX_GPIO115__FUNC_SPI4_A_CSB>,
 				 <PINMUX_GPIO116__FUNC_SPI4_A_MO>,
 				 <PINMUX_GPIO117__FUNC_SPI4_A_MI>;
+			bias-disable;
+		};
+	};
+
+	uart2_pins: uart2-pins {
+		pins-bus {
+			pinmux = <PINMUX_GPIO155__FUNC_UCTS2>,
+				 <PINMUX_GPIO156__FUNC_URTS2>,
+				 <PINMUX_GPIO157__FUNC_UTXD2>,
+				 <PINMUX_GPIO158__FUNC_URXD2>;
+			bias-disable;
+		};
+	};
+
+	uart4_pins: uart4-pins {
+		pins-bus {
+			pinmux = <PINMUX_GPIO27__FUNC_UTXD4>,
+				 <PINMUX_GPIO28__FUNC_URXD4>,
+				 <PINMUX_GPIO29__FUNC_UCTS4>,
+				 <PINMUX_GPIO30__FUNC_URTS4>;
 			bias-disable;
 		};
 	};
@@ -710,11 +808,41 @@
 		};
 	};
 
+	video5_pins: video5-default {
+		pins-regulator {
+			pinmux = <PINMUX_GPIO36__FUNC_GPIO36>;
+			output-high;
+		};
+	};
+
+	vraspi_pins: vraspi-default {
+		pins-regulator {
+			pinmux = <PINMUX_GPIO139__FUNC_GPIO139>;
+			output-high;
+		};
+	};
+
 	vsys33_pins: vsys33-default {
 		pins-regulator {
 			pinmux = <PINMUX_GPIO150__FUNC_GPIO150>;
 			output-high;
 		};
+	};
+};
+
+/* SPI3: Raspberry Pi & JTAG header (GPIO106/CLK, GPIO107/CSB, GPIO108/MO, GPIO109/MI) */
+&spi3 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&spi3_pins>;
+	#address-cells = <1>;
+	#size-cells = <0>;
+	mediatek,pad-select = <0>;
+	status = "okay";
+
+	spidev@0 {
+		compatible = "rohm,bh2228fv";
+		reg = <0>;
+		spi-max-frequency = <10000000>;
 	};
 };
 
@@ -787,6 +915,20 @@
 };
 
 &uart0 {
+	status = "okay";
+};
+
+/* uart2: 6-pin header (GPIO155-158: UCTS2/URTS2/UTXD2/URXD2) */
+&uart2 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&uart2_pins>;
+	status = "okay";
+};
+
+/* uart4: Raspberry Pi & JTAG header (GPIO27-30: UTXD4/URXD4/UCTS4/URTS4) */
+&uart4 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&uart4_pins>;
 	status = "okay";
 };
 
