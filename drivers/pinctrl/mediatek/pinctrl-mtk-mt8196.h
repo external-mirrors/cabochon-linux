@@ -1740,6 +1740,7 @@ static const struct mtk_pin_desc mtk_pins_mt8196[] = {
 		MTK_FUNCTION(0, "GPIO169"),
 		MTK_FUNCTION(1, "SCP_SPI2_CS"),
 		MTK_FUNCTION(2, "SPI2_B_CSB"),
+		MTK_FUNCTION(6, "PCIE_WAKEN"),
 		MTK_FUNCTION(7, "DBG_MON_A27")
 	),
 	MTK_PIN(
@@ -1750,6 +1751,7 @@ static const struct mtk_pin_desc mtk_pins_mt8196[] = {
 		MTK_FUNCTION(1, "SCP_SPI2_MO"),
 		MTK_FUNCTION(2, "SPI2_B_MO"),
 		MTK_FUNCTION(4, "SCP_SDA2"),
+		MTK_FUNCTION(6, "PCIE_CLKREQN"),
 		MTK_FUNCTION(7, "DBG_MON_A28")
 	),
 	MTK_PIN(
@@ -1759,6 +1761,7 @@ static const struct mtk_pin_desc mtk_pins_mt8196[] = {
 		MTK_FUNCTION(0, "GPIO171"),
 		MTK_FUNCTION(1, "SCP_SPI2_MI"),
 		MTK_FUNCTION(2, "SPI2_B_MI"),
+		MTK_FUNCTION(6, "PCIE_PERSTN"),
 		MTK_FUNCTION(7, "DBG_MON_A29")
 	),
 	MTK_PIN(
