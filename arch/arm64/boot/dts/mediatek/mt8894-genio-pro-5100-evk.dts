@@ -227,6 +227,32 @@
 		pinctrl-0 = <&can_vdd_en_pins>;
 		vin-supply = <&vaudio_5v>;
 	};
+
+	vwifi33: regulator-wifi33 {
+		compatible = "regulator-fixed";
+		regulator-name = "vwifi33";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		enable-active-high;
+		gpio = <&pio 113 GPIO_ACTIVE_HIGH>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&vwifi33_pins>;
+		vin-supply = <&vvideo_5v>;
+		regulator-always-on;
+	};
+
+	vusb_hub: regulator-usb-hub {
+		compatible = "regulator-fixed";
+		regulator-name = "vusb_hub";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		enable-active-high;
+		gpio = <&pio 149 GPIO_ACTIVE_HIGH>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&vusb_hub_pins>;
+		vin-supply = <&vvideo_5v>;
+		regulator-always-on;
+	};
 };
 
 &i2c2 {
@@ -542,6 +568,36 @@
 	regulator-always-on;
 };
 
+&pcie0 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&pcie0_pins>;
+	status = "okay";
+};
+
+&pciephy0 {
+	status = "okay";
+};
+
+&pcie1 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&pcie1_pins>;
+	status = "okay";
+};
+
+&pciephy1 {
+	status = "okay";
+};
+
+&pcie2 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&pcie2_pins>;
+	status = "okay";
+};
+
+&pciephy2 {
+	status = "okay";
+};
+
 &pio {
 	can0_default_pins: can0-default-pins {
 		pins-irq {
@@ -699,6 +755,68 @@
 		};
 	};
 
+	pcie0_pins: pcie0-pins {
+		pins-bus {
+			pinmux = <PINMUX_GPIO169__FUNC_PCIE_WAKEN>,
+				 <PINMUX_GPIO171__FUNC_PCIE_PERSTN>;
+			bias-pull-up;
+		};
+
+		pins-bus1 {
+			pinmux = <PINMUX_GPIO170__FUNC_PCIE_CLKREQN>;
+			bias-pull-up;
+			input-enable;
+		};
+
+		pins-repeater {
+			pinmux = <PINMUX_GPIO216__FUNC_GPIO216>; // eUSB2 repeater (port 3)
+			bias-pull-up;
+			output-high;
+		};
+
+		pins-shifter {
+			pinmux = <PINMUX_GPIO111__FUNC_GPIO111>; // WCN_3V3_EN (WiFi/BT level shifter)
+			bias-pull-up;
+			output-high;
+		};
+
+		pins-wifi {
+			pinmux = <PINMUX_GPIO110__FUNC_GPIO110>, // WF_RST (active low)
+				 <PINMUX_GPIO112__FUNC_GPIO112>; // BT_RST (active low)
+			bias-pull-up;
+			output-high;
+		};
+	};
+
+	pcie1_pins: pcie1-pins {
+		pins-bus {
+			pinmux = <PINMUX_GPIO21__FUNC_PCIE_PERSTN_1P>,
+				 <PINMUX_GPIO22__FUNC_PCIE_CLKREQN_1P>,
+				 <PINMUX_GPIO23__FUNC_PCIE_WAKEN_1P>;
+			bias-pull-up;
+		};
+
+		pins-nvme-enable-n {
+			pinmux = <PINMUX_GPIO24__FUNC_GPIO24>;
+			output-low;
+		};
+	};
+
+	pcie2_pins: pcie2-pins {
+		pins-bus {
+			pinmux = <PINMUX_GPIO207__FUNC_PCIE_WAKEN_2P>,
+				 <PINMUX_GPIO208__FUNC_PCIE_CLKREQN_2P>,
+				 <PINMUX_GPIO209__FUNC_PCIE_PERSTN_2P>;
+			bias-pull-up;
+		};
+
+		pins-hub-reset {
+			pinmux = <PINMUX_GPIO186__FUNC_GPIO186>; // USBHOST_RST_N
+			bias-pull-up;
+			output-high;
+		};
+	};
+
 	/* SPI3: Raspberry Pi & JTAG header (GPIO106-109) */
 	spi3_pins: spi3-pins {
 		pins-bus {
@@ -827,6 +945,20 @@
 	vsys33_pins: vsys33-default {
 		pins-regulator {
 			pinmux = <PINMUX_GPIO150__FUNC_GPIO150>;
+			output-high;
+		};
+	};
+
+	vwifi33_pins: vwifi33-default {
+		pins-regulator {
+			pinmux = <PINMUX_GPIO113__FUNC_GPIO113>;
+			output-high;
+		};
+	};
+
+	vusb_hub_pins: vusb-hub-default {
+		pins-regulator {
+			pinmux = <PINMUX_GPIO149__FUNC_GPIO149>;
 			output-high;
 		};
 	};
