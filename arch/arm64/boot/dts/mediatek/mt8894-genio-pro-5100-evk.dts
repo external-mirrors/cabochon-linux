@@ -21,6 +21,7 @@
 		i2c6 = &i2c6;
 		i2c9 = &i2c9;
 		serial0 = &uart0;
+		spi4 = &spi4;
 	};
 
 	chosen {
@@ -155,6 +156,25 @@
 		pinctrl-names = "default";
 		pinctrl-0 = <&usb_vusb33_pins>;
 		vin-supply = <&vsys_5v>;
+	};
+
+	can_clk: can-clk {
+		compatible = "fixed-clock";
+		#clock-cells = <0>;
+		clock-frequency = <20000000>;
+	};
+
+	vcan_5v: regulator-can-5v {
+		compatible = "regulator-fixed";
+		regulator-name = "can_5v";
+		regulator-min-microvolt = <5000000>;
+		regulator-max-microvolt = <5000000>;
+		regulator-always-on;
+		enable-active-high;
+		gpio = <&pio 17 GPIO_ACTIVE_HIGH>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&can_vdd_en_pins>;
+		vin-supply = <&vaudio_5v>;
 	};
 };
 
@@ -463,6 +483,33 @@
 };
 
 &pio {
+	can0_default_pins: can0-default-pins {
+		pins-irq {
+			pinmux = <PINMUX_GPIO15__FUNC_GPIO15>;
+			input-enable;
+			bias-pull-up;
+		};
+
+		pins-stby {
+			pinmux = <PINMUX_GPIO13__FUNC_GPIO13>;
+			output-low;
+		};
+	};
+
+	can0_sleep_pins: can0-sleep-pins {
+		pins-stby {
+			pinmux = <PINMUX_GPIO13__FUNC_GPIO13>;
+			output-high;
+		};
+	};
+
+	can_vdd_en_pins: can-vdd-en-pins {
+		pins {
+			pinmux = <PINMUX_GPIO17__FUNC_GPIO17>;
+			output-high;
+		};
+	};
+
 	eth1_default_pins: eth1-default-pins {
 		pins-cc {
 			pinmux = <PINMUX_GPIO261__FUNC_GBE1_TXC>,
@@ -583,6 +630,16 @@
 		};
 	};
 
+	spi4_pins: spi4-pins {
+		pins-bus {
+			pinmux = <PINMUX_GPIO114__FUNC_SPI4_A_CLK>,
+				 <PINMUX_GPIO115__FUNC_SPI4_A_CSB>,
+				 <PINMUX_GPIO116__FUNC_SPI4_A_MO>,
+				 <PINMUX_GPIO117__FUNC_SPI4_A_MI>;
+			bias-disable;
+		};
+	};
+
 	usb_vusb33_pins: usb-vusb33-default {
 		pins-regulator {
 			pinmux = <PINMUX_GPIO251__FUNC_GPIO251>;
@@ -658,6 +715,29 @@
 			pinmux = <PINMUX_GPIO150__FUNC_GPIO150>;
 			output-high;
 		};
+	};
+};
+
+&spi4 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&spi4_pins>;
+	#address-cells = <1>;
+	#size-cells = <0>;
+	mediatek,pad-select = <0>;
+	status = "okay";
+
+	can0: can@0 {
+		compatible = "microchip,mcp2518fd";
+		reg = <0>;
+		clocks = <&can_clk>;
+		spi-max-frequency = <20000000>;
+		interrupts-extended = <&pio 15 IRQ_TYPE_LEVEL_LOW>;
+		vdd-supply = <&vcan_5v>;
+		xceiver-supply = <&vcan_5v>;
+		pinctrl-names = "default", "sleep";
+		pinctrl-0 = <&can0_default_pins>;
+		pinctrl-1 = <&can0_sleep_pins>;
+		status = "failed";
 	};
 };
 
