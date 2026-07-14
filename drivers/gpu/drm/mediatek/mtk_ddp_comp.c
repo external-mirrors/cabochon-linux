@@ -345,6 +345,18 @@ static const struct mtk_ddp_comp_funcs ddp_od = {
 	.start = mtk_od_start,
 };
 
+static const struct mtk_ddp_comp_funcs ddp_outproc = {
+	.clk_enable = mtk_outproc_clk_enable,
+	.clk_disable = mtk_outproc_clk_disable,
+	.start = mtk_outproc_start,
+	.stop = mtk_outproc_stop,
+	.config = mtk_outproc_config,
+	.register_vblank_cb = mtk_outproc_register_vblank_cb,
+	.unregister_vblank_cb = mtk_outproc_unregister_vblank_cb,
+	.enable_vblank = mtk_outproc_enable_vblank,
+	.disable_vblank = mtk_outproc_disable_vblank,
+};
+
 static const struct mtk_ddp_comp_funcs ddp_ovl = {
 	.clk_enable = mtk_ovl_clk_enable,
 	.clk_disable = mtk_ovl_clk_disable,
@@ -451,6 +463,7 @@ static const char * const mtk_ddp_comp_stem[MTK_DDP_COMP_TYPE_MAX] = {
 	[MTK_DISP_MERGE] = "merge",
 	[MTK_DISP_MUTEX] = "mutex",
 	[MTK_DISP_OD] = "od",
+	[MTK_DISP_OUTPROC] = "outproc",
 	[MTK_DISP_OVL] = "ovl",
 	[MTK_DISP_OVL_2L] = "ovl-2l",
 	[MTK_DISP_OVL_ADAPTOR] = "ovl_adaptor",
@@ -477,6 +490,7 @@ static const struct mtk_ddp_comp_funcs *mtk_ddp_funcs[MTK_DDP_COMP_TYPE_MAX] = {
 	[MTK_DISP_GAMMA]		= &ddp_gamma,
 	[MTK_DISP_MERGE]		= &ddp_merge,
 	[MTK_DISP_OD]			= &ddp_od,
+	[MTK_DISP_OUTPROC]		= &ddp_outproc,
 	[MTK_DISP_OVL]			= &ddp_ovl,
 	[MTK_DISP_OVL_2L]		= &ddp_ovl,
 	[MTK_DISP_OVL_ADAPTOR]		= &ddp_ovl_adaptor,
