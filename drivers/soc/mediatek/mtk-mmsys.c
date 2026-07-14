@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: GPL-2.0-only
 /*
  * Copyright (c) 2014 MediaTek Inc.
- * Author: James Liao <jamesjj.liao@mediatek.com>
+ *                    James Liao <jamesjj.liao@mediatek.com>
+ *
+ * Copyrignt (c) 2026 Collabora Ltd.
+ *                    AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
  */
 
 #include <linux/delay.h>
@@ -191,38 +194,90 @@ static void mtk_mmsys_update_bits(struct mtk_mmsys *mmsys, u32 offset, u32 mask,
 	writel_relaxed(tmp, mmsys->regs + offset);
 }
 
-void mtk_mmsys_ddp_connect(struct device *dev,
-			   enum mtk_ddp_comp_id cur,
-			   enum mtk_ddp_comp_id next)
+/**
+ * mtk_mmsys_hw_connect - Connect MultiMedia Subsystem (MMSYS) Hardware IPs
+ * @dev:            Device pointer
+ * @src_type:       Type of the Source IP
+ * @src_hw_inst_id: Hardware instance of the Source IP
+ * @dst_type:       Type of the Destination IP
+ * @dst_hw_inst_id: Hardware instance of the Destination IP
+ *
+ * This function connects one MultiMedia Subsystem (MMSYS) related hardware
+ * to another (in the same subsystem), depending on supported connections.
+ * In short, this connects "Source" to "Destination", as in, enables sending
+ * data from a Source IP to a Destination IP.
+ *
+ * As a final note - depending on the SoC and on the specific IPs, it may
+ * also be possible to connect multiple Sources to a single Destination.
+ *
+ * Examples below follow this format to explain hardware components:
+ *      [Source Type][Instance ID] -> [Destination Type] [Instance ID]
+ *
+ * Example 1 - Single Source to Destination
+ *                         GAMMA 0 -> DITHER 0
+ *
+ * Example 2 - Multiple Sources to Single Destination
+ *                 MDP_RDMA 0 -----\
+ *                                  |
+ *                                  v
+ *                 MDP_RDMA 1 ---> MERGE 1 \
+ *                 MDP_RDMA 2 ---> MERGE 2 -\
+ *                                           >> ETHDR_MIXER 0
+ *                 (other 1)  ---> MERGE 3 -/
+ *                 (other 2)  ---> MERGE 4 /
+ *
+ * Note that in Example 2, some components are not chained together, but
+ * connected in parallel to a destination.
+ */
+void mtk_mmsys_hw_connect(struct device *dev,
+			  enum mtk_ddp_comp_type src_type, u8 src_hw_inst_id,
+			  enum mtk_ddp_comp_type dst_type, u8 dst_hw_inst_id)
 {
 	struct mtk_mmsys *mmsys = dev_get_drvdata(dev);
 	const struct mtk_mmsys_routes *routes = mmsys->data->routes;
-	int i;
 
-	for (i = 0; i < mmsys->data->num_routes; i++)
-		if (cur == routes[i].from_comp && next == routes[i].to_comp)
-			mtk_mmsys_update_bits(mmsys, routes[i].addr, routes[i].mask,
-					      routes[i].val, NULL);
+	for (int i = 0; i < mmsys->data->num_routes; i++) {
+		if (src_type != routes[i].from_comp_type ||
+		    src_hw_inst_id != routes[i].from_comp_inst ||
+		    dst_type != routes[i].to_comp_type ||
+		    dst_hw_inst_id != routes[i].to_comp_inst)
+			continue;
 
-	if (mmsys->data->vsync_len)
-		mtk_mmsys_update_bits(mmsys, MT8188_VDO1_MIXER_VSYNC_LEN, GENMASK(31, 0),
-				      mmsys->data->vsync_len, NULL);
+		mtk_mmsys_update_bits(mmsys, routes[i].addr, routes[i].mask, routes[i].val, NULL);
+		dev_dbg(dev, "Connected %u-%u to %u-%u\n",
+			src_type, src_hw_inst_id, dst_type, dst_hw_inst_id);
+	}
 }
-EXPORT_SYMBOL_GPL(mtk_mmsys_ddp_connect);
+EXPORT_SYMBOL_NS_GPL(mtk_mmsys_hw_connect, "MTK_MMSYS");
 
-void mtk_mmsys_ddp_disconnect(struct device *dev,
-			      enum mtk_ddp_comp_id cur,
-			      enum mtk_ddp_comp_id next)
+/**
+ * mtk_mmsys_hw_disconnect - Disconnect MultiMedia Subsystem (MMSYS) Hardware IPs
+ * @dev:            Device pointer
+ * @src_type:       Type of the Source IP
+ * @src_hw_inst_id: Hardware instance of the Source IP
+ * @dst_type:       Type of the Destination IP
+ * @dst_hw_inst_id: Hardware instance of the Destination IP
+ */
+void mtk_mmsys_hw_disconnect(struct device *dev,
+			     enum mtk_ddp_comp_type src_type, u8 src_hw_inst_id,
+			     enum mtk_ddp_comp_type dst_type, u8 dst_hw_inst_id)
 {
 	struct mtk_mmsys *mmsys = dev_get_drvdata(dev);
 	const struct mtk_mmsys_routes *routes = mmsys->data->routes;
-	int i;
 
-	for (i = 0; i < mmsys->data->num_routes; i++)
-		if (cur == routes[i].from_comp && next == routes[i].to_comp)
-			mtk_mmsys_update_bits(mmsys, routes[i].addr, routes[i].mask, 0, NULL);
+	for (int i = 0; i < mmsys->data->num_routes; i++) {
+		if (src_type != routes[i].from_comp_type ||
+		    src_hw_inst_id != routes[i].from_comp_inst ||
+		    dst_type != routes[i].to_comp_type ||
+		    dst_hw_inst_id != routes[i].to_comp_inst)
+			continue;
+
+		mtk_mmsys_update_bits(mmsys, routes[i].addr, routes[i].mask, 0, NULL);
+		dev_dbg(dev, "Disconnected %u-%u from %u-%u\n",
+			src_type, src_hw_inst_id, dst_type, dst_hw_inst_id);
+	}
 }
-EXPORT_SYMBOL_GPL(mtk_mmsys_ddp_disconnect);
+EXPORT_SYMBOL_NS_GPL(mtk_mmsys_hw_disconnect, "MTK_MMSYS");
 
 void mtk_mmsys_merge_async_config(struct device *dev, int idx, int width, int height,
 				  struct cmdq_pkt *cmdq_pkt)
