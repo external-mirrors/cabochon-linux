@@ -6,6 +6,7 @@
 #ifndef MTK_DDP_COMP_H
 #define MTK_DDP_COMP_H
 
+#include <linux/hashtable.h>
 #include <linux/io.h>
 #include <linux/pm_runtime.h>
 #include <linux/soc/mediatek/mtk-cmdq.h>
@@ -24,6 +25,11 @@ struct drm_dsc_config;
 
 struct mtk_ddp_comp;
 struct cmdq_pkt;
+
+struct mtk_drm_comp_list {
+	DECLARE_HASHTABLE(ddp_list, 8);
+};
+
 struct mtk_ddp_comp_funcs {
 	int (*power_on)(struct device *dev);
 	void (*power_off)(struct device *dev);
@@ -75,6 +81,8 @@ struct mtk_ddp_comp {
 	unsigned int id;
 	int encoder_index;
 	const struct mtk_ddp_comp_funcs *funcs;
+
+	struct hlist_node lnode;
 };
 
 static inline int mtk_ddp_comp_power_on(struct mtk_ddp_comp *comp)
@@ -331,10 +339,23 @@ static inline void mtk_ddp_comp_encoder_index_set(struct mtk_ddp_comp *comp)
 		comp->encoder_index = (int)comp->funcs->encoder_index(comp->dev);
 }
 
+static inline struct mtk_ddp_comp
+*mtk_ddp_comp_find_by_id(struct mtk_drm_comp_list *hlist,
+			 const unsigned int id)
+{
+	struct mtk_ddp_comp *ddp_comp;
+
+	hash_for_each_possible(hlist->ddp_list, ddp_comp, lnode, id)
+		return ddp_comp;
+
+	return NULL;
+}
+
 int mtk_ddp_comp_get_id(struct device_node *node,
 			enum mtk_ddp_comp_type comp_type);
 int mtk_find_possible_crtcs(struct drm_device *drm, struct device *dev);
-int mtk_ddp_comp_init(struct device *dev, struct device_node *comp_node, struct mtk_ddp_comp *comp,
+int mtk_ddp_comp_init(struct device *dev, struct device_node *node,
+		      struct mtk_drm_comp_list *hlist,
 		      unsigned int comp_id);
 enum mtk_ddp_comp_type mtk_ddp_comp_get_type(unsigned int comp_id);
 void mtk_ddp_write(struct cmdq_pkt *cmdq_pkt, unsigned int value,

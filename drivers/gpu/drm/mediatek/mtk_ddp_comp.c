@@ -480,10 +480,24 @@ static const struct mtk_ddp_comp_match mtk_ddp_matches[DDP_COMPONENT_DRM_ID_MAX]
 	[DDP_COMPONENT_WDMA1]		= { MTK_DISP_WDMA,		1, &ddp_wdma },
 };
 
+static bool mtk_ddp_find_comp_dev_in_table(const struct mtk_drm_comp_list *hlist,
+					   const unsigned int comp_id,
+					   struct device *dev)
+{
+	struct mtk_ddp_comp *ddp_comp;
+
+	hash_for_each_possible(hlist->ddp_list, ddp_comp, lnode, comp_id) {
+		if (ddp_comp->dev == dev)
+			return true;
+	}
+
+	return false;
+}
+
 static bool mtk_ddp_comp_find(struct device *dev,
 			      const unsigned int *path,
 			      unsigned int path_len,
-			      struct mtk_ddp_comp *ddp_comp)
+			      const struct mtk_drm_comp_list *hlist)
 {
 	unsigned int i;
 
@@ -491,7 +505,7 @@ static bool mtk_ddp_comp_find(struct device *dev,
 		return false;
 
 	for (i = 0U; i < path_len; i++)
-		if (dev == ddp_comp[path[i]].dev)
+		if (mtk_ddp_find_comp_dev_in_table(hlist, path[i], dev))
 			return true;
 
 	return false;
@@ -500,7 +514,7 @@ static bool mtk_ddp_comp_find(struct device *dev,
 static int mtk_ddp_comp_find_in_route(struct device *dev,
 				      const struct mtk_drm_route *routes,
 				      unsigned int num_routes,
-				      struct mtk_ddp_comp *ddp_comp)
+				      const struct mtk_drm_comp_list *hlist)
 {
 	unsigned int i;
 
@@ -508,7 +522,7 @@ static int mtk_ddp_comp_find_in_route(struct device *dev,
 		return -EINVAL;
 
 	for (i = 0; i < num_routes; i++)
-		if (dev == ddp_comp[routes[i].route_ddp].dev)
+		if (mtk_ddp_find_comp_dev_in_table(hlist, routes[i].route_ddp, dev))
 			return BIT(routes[i].crtc_id);
 
 	return -ENODEV;
@@ -566,7 +580,7 @@ int mtk_find_possible_crtcs(struct drm_device *drm, struct device *dev)
 					   priv_n->comp_node)) {
 			if (mtk_ddp_comp_find(dev, data->main_path,
 					      data->main_len,
-					      priv_n->ddp_comp))
+					      &priv_n->hlist))
 				return BIT(i);
 			i++;
 		}
@@ -575,7 +589,7 @@ int mtk_find_possible_crtcs(struct drm_device *drm, struct device *dev)
 					   priv_n->comp_node)) {
 			if (mtk_ddp_comp_find(dev, data->ext_path,
 					      data->ext_len,
-					      priv_n->ddp_comp))
+					      &priv_n->hlist))
 				return BIT(i);
 			i++;
 		}
@@ -584,7 +598,7 @@ int mtk_find_possible_crtcs(struct drm_device *drm, struct device *dev)
 					   priv_n->comp_node)) {
 			if (mtk_ddp_comp_find(dev, data->third_path,
 					      data->third_len,
-					      priv_n->ddp_comp))
+					      &priv_n->hlist))
 				return BIT(i);
 			i++;
 		}
@@ -593,7 +607,7 @@ int mtk_find_possible_crtcs(struct drm_device *drm, struct device *dev)
 	ret = mtk_ddp_comp_find_in_route(dev,
 					 private->data->conn_routes,
 					 private->data->num_conn_routes,
-					 private->ddp_comp);
+					 &private->hlist);
 
 	if (ret < 0)
 		DRM_INFO("Failed to find comp in ddp table, ret = %d\n", ret);
@@ -615,16 +629,22 @@ static void mtk_ddp_comp_clk_put(void *_clk)
 	clk_put(clk);
 }
 
-int mtk_ddp_comp_init(struct device *dev, struct device_node *node, struct mtk_ddp_comp *comp,
+int mtk_ddp_comp_init(struct device *dev, struct device_node *node,
+		      struct mtk_drm_comp_list *hlist,
 		      unsigned int comp_id)
 {
 	struct platform_device *comp_pdev;
+	struct mtk_ddp_comp *comp;
 	enum mtk_ddp_comp_type type;
 	struct mtk_ddp_comp_dev *priv;
 	int ret;
 
 	if (comp_id >= DDP_COMPONENT_DRM_ID_MAX)
 		return -EINVAL;
+
+	comp = devm_kzalloc(dev, sizeof(*comp), GFP_KERNEL);
+	if (!comp)
+		return -ENOMEM;
 
 	type = mtk_ddp_matches[comp_id].type;
 
@@ -633,8 +653,10 @@ int mtk_ddp_comp_init(struct device *dev, struct device_node *node, struct mtk_d
 	/* Not all drm components have a DTS device node, such as ovl_adaptor,
 	 * which is the drm bring up sub driver
 	 */
-	if (!node)
-		return 0;
+	if (!node) {
+		comp->dev = dev;
+		goto end;
+	}
 
 	comp_pdev = of_find_device_by_node(node);
 	if (!comp_pdev) {
@@ -662,7 +684,7 @@ int mtk_ddp_comp_init(struct device *dev, struct device_node *node, struct mtk_d
 	    type == MTK_DISP_DPI ||
 	    type == MTK_DISP_DP_INTF ||
 	    type == MTK_DISP_DSI)
-		return 0;
+		goto end;
 
 	priv = devm_kzalloc(dev, sizeof(*priv), GFP_KERNEL);
 	if (!priv)
@@ -687,6 +709,8 @@ int mtk_ddp_comp_init(struct device *dev, struct device_node *node, struct mtk_d
 #endif
 
 	platform_set_drvdata(comp_pdev, priv);
+end:
+	hash_add(hlist->ddp_list, &comp->lnode, comp->id);
 
 	return 0;
 }
