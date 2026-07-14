@@ -92,6 +92,7 @@ enum mtk_ddp_comp_type {
 	MTK_DISP_COLOR,
 	MTK_DISP_DITHER,
 	MTK_DISP_DSC,
+	MTK_DISP_ETHDR_MIXER,
 	MTK_DISP_GAMMA,
 	MTK_DISP_MERGE,
 	MTK_DISP_MUTEX,
@@ -99,11 +100,15 @@ enum mtk_ddp_comp_type {
 	MTK_DISP_OVL,
 	MTK_DISP_OVL_2L,
 	MTK_DISP_OVL_ADAPTOR,
+	MTK_DISP_PADDING,
 	MTK_DISP_POSTMASK,
 	MTK_DISP_PWM,
 	MTK_DISP_RDMA,
 	MTK_DISP_UFOE,
 	MTK_DISP_WDMA,
+
+	/* MDP Components */
+	MTK_DISP_MDP_RDMA,
 
 	/* Keep Display outputs at the end for readability */
 	MTK_DPI,
