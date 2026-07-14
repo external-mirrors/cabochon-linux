@@ -62,6 +62,10 @@ void mtk_dsi_ddp_stop(struct device *dev);
 unsigned int mtk_dsi_encoder_index(struct device *dev);
 struct drm_dsc_config *mtk_dsi_get_dsc_config(struct device *dev);
 
+void mtk_dvo_start(struct device *dev);
+void mtk_dvo_stop(struct device *dev);
+unsigned int mtk_dvo_encoder_index(struct device *dev);
+
 int mtk_gamma_clk_enable(struct device *dev);
 void mtk_gamma_clk_disable(struct device *dev);
 void mtk_gamma_config(struct device *dev, unsigned int w,

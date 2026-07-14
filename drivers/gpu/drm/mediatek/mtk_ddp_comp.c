@@ -290,6 +290,12 @@ static const struct mtk_ddp_comp_funcs ddp_dsi = {
 	.encoder_index = mtk_dsi_encoder_index,
 };
 
+static const struct mtk_ddp_comp_funcs ddp_dvo = {
+	.start = mtk_dvo_start,
+	.stop = mtk_dvo_stop,
+	.encoder_index = mtk_dvo_encoder_index,
+};
+
 static const struct mtk_ddp_comp_funcs ddp_gamma = {
 	.clk_enable = mtk_gamma_clk_enable,
 	.clk_disable = mtk_gamma_clk_disable,
@@ -430,6 +436,7 @@ static const char * const mtk_ddp_comp_stem[MTK_DDP_COMP_TYPE_MAX] = {
 	[MTK_DISP_DP_INTF] = "dp-intf",
 	[MTK_DISP_DPI] = "dpi",
 	[MTK_DISP_DSI] = "dsi",
+	[MTK_DISP_DVO] = "dvo",
 };
 
 static const struct mtk_ddp_comp_funcs *mtk_ddp_funcs[MTK_DDP_COMP_TYPE_MAX] = {
@@ -453,6 +460,7 @@ static const struct mtk_ddp_comp_funcs *mtk_ddp_funcs[MTK_DDP_COMP_TYPE_MAX] = {
 	[MTK_DISP_DPI]			= &ddp_dpi,
 	[MTK_DISP_DP_INTF]		= &ddp_dpi,
 	[MTK_DISP_DSI]			= &ddp_dsi,
+	[MTK_DISP_DVO]			= &ddp_dvo,
 };
 
 static bool mtk_ddp_find_comp_dev_in_table(const struct mtk_drm_comp_list *hlist,
