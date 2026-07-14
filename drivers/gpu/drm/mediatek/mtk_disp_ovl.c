@@ -260,16 +260,16 @@ bool mtk_ovl_is_afbc_supported(struct device *dev)
 	return ovl->data->supports_afbc;
 }
 
-int mtk_ovl_clk_enable(struct device *dev)
+int mtk_ovl_clk_enable(struct mtk_ddp_comp *comp)
 {
-	struct mtk_disp_ovl *ovl = dev_get_drvdata(dev);
+	struct mtk_disp_ovl *ovl = dev_get_drvdata(comp->dev);
 
 	return clk_prepare_enable(ovl->clk);
 }
 
-void mtk_ovl_clk_disable(struct device *dev)
+void mtk_ovl_clk_disable(struct mtk_ddp_comp *comp)
 {
-	struct mtk_disp_ovl *ovl = dev_get_drvdata(dev);
+	struct mtk_disp_ovl *ovl = dev_get_drvdata(comp->dev);
 
 	clk_disable_unprepare(ovl->clk);
 }
@@ -327,11 +327,11 @@ static void mtk_ovl_set_bit_depth(struct device *dev, int idx, u32 format,
 			   OVL_CON_CLRFMT_BIT_DEPTH_MASK(idx));
 }
 
-void mtk_ovl_config(struct device *dev, unsigned int w,
+void mtk_ovl_config(struct mtk_ddp_comp *comp, unsigned int w,
 		    unsigned int h, unsigned int vrefresh,
 		    unsigned int bpc, struct cmdq_pkt *cmdq_pkt)
 {
-	struct mtk_disp_ovl *ovl = dev_get_drvdata(dev);
+	struct mtk_disp_ovl *ovl = dev_get_drvdata(comp->dev);
 
 	if (w != 0 && h != 0)
 		mtk_ddp_write_relaxed(cmdq_pkt, h << 16 | w, &ovl->cmdq_reg, ovl->regs,

@@ -281,21 +281,21 @@ void mtk_ethdr_stop(struct device *dev)
 	writel(0, mixer->regs + MIX_RST);
 }
 
-int mtk_ethdr_clk_enable(struct device *dev)
+int mtk_ethdr_clk_enable(struct mtk_ddp_comp *comp)
 {
 	int ret;
-	struct mtk_ethdr *priv = dev_get_drvdata(dev);
+	struct mtk_ethdr *priv = dev_get_drvdata(comp->dev);
 
 	ret = clk_bulk_prepare_enable(ETHDR_CLK_NUM, priv->ethdr_clk);
 	if (ret)
-		dev_err(dev,
+		dev_err(comp->dev,
 			"ethdr_clk prepare enable failed\n");
 	return ret;
 }
 
-void mtk_ethdr_clk_disable(struct device *dev)
+void mtk_ethdr_clk_disable(struct mtk_ddp_comp *comp)
 {
-	struct mtk_ethdr *priv = dev_get_drvdata(dev);
+	struct mtk_ethdr *priv = dev_get_drvdata(comp->dev);
 
 	clk_bulk_disable_unprepare(ETHDR_CLK_NUM, priv->ethdr_clk);
 }

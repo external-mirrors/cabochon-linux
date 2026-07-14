@@ -187,16 +187,16 @@ size_t mtk_wdma_get_num_formats(struct device *dev)
 	return wdma->data->num_formats;
 }
 
-int mtk_wdma_clk_enable(struct device *dev)
+int mtk_wdma_clk_enable(struct mtk_ddp_comp *comp)
 {
-	struct mtk_disp_wdma *wdma = dev_get_drvdata(dev);
+	struct mtk_disp_wdma *wdma = dev_get_drvdata(comp->dev);
 
 	return clk_prepare_enable(wdma->clk);
 }
 
-void mtk_wdma_clk_disable(struct device *dev)
+void mtk_wdma_clk_disable(struct mtk_ddp_comp *comp)
 {
-	struct mtk_disp_wdma *wdma = dev_get_drvdata(dev);
+	struct mtk_disp_wdma *wdma = dev_get_drvdata(comp->dev);
 
 	clk_disable_unprepare(wdma->clk);
 }
@@ -219,11 +219,11 @@ void mtk_wdma_stop(struct device *dev)
 	wdma_update_bits(dev, DISP_REG_WDMA_EN, WDMA_ENGINE_EN, 0);
 }
 
-void mtk_wdma_config(struct device *dev, unsigned int width,
+void mtk_wdma_config(struct mtk_ddp_comp *comp, unsigned int width,
 		     unsigned int height, unsigned int vrefresh,
 		     unsigned int bpc, struct cmdq_pkt *cmdq_pkt)
 {
-	struct mtk_disp_wdma *wdma = dev_get_drvdata(dev);
+	struct mtk_disp_wdma *wdma = dev_get_drvdata(comp->dev);
 
 	writel(WDMA_FORCE_COMMIT | WDMA_BYPASS_SHADOW,
 	       wdma->regs + DISP_REG_WDMA_SHADOW_CTRL);

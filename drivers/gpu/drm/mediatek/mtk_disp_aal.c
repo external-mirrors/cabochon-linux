@@ -50,25 +50,25 @@ struct mtk_disp_aal {
 	const struct mtk_disp_aal_data *data;
 };
 
-int mtk_aal_clk_enable(struct device *dev)
+int mtk_aal_clk_enable(struct mtk_ddp_comp *comp)
 {
-	struct mtk_disp_aal *aal = dev_get_drvdata(dev);
+	struct mtk_disp_aal *aal = dev_get_drvdata(comp->dev);
 
 	return clk_prepare_enable(aal->clk);
 }
 
-void mtk_aal_clk_disable(struct device *dev)
+void mtk_aal_clk_disable(struct mtk_ddp_comp *comp)
 {
-	struct mtk_disp_aal *aal = dev_get_drvdata(dev);
+	struct mtk_disp_aal *aal = dev_get_drvdata(comp->dev);
 
 	clk_disable_unprepare(aal->clk);
 }
 
-void mtk_aal_config(struct device *dev, unsigned int w,
+void mtk_aal_config(struct mtk_ddp_comp *comp, unsigned int w,
 			   unsigned int h, unsigned int vrefresh,
 			   unsigned int bpc, struct cmdq_pkt *cmdq_pkt)
 {
-	struct mtk_disp_aal *aal = dev_get_drvdata(dev);
+	struct mtk_disp_aal *aal = dev_get_drvdata(comp->dev);
 	u32 sz;
 
 	sz = FIELD_PREP(DISP_AAL_SIZE_HSIZE, w);

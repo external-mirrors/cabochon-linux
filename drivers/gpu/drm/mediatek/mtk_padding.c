@@ -38,16 +38,16 @@ struct mtk_padding {
 	struct cmdq_client_reg	cmdq_reg;
 };
 
-int mtk_padding_clk_enable(struct device *dev)
+int mtk_padding_clk_enable(struct mtk_ddp_comp *comp)
 {
-	struct mtk_padding *padding = dev_get_drvdata(dev);
+	struct mtk_padding *padding = dev_get_drvdata(comp->dev);
 
 	return clk_prepare_enable(padding->clk);
 }
 
-void mtk_padding_clk_disable(struct device *dev)
+void mtk_padding_clk_disable(struct mtk_ddp_comp *comp)
 {
-	struct mtk_padding *padding = dev_get_drvdata(dev);
+	struct mtk_padding *padding = dev_get_drvdata(comp->dev);
 
 	clk_disable_unprepare(padding->clk);
 }

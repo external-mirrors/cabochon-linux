@@ -208,11 +208,11 @@ void mtk_ovl_adaptor_layer_config(struct device *dev, unsigned int idx,
 	mtk_ethdr_layer_config(ethdr, idx, state, cmdq_pkt);
 }
 
-void mtk_ovl_adaptor_config(struct device *dev, unsigned int w,
+void mtk_ovl_adaptor_config(struct mtk_ddp_comp *comp, unsigned int w,
 			    unsigned int h, unsigned int vrefresh,
 			    unsigned int bpc, struct cmdq_pkt *cmdq_pkt)
 {
-	struct mtk_disp_ovl_adaptor *ovl_adaptor = dev_get_drvdata(dev);
+	struct mtk_disp_ovl_adaptor *ovl_adaptor = dev_get_drvdata(comp->dev);
 
 	mtk_ethdr_config(ovl_adaptor->ovl_adaptor_comp[OVL_ADAPTOR_ETHDR0], w, h,
 			 vrefresh, bpc, cmdq_pkt);
@@ -306,41 +306,49 @@ void mtk_ovl_adaptor_power_off(struct device *dev)
 	power_off(dev, OVL_ADAPTOR_ID_MAX);
 }
 
-int mtk_ovl_adaptor_clk_enable(struct device *dev)
+int mtk_ovl_adaptor_clk_enable(struct mtk_ddp_comp *comp)
 {
-	struct mtk_disp_ovl_adaptor *ovl_adaptor = dev_get_drvdata(dev);
-	struct device *comp;
+	struct mtk_disp_ovl_adaptor *ovl_adaptor = dev_get_drvdata(comp->dev);
 	int ret;
 	int i;
 
 	for (i = 0; i < OVL_ADAPTOR_ID_MAX; i++) {
-		comp = ovl_adaptor->ovl_adaptor_comp[i];
-		if (!comp || !comp_matches[i].funcs->clk_enable)
+		struct mtk_ddp_comp adaptor_comp;
+
+		if (!ovl_adaptor->ovl_adaptor_comp[i] ||
+		    !comp_matches[i].funcs->clk_enable)
 			continue;
-		ret = comp_matches[i].funcs->clk_enable(comp);
+
+		adaptor_comp.dev = ovl_adaptor->ovl_adaptor_comp[i];
+
+		ret = comp_matches[i].funcs->clk_enable(&adaptor_comp);
 		if (ret) {
-			dev_err(dev, "Failed to enable clock %d, err %d\n", i, ret);
+			dev_err(comp->dev, "Failed to enable clock %d, err %d\n", i, ret);
 			while (--i >= 0)
-				comp_matches[i].funcs->clk_disable(comp);
+				comp_matches[i].funcs->clk_disable(&adaptor_comp);
 			return ret;
 		}
 	}
 	return 0;
 }
 
-void mtk_ovl_adaptor_clk_disable(struct device *dev)
+void mtk_ovl_adaptor_clk_disable(struct mtk_ddp_comp *comp)
 {
-	struct mtk_disp_ovl_adaptor *ovl_adaptor = dev_get_drvdata(dev);
-	struct device *comp;
+	struct mtk_disp_ovl_adaptor *ovl_adaptor = dev_get_drvdata(comp->dev);
 	int i;
 
 	for (i = 0; i < OVL_ADAPTOR_ID_MAX; i++) {
-		comp = ovl_adaptor->ovl_adaptor_comp[i];
-		if (!comp || !comp_matches[i].funcs->clk_disable)
+		struct mtk_ddp_comp adaptor_comp;
+
+		if (!ovl_adaptor->ovl_adaptor_comp[i] ||
+		    !comp_matches[i].funcs->clk_disable)
 			continue;
-		comp_matches[i].funcs->clk_disable(comp);
+
+		adaptor_comp.dev = ovl_adaptor->ovl_adaptor_comp[i];
+
+		comp_matches[i].funcs->clk_disable(&adaptor_comp);
 		if (i < OVL_ADAPTOR_MERGE0)
-			pm_runtime_put(comp);
+			pm_runtime_put(adaptor_comp.dev);
 	}
 }
 
@@ -423,10 +431,10 @@ size_t mtk_ovl_adaptor_get_num_formats(struct device *dev)
 	return mtk_mdp_rdma_get_num_formats(ovl_adaptor->ovl_adaptor_comp[OVL_ADAPTOR_MDP_RDMA0]);
 }
 
-void mtk_ovl_adaptor_add_comp(struct device *dev, struct mtk_mutex *mutex)
+void mtk_ovl_adaptor_add_comp(struct mtk_ddp_comp *comp, struct mtk_mutex *mutex)
 {
 	int i;
-	struct mtk_disp_ovl_adaptor *ovl_adaptor = dev_get_drvdata(dev);
+	struct mtk_disp_ovl_adaptor *ovl_adaptor = dev_get_drvdata(comp->dev);
 
 	for (i = 0; i < OVL_ADAPTOR_ID_MAX; i++) {
 		if (!ovl_adaptor->ovl_adaptor_comp[i])
@@ -439,10 +447,10 @@ void mtk_ovl_adaptor_add_comp(struct device *dev, struct mtk_mutex *mutex)
 	}
 }
 
-void mtk_ovl_adaptor_remove_comp(struct device *dev, struct mtk_mutex *mutex)
+void mtk_ovl_adaptor_remove_comp(struct mtk_ddp_comp *comp, struct mtk_mutex *mutex)
 {
 	int i;
-	struct mtk_disp_ovl_adaptor *ovl_adaptor = dev_get_drvdata(dev);
+	struct mtk_disp_ovl_adaptor *ovl_adaptor = dev_get_drvdata(comp->dev);
 
 	for (i = 0; i < OVL_ADAPTOR_ID_MAX; i++) {
 		if (!ovl_adaptor->ovl_adaptor_comp[i])
