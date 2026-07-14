@@ -505,9 +505,9 @@ static const struct mtk_ddp_comp_funcs *mtk_ddp_funcs[MTK_DDP_COMP_TYPE_MAX] = {
 	[MTK_DISP_DVO]			= &ddp_dvo,
 };
 
-static bool mtk_ddp_find_comp_dev_in_table(const struct mtk_drm_comp_list *hlist,
-					   const unsigned int comp_type,
-					   struct device *dev)
+bool mtk_ddp_find_comp_dev_in_table(const struct mtk_drm_comp_list *hlist,
+				    const unsigned int comp_type,
+				    struct device *dev)
 {
 	struct mtk_ddp_comp *ddp_comp;
 
