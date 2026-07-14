@@ -50,7 +50,8 @@ struct mtk_ddp_comp_funcs {
 	void (*enable_vblank)(struct device *dev);
 	void (*disable_vblank)(struct device *dev);
 	unsigned int (*supported_rotations)(struct device *dev);
-	unsigned int (*layer_nr)(struct device *dev);
+	unsigned int (*layer_nr)(struct device *dev, int pipeline_index);
+	unsigned int (*layerstage_nr)(struct device *dev);
 	int (*layer_check)(struct device *dev,
 			   unsigned int idx,
 			   struct mtk_plane_state *state);
@@ -196,10 +197,18 @@ unsigned int mtk_ddp_comp_supported_rotations(struct mtk_ddp_comp *comp)
 	return DRM_MODE_ROTATE_0;
 }
 
-static inline unsigned int mtk_ddp_comp_layer_nr(struct mtk_ddp_comp *comp)
+static inline unsigned int mtk_ddp_comp_layer_nr(struct mtk_ddp_comp *comp, int pipeline_idx)
 {
 	if (comp->funcs && comp->funcs->layer_nr)
-		return comp->funcs->layer_nr(comp->dev);
+		return comp->funcs->layer_nr(comp->dev, pipeline_idx);
+
+	return 0;
+}
+
+static inline unsigned int mtk_ddp_comp_stage_nr(struct mtk_ddp_comp *comp)
+{
+	if (comp->funcs && comp->funcs->layerstage_nr)
+		return comp->funcs->layerstage_nr(comp->dev);
 
 	return 0;
 }

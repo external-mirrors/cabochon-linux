@@ -348,9 +348,19 @@ void mtk_ovl_config(struct device *dev, unsigned int w,
 	mtk_ddp_write(cmdq_pkt, 0x0, &ovl->cmdq_reg, ovl->regs, DISP_REG_OVL_RST);
 }
 
-unsigned int mtk_ovl_layer_nr(struct device *dev)
+unsigned int mtk_ovl_layer_nr(struct device *dev, int pipeline_index)
 {
 	struct mtk_disp_ovl *ovl = dev_get_drvdata(dev);
+
+	/*
+	 * Only the first OVL in a display pipeline can form layers, and it
+	 * must be either:
+	 *  - The first HW component in the pipeline; or
+	 *  - The second HW component in the pipeline, taking its input from
+	 *    a ReadDMA (RDMA) output.
+	 */
+	if (pipeline_index > 1)
+		return 0;
 
 	return ovl->data->layer_nr;
 }

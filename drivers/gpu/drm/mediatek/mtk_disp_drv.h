@@ -1,6 +1,8 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
 /*
- * Copyright (c) 2020 MediaTek Inc.
+ * Copyright (c) 2020-2025 MediaTek Inc.
+ * Copyright (c) 2026 Collabora Ltd.
+ *                    AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
  */
 
 #ifndef _MTK_DISP_DRV_H_
@@ -97,7 +99,7 @@ int mtk_ovl_layer_check(struct device *dev, unsigned int idx,
 void mtk_ovl_layer_config(struct device *dev, unsigned int idx,
 			  struct mtk_plane_state *state,
 			  struct cmdq_pkt *cmdq_pkt);
-unsigned int mtk_ovl_layer_nr(struct device *dev);
+unsigned int mtk_ovl_layer_nr(struct device *dev, int pipeline_index);
 void mtk_ovl_layer_on(struct device *dev, unsigned int idx,
 		      struct cmdq_pkt *cmdq_pkt);
 void mtk_ovl_layer_off(struct device *dev, unsigned int idx,
@@ -140,7 +142,7 @@ void mtk_ovl_adaptor_enable_vblank(struct device *dev);
 void mtk_ovl_adaptor_disable_vblank(struct device *dev);
 void mtk_ovl_adaptor_start(struct device *dev);
 void mtk_ovl_adaptor_stop(struct device *dev);
-unsigned int mtk_ovl_adaptor_layer_nr(struct device *dev);
+unsigned int mtk_ovl_adaptor_layer_nr(struct device *dev, int pipeline_index);
 struct device *mtk_ovl_adaptor_dma_dev_get(struct device *dev);
 u32 mtk_ovl_adaptor_get_blend_modes(struct device *dev);
 const u32 *mtk_ovl_adaptor_get_formats(struct device *dev);
@@ -154,7 +156,7 @@ void mtk_rdma_clk_disable(struct device *dev);
 void mtk_rdma_config(struct device *dev, unsigned int width,
 		     unsigned int height, unsigned int vrefresh,
 		     unsigned int bpc, struct cmdq_pkt *cmdq_pkt);
-unsigned int mtk_rdma_layer_nr(struct device *dev);
+unsigned int mtk_rdma_layer_nr(struct device *dev, int pipeline_index);
 void mtk_rdma_layer_config(struct device *dev, unsigned int idx,
 			   struct mtk_plane_state *state,
 			   struct cmdq_pkt *cmdq_pkt);
@@ -185,7 +187,7 @@ void mtk_wdma_clk_disable(struct device *dev);
 void mtk_wdma_config(struct device *dev, unsigned int width,
 		     unsigned int height, unsigned int vrefresh,
 		     unsigned int bpc, struct cmdq_pkt *cmdq_pkt);
-unsigned int mtk_wdma_layer_nr(struct device *dev);
+unsigned int mtk_wdma_layer_nr(struct device *dev, int pipeline_index);
 void mtk_wdma_layer_config(struct device *dev, unsigned int idx,
 			   struct mtk_plane_state *state,
 			   struct cmdq_pkt *cmdq_pkt);
