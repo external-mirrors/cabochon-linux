@@ -10,8 +10,6 @@
 #include "mtk_ddp_comp.h"
 
 #define MAX_CONNECTOR	2
-#define DDP_COMPONENT_DRM_OVL_ADAPTOR (DDP_COMPONENT_ID_MAX + 1)
-#define DDP_COMPONENT_DRM_ID_MAX (DDP_COMPONENT_DRM_OVL_ADAPTOR + 1)
 
 enum mtk_crtc_path {
 	CRTC_MAIN,
@@ -30,11 +28,13 @@ struct regmap;
 
 struct mtk_drm_route {
 	const unsigned int crtc_id;
-	const unsigned int route_ddp;
+	const enum mtk_ddp_comp_type route_ddp_type;
+	const u8 route_ddp_inst_id;
 };
 
 struct mtk_drm_comp_definition {
-	enum mtk_ddp_comp_id type;
+	enum mtk_ddp_comp_type type;
+	u8 inst_id;
 };
 
 struct mtk_drm_path_definition {
@@ -66,7 +66,6 @@ struct mtk_drm_private {
 	struct device *mutex_dev;
 	struct device *mmsys_dev;
 	struct mtk_drm_comp_list hlist;
-	struct device_node *comp_node[DDP_COMPONENT_DRM_ID_MAX];
 	struct mtk_mmsys_driver_data *data;
 	struct drm_atomic_commit *suspend_state;
 	unsigned int mbox_index;

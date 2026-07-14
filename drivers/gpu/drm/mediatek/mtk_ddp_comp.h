@@ -16,6 +16,7 @@
 #include <drm/drm_modes.h>
 
 #define MTK_DISP_CONTROLLER_MAX_COMP_PER_PATH		24
+#define MTK_DISP_CONTROLLER_MAX_HW_COMP_INSTANCE	32
 
 struct device;
 struct device_node;
@@ -70,8 +71,10 @@ struct mtk_ddp_comp_funcs {
 	const u32 *(*get_formats)(struct device *dev);
 	size_t (*get_num_formats)(struct device *dev);
 	bool (*is_afbc_supported)(struct device *dev);
-	void (*connect)(struct device *dev, struct device *mmsys_dev, unsigned int next);
-	void (*disconnect)(struct device *dev, struct device *mmsys_dev, unsigned int next);
+	void (*connect)(struct mtk_ddp_comp *comp, struct device *mmsys_dev,
+			struct mtk_ddp_comp *next);
+	void (*disconnect)(struct mtk_ddp_comp *comp, struct device *mmsys_dev,
+			   struct mtk_ddp_comp *next);
 	void (*add)(struct device *dev, struct mtk_mutex *mutex);
 	void (*remove)(struct device *dev, struct mtk_mutex *mutex);
 	unsigned int (*encoder_index)(struct device *dev);
@@ -81,7 +84,8 @@ struct mtk_ddp_comp_funcs {
 struct mtk_ddp_comp {
 	struct device *dev;
 	int irq;
-	unsigned int id;
+	enum mtk_ddp_comp_type type;
+	u8 inst_id;
 	u8 mtx_trig_id;
 	int encoder_index;
 	const struct mtk_ddp_comp_funcs *funcs;
@@ -326,20 +330,20 @@ static inline bool mtk_ddp_comp_remove(struct mtk_ddp_comp *comp, struct mtk_mut
 }
 
 static inline bool mtk_ddp_comp_connect(struct mtk_ddp_comp *comp, struct device *mmsys_dev,
-					unsigned int next)
+					struct mtk_ddp_comp *next)
 {
 	if (comp->funcs && comp->funcs->connect) {
-		comp->funcs->connect(comp->dev, mmsys_dev, next);
+		comp->funcs->connect(comp, mmsys_dev, next);
 		return true;
 	}
 	return false;
 }
 
 static inline bool mtk_ddp_comp_disconnect(struct mtk_ddp_comp *comp, struct device *mmsys_dev,
-					   unsigned int next)
+					   struct mtk_ddp_comp *next)
 {
 	if (comp->funcs && comp->funcs->disconnect) {
-		comp->funcs->disconnect(comp->dev, mmsys_dev, next);
+		comp->funcs->disconnect(comp, mmsys_dev, next);
 		return true;
 	}
 	return false;
@@ -353,12 +357,14 @@ static inline void mtk_ddp_comp_encoder_index_set(struct mtk_ddp_comp *comp)
 
 static inline struct mtk_ddp_comp
 *mtk_ddp_comp_find_by_id(struct mtk_drm_comp_list *hlist,
-			 const unsigned int id)
+			 const unsigned int comp_type,
+			 const unsigned int comp_inst_id)
 {
 	struct mtk_ddp_comp *ddp_comp;
 
-	hash_for_each_possible(hlist->ddp_list, ddp_comp, lnode, id)
-		return ddp_comp;
+	hash_for_each_possible(hlist->ddp_list, ddp_comp, lnode, comp_type)
+		if (ddp_comp->inst_id == comp_inst_id)
+			return ddp_comp;
 
 	return NULL;
 }
@@ -369,7 +375,7 @@ int mtk_ddp_comp_get_id(struct device_node *node,
 int mtk_find_possible_crtcs(struct drm_device *drm, struct device *dev);
 int mtk_ddp_comp_init(struct device *dev, struct device_node *node,
 		      struct mtk_drm_comp_list *hlist,
-		      unsigned int comp_id);
+		      enum mtk_ddp_comp_type comp_type, int comp_inst_id);
 int mtk_ddp_comp_get_mutex_trigger(struct device_node *node, unsigned int index);
 enum mtk_ddp_comp_type mtk_ddp_comp_get_type(unsigned int comp_id);
 void mtk_ddp_write(struct cmdq_pkt *cmdq_pkt, unsigned int value,
