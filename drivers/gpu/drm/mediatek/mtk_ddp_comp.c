@@ -13,6 +13,7 @@
 #include <linux/clk.h>
 #include <linux/of.h>
 #include <linux/of_address.h>
+#include <linux/of_graph.h>
 #include <linux/of_platform.h>
 #include <linux/platform_device.h>
 #include <linux/soc/mediatek/mtk-cmdq.h>
@@ -274,6 +275,16 @@ static const struct mtk_ddp_comp_funcs ddp_color = {
 	.start = mtk_color_start,
 };
 
+static const struct mtk_ddp_comp_funcs ddp_direct_link = {
+	.add = mtk_direct_link_add,
+	.remove = mtk_direct_link_mtx_remove,
+	.connect = mtk_direct_link_connect,
+	.disconnect = mtk_direct_link_disconnect,
+	.clk_enable = mtk_direct_link_clk_enable,
+	.clk_disable = mtk_direct_link_clk_disable,
+	.config = mtk_direct_link_config,
+};
+
 static const struct mtk_ddp_comp_funcs ddp_dither = {
 	.clk_enable = mtk_ddp_clk_enable,
 	.clk_disable = mtk_ddp_clk_disable,
@@ -503,6 +514,8 @@ static const struct mtk_ddp_comp_funcs *mtk_ddp_funcs[MTK_DDP_COMP_TYPE_MAX] = {
 	[MTK_DISP_DP_INTF]		= &ddp_dpi,
 	[MTK_DISP_DSI]			= &ddp_dsi,
 	[MTK_DISP_DVO]			= &ddp_dvo,
+	[MTK_DISP_DIRECT_LINK_OUT]	= &ddp_direct_link,
+	[MTK_DISP_DIRECT_LINK_IN]	= &ddp_direct_link,
 };
 
 bool mtk_ddp_find_comp_dev_in_table(const struct mtk_drm_comp_list *hlist,
@@ -549,7 +562,7 @@ static int mtk_ddp_comp_find_in_route(struct device *dev,
 	return -ENODEV;
 }
 
-int mtk_ddp_comp_get_id(struct device_node *node,
+int mtk_ddp_comp_get_id(struct device_node *node, struct device_node *ep_node,
 			enum mtk_ddp_comp_type comp_type)
 {
 	/* If there's an alias, return the ID from that */
@@ -557,6 +570,24 @@ int mtk_ddp_comp_get_id(struct device_node *node,
 		int alias_id = of_alias_get_id(node, mtk_ddp_comp_stem[comp_type]);
 		if (alias_id >= 0)
 			return alias_id;
+	}
+
+	/*
+	 * Alias ID -1 means that hardcoded IDs are not supported and
+	 * must be taken from the endpoint.
+	 */
+	if ((comp_type == MTK_DISP_DIRECT_LINK_IN ||
+	     comp_type == MTK_DISP_DIRECT_LINK_OUT) && ep_node) {
+		struct of_endpoint endpoint;
+		int ret;
+
+		ret = of_graph_parse_endpoint(ep_node, &endpoint);
+		if (ret) {
+			pr_err("Cannot parse endpoint for node %pOF\n", ep_node);
+			return ret;
+		}
+
+		return endpoint.id;
 	}
 
 	return 0;
@@ -697,6 +728,15 @@ int mtk_ddp_comp_init(struct device *dev, struct device_node *node,
 	comp->inst_id = comp_inst_id;
 	comp->controller_id = comp_controller_id;
 	comp->funcs = mtk_ddp_funcs[comp_type];
+
+	/*
+	 * For DirectLink components, call the DirectLink-specific connection
+	 * and disconnection callbacks regardless of whether it is a source or
+	 * a destination component during the pipeline setup.
+	 */
+	if (comp->type == MTK_DISP_DIRECT_LINK_OUT || comp->type == MTK_DISP_DIRECT_LINK_IN)
+		comp->special_connect = true;
+
 	/* Not all drm components have a DTS device node, such as ovl_adaptor,
 	 * which is the drm bring up sub driver
 	 */

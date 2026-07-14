@@ -266,7 +266,8 @@ static bool mtk_drm_find_mmsys_comp(struct mtk_drm_private *private,
 
 		for (j = 0; j < output_path->len; j++) {
 			if (output_path->comp[j].type != type ||
-			    output_path->comp[j].inst_id != inst_id)
+			    (inst_id != MTK_DISP_CONTROLLER_MAX_HW_COMP_INSTANCE &&
+			     output_path->comp[j].inst_id != inst_id))
 				continue;
 
 			return true;
@@ -278,6 +279,19 @@ static bool mtk_drm_find_mmsys_comp(struct mtk_drm_private *private,
 			if (data->conn_routes[i].route_ddp_type == type &&
 			    data->conn_routes[i].route_ddp_inst_id == inst_id)
 				return true;
+
+	return false;
+}
+
+static bool mtk_drm_find_directlink_comp(struct mtk_drm_private *private)
+{
+	if (mtk_drm_find_mmsys_comp(private, MTK_DISP_DIRECT_LINK_IN,
+				    MTK_DISP_CONTROLLER_MAX_HW_COMP_INSTANCE))
+		return true;
+
+	if (mtk_drm_find_mmsys_comp(private, MTK_DISP_DIRECT_LINK_OUT,
+				    MTK_DISP_CONTROLLER_MAX_HW_COMP_INSTANCE))
+		return true;
 
 	return false;
 }
@@ -622,6 +636,8 @@ static const struct of_device_id mtk_ddp_comp_dt_ids[] = {
 	  .data = (void *)MTK_DISP_COLOR },
 	{ .compatible = "mediatek,mt8173-disp-color",
 	  .data = (void *)MTK_DISP_COLOR },
+	{ .compatible = "mediatek,mt8196-disp-direct-link",
+	  .data = (void *)MTK_DISP_DIRECT_LINK },
 	{ .compatible = "mediatek,mt8167-disp-dither",
 	  .data = (void *)MTK_DISP_DITHER },
 	{ .compatible = "mediatek,mt8183-disp-dither",
@@ -704,6 +720,8 @@ static const struct of_device_id mtk_ddp_comp_dt_ids[] = {
 	  .data = (void *)MTK_DISP_WDMA },
 	{ .compatible = "mediatek,mt8173-disp-wdma",
 	  .data = (void *)MTK_DISP_WDMA },
+	{ .compatible = "mediatek,mt8196-ovl-direct-link",
+	  .data = (void *)MTK_DISP_DIRECT_LINK },
 	{ .compatible = "mediatek,mt2701-dpi",
 	  .data = (void *)MTK_DISP_DPI },
 	{ .compatible = "mediatek,mt8167-dsi",
@@ -808,9 +826,26 @@ static int mtk_drm_of_get_first_input(struct device *dev, struct device_node *no
 	if (ret)
 		return -ENOENT;
 
-	inst_id = mtk_ddp_comp_get_id(ep_dev_node, comp_type);
+	inst_id = mtk_ddp_comp_get_id(ep_dev_node, ep_in, comp_type);
 	if (inst_id < 0)
 		return inst_id;
+
+	if (comp_type == MTK_DISP_DIRECT_LINK) {
+		struct device_node *remote_port = of_graph_get_remote_port(ep_in);
+
+		/* If there's a remote port this input is active, otherwise it's unused */
+		if (!remote_port)
+			return -ENOENT;
+		of_node_put(remote_port);
+
+		/* All even ports describe inputs, all odd ports describe outputs */
+		comp_type = (crtc_endpoint + 1) % 2 ?
+			    MTK_DISP_DIRECT_LINK_IN : MTK_DISP_DIRECT_LINK_OUT;
+
+		dev_dbg(dev, "Found First DirectLink %s with port %pOF and ID %u\n",
+			comp_type == MTK_DISP_DIRECT_LINK_OUT ? "OUT" : "IN",
+			ep_in, crtc_endpoint);
+	}
 
 	/* All ok! Pass the Component ID to the caller. */
 	comp_def->type = comp_type;
@@ -852,7 +887,7 @@ static int mtk_drm_of_get_ddp_ep_cid(struct device *dev, struct device_node *nod
 				     struct mtk_drm_comp_definition *comp_def,
 				     bool controller_arch_v2)
 {
-	struct device_node *ep_dev_node, *ep_out;
+	struct device_node *ep_dev_node, *ep_out, *remote_ep;
 	enum mtk_ddp_comp_type comp_type;
 	int ret;
 
@@ -860,10 +895,16 @@ static int mtk_drm_of_get_ddp_ep_cid(struct device *dev, struct device_node *nod
 	if (!ep_out)
 		return -EINVAL;
 
-	ep_dev_node = of_graph_get_remote_port_parent(ep_out);
+	remote_ep = of_graph_get_remote_endpoint(ep_out);
 	of_node_put(ep_out);
-	if (!ep_dev_node)
+	if (!remote_ep)
+		return -ENOENT;
+
+	ep_dev_node = of_graph_get_port_parent(remote_ep);
+	if (!ep_dev_node) {
+		of_node_put(remote_ep);
 		return -EINVAL;
+	};
 
 	/*
 	 * Pass the next node pointer regardless of failures in the later code
@@ -881,17 +922,20 @@ static int mtk_drm_of_get_ddp_ep_cid(struct device *dev, struct device_node *nod
 			dev_dbg(dev, "Found connection to external mmsys %pOF\n",
 				rmt_ctrlr_node);
 
-			of_node_put(ep_dev_node);
 			of_node_put(rmt_ctrlr_node);
+			of_node_put(remote_ep);
 			return -EREMOTE;
 		}
 	}
 
-	if (!of_device_is_available(ep_dev_node))
+	if (!of_device_is_available(ep_dev_node)) {
+		of_node_put(remote_ep);
 		return -ENODEV;
+	}
 
 	ret = mtk_drm_of_get_ddp_comp_type(ep_dev_node, &comp_type);
 	if (ret) {
+		of_node_put(remote_ep);
 		if (mtk_ovl_adaptor_is_comp_present(ep_dev_node)) {
 			comp_def->type = MTK_DISP_OVL_ADAPTOR;
 			comp_def->inst_id = 0;
@@ -901,9 +945,25 @@ static int mtk_drm_of_get_ddp_ep_cid(struct device *dev, struct device_node *nod
 		return ret;
 	}
 
-	ret = mtk_ddp_comp_get_id(ep_dev_node, comp_type);
+	ret = mtk_ddp_comp_get_id(ep_dev_node, remote_ep, comp_type);
+	of_node_put(remote_ep);
 	if (ret < 0)
 		return ret;
+
+	if (comp_type == MTK_DISP_DIRECT_LINK) {
+		struct device_node *remote_port = of_graph_get_remote_port(ep_out);
+		u32 port_id;
+
+		of_property_read_u32(remote_port, "reg", &port_id);
+		of_node_put(remote_port);
+
+		/* All even ports describe inputs, all odd ports describe outputs */
+		comp_type = (port_id + 1) % 2 ? MTK_DISP_DIRECT_LINK_IN : MTK_DISP_DIRECT_LINK_OUT;
+
+		dev_dbg(dev, "Found DirectLink %s with port %pOF and ID %u\n",
+			comp_type == MTK_DISP_DIRECT_LINK_OUT ? "OUT" : "IN",
+			remote_port, port_id);
+	}
 
 	/* All ok! Pass the Component ID to the caller. */
 	comp_def->type = comp_type;
@@ -1021,6 +1081,22 @@ static int mtk_drm_of_ddp_path_build_one(struct device *dev, struct device_node 
 			ret = mtk_drm_of_get_ddp_ep_cid(dev, prev, 3, cpath, &next,
 							&temp_path[idx], controller_arch_v2);
 		of_node_put(prev);
+
+		/*
+		 * Avoid recursion for special DL_IN/DL_OUT connections:
+		 * 1. IN may be directly connected to OUT, expressing a RELAY
+		 *    internal connection, or
+		 * 2. A component's OUT may be directly connected to an
+		 *    output of DirectLink, expressing a (rare) fixed connection.
+		 */
+		for (int i = 1; i <= min(idx, 2); i++) {
+			if (temp_path[idx].type == temp_path[idx - i].type &&
+			    temp_path[idx].inst_id  == temp_path[idx - i].inst_id) {
+				ret = -ELOOP;
+				break;
+			}
+		}
+
 		if (ret) {
 			dev_vdbg(dev, "Invalid comp reached with result %d\n", ret);
 			of_node_put(next);
@@ -1051,6 +1127,8 @@ static int mtk_drm_of_ddp_path_build_one(struct device *dev, struct device_node 
 
 	/* If the last entry is not a final display output, the configuration is wrong */
 	switch (temp_path[idx - 1].type) {
+	case MTK_DISP_DIRECT_LINK_IN:
+	case MTK_DISP_DIRECT_LINK_OUT:
 	case MTK_DISP_DP_INTF:
 	case MTK_DISP_DPI:
 	case MTK_DISP_DSI:
@@ -1204,8 +1282,13 @@ static int mtk_drm_probe(struct platform_device *pdev)
 
 	hash_init(private->hlist.ddp_list);
 
+	if (of_graph_is_present(phandle))
+		node = phandle;
+	else
+		node = of_find_node_by_name(phandle, "direct-link");
+
 	/* Try to build the display pipeline from devicetree graphs */
-	if (of_graph_is_present(phandle)) {
+	if (node) {
 		dev_dbg(dev, "Building display pipeline for MMSYS %u\n",
 			mtk_drm_data->mmsys_id);
 		private->data = devm_kmemdup(dev, mtk_drm_data,
@@ -1213,7 +1296,7 @@ static int mtk_drm_probe(struct platform_device *pdev)
 		if (!private->data)
 			return -ENOMEM;
 
-		ret = mtk_drm_of_ddp_path_build(dev, phandle, private->data);
+		ret = mtk_drm_of_ddp_path_build(dev, node, private->data);
 		if (ret)
 			return ret;
 	} else {
@@ -1232,6 +1315,7 @@ static int mtk_drm_probe(struct platform_device *pdev)
 	for_each_child_of_node(phandle->parent, node) {
 		enum mtk_ddp_comp_type comp_type;
 		u8 comp_inst_id;
+		bool comp_found;
 
 		ret = mtk_drm_of_get_ddp_comp_type(node, &comp_type);
 		if (ret)
@@ -1254,14 +1338,20 @@ static int mtk_drm_probe(struct platform_device *pdev)
 			continue;
 		}
 
-		comp_inst_id = mtk_ddp_comp_get_id(node, comp_type);
+		comp_inst_id = mtk_ddp_comp_get_id(node, NULL, comp_type);
 		if (comp_inst_id < 0) {
 			dev_warn(dev, "Skipping unknown component %pOF\n",
 				 node);
 			continue;
 		}
 
-		if (!mtk_drm_find_mmsys_comp(private, comp_type, comp_inst_id))
+		if (comp_type == MTK_DISP_DIRECT_LINK)
+			comp_found = mtk_drm_find_directlink_comp(private);
+		else
+			comp_found = mtk_drm_find_mmsys_comp(private,
+							     comp_type, comp_inst_id);
+
+		if (!comp_found)
 			continue;
 
 		/*
@@ -1277,12 +1367,45 @@ static int mtk_drm_probe(struct platform_device *pdev)
 						   node);
 		}
 
-		ret = mtk_ddp_comp_init(dev, node, &private->hlist,
-					private->data->mmsys_id,
-					comp_type, comp_inst_id);
-		if (ret) {
-			of_node_put(node);
-			goto err_node;
+		if (comp_type == MTK_DISP_DIRECT_LINK) {
+			for_each_of_graph_port(node, port) {
+				u32 port_id;
+
+				of_property_read_u32(port, "reg", &port_id);
+				if (port_id > 1)
+					continue;
+
+				/* Even ports are inputs, odd ports are outputs */
+				if (port_id % 2)
+					comp_type = MTK_DISP_DIRECT_LINK_OUT;
+
+				for_each_of_graph_port_endpoint(port, ep) {
+					struct of_endpoint of_ep;
+
+					ret = of_graph_parse_endpoint(ep, &of_ep);
+					if (ret)
+						break;
+
+					ret = mtk_ddp_comp_init(dev, node, &private->hlist,
+								private->data->mmsys_id,
+								comp_type, of_ep.id);
+					if (ret)
+						break;
+				}
+
+				if (ret) {
+					of_node_put(node);
+					goto err_node;
+				}
+			}
+		} else {
+			ret = mtk_ddp_comp_init(dev, node, &private->hlist,
+						private->data->mmsys_id,
+						comp_type, comp_inst_id);
+			if (ret) {
+				of_node_put(node);
+				goto err_node;
+			}
 		}
 	}
 
@@ -1375,6 +1498,7 @@ static struct platform_driver mtk_drm_platform_driver = {
 };
 
 static struct platform_driver * const mtk_drm_drivers[] = {
+	&mtk_direct_link_driver,
 	&mtk_disp_aal_driver,
 	&mtk_disp_blender_driver,
 	&mtk_disp_ccorr_driver,
