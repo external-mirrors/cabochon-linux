@@ -4,6 +4,10 @@
  * Authors:
  *	YT Shen <yt.shen@mediatek.com>
  *	CK Hu <ck.hu@mediatek.com>
+ *
+ * Major refactoring
+ * Copyright (c) 2026 Collabora Ltd.
+ *                    AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
  */
 
 #include <linux/clk.h>
@@ -428,65 +432,36 @@ static const char * const mtk_ddp_comp_stem[MTK_DDP_COMP_TYPE_MAX] = {
 	[MTK_DISP_DSI] = "dsi",
 };
 
-struct mtk_ddp_comp_match {
-	enum mtk_ddp_comp_type type;
-	int alias_id;
-	const struct mtk_ddp_comp_funcs *funcs;
-};
-
-static const struct mtk_ddp_comp_match mtk_ddp_matches[DDP_COMPONENT_DRM_ID_MAX] = {
-	[DDP_COMPONENT_AAL0]		= { MTK_DISP_AAL,		0, &ddp_aal },
-	[DDP_COMPONENT_AAL1]		= { MTK_DISP_AAL,		1, &ddp_aal },
-	[DDP_COMPONENT_BLS]		= { MTK_DISP_BLS,		0, NULL },
-	[DDP_COMPONENT_CCORR]		= { MTK_DISP_CCORR,		0, &ddp_ccorr },
-	[DDP_COMPONENT_COLOR0]		= { MTK_DISP_COLOR,		0, &ddp_color },
-	[DDP_COMPONENT_COLOR1]		= { MTK_DISP_COLOR,		1, &ddp_color },
-	[DDP_COMPONENT_DITHER0]		= { MTK_DISP_DITHER,		0, &ddp_dither },
-	[DDP_COMPONENT_DP_INTF0]	= { MTK_DISP_DP_INTF,		0, &ddp_dpi },
-	[DDP_COMPONENT_DP_INTF1]	= { MTK_DISP_DP_INTF,		1, &ddp_dpi },
-	[DDP_COMPONENT_DPI0]		= { MTK_DISP_DPI,		0, &ddp_dpi },
-	[DDP_COMPONENT_DPI1]		= { MTK_DISP_DPI,		1, &ddp_dpi },
-	[DDP_COMPONENT_DRM_OVL_ADAPTOR]	= { MTK_DISP_OVL_ADAPTOR,	0, &ddp_ovl_adaptor },
-	[DDP_COMPONENT_DSC0]		= { MTK_DISP_DSC,		0, &ddp_dsc },
-	[DDP_COMPONENT_DSC1]		= { MTK_DISP_DSC,		1, &ddp_dsc },
-	[DDP_COMPONENT_DSI0]		= { MTK_DISP_DSI,		0, &ddp_dsi },
-	[DDP_COMPONENT_DSI1]		= { MTK_DISP_DSI,		1, &ddp_dsi },
-	[DDP_COMPONENT_DSI2]		= { MTK_DISP_DSI,		2, &ddp_dsi },
-	[DDP_COMPONENT_DSI3]		= { MTK_DISP_DSI,		3, &ddp_dsi },
-	[DDP_COMPONENT_GAMMA]		= { MTK_DISP_GAMMA,		0, &ddp_gamma },
-	[DDP_COMPONENT_MERGE0]		= { MTK_DISP_MERGE,		0, &ddp_merge },
-	[DDP_COMPONENT_MERGE1]		= { MTK_DISP_MERGE,		1, &ddp_merge },
-	[DDP_COMPONENT_MERGE2]		= { MTK_DISP_MERGE,		2, &ddp_merge },
-	[DDP_COMPONENT_MERGE3]		= { MTK_DISP_MERGE,		3, &ddp_merge },
-	[DDP_COMPONENT_MERGE4]		= { MTK_DISP_MERGE,		4, &ddp_merge },
-	[DDP_COMPONENT_MERGE5]		= { MTK_DISP_MERGE,		5, &ddp_merge },
-	[DDP_COMPONENT_OD0]		= { MTK_DISP_OD,		0, &ddp_od },
-	[DDP_COMPONENT_OD1]		= { MTK_DISP_OD,		1, &ddp_od },
-	[DDP_COMPONENT_OVL0]		= { MTK_DISP_OVL,		0, &ddp_ovl },
-	[DDP_COMPONENT_OVL1]		= { MTK_DISP_OVL,		1, &ddp_ovl },
-	[DDP_COMPONENT_OVL_2L0]		= { MTK_DISP_OVL_2L,		0, &ddp_ovl },
-	[DDP_COMPONENT_OVL_2L1]		= { MTK_DISP_OVL_2L,		1, &ddp_ovl },
-	[DDP_COMPONENT_OVL_2L2]		= { MTK_DISP_OVL_2L,		2, &ddp_ovl },
-	[DDP_COMPONENT_POSTMASK0]	= { MTK_DISP_POSTMASK,		0, &ddp_postmask },
-	[DDP_COMPONENT_PWM0]		= { MTK_DISP_PWM,		0, NULL },
-	[DDP_COMPONENT_PWM1]		= { MTK_DISP_PWM,		1, NULL },
-	[DDP_COMPONENT_PWM2]		= { MTK_DISP_PWM,		2, NULL },
-	[DDP_COMPONENT_RDMA0]		= { MTK_DISP_RDMA,		0, &ddp_rdma },
-	[DDP_COMPONENT_RDMA1]		= { MTK_DISP_RDMA,		1, &ddp_rdma },
-	[DDP_COMPONENT_RDMA2]		= { MTK_DISP_RDMA,		2, &ddp_rdma },
-	[DDP_COMPONENT_RDMA4]		= { MTK_DISP_RDMA,		4, &ddp_rdma },
-	[DDP_COMPONENT_UFOE]		= { MTK_DISP_UFOE,		0, &ddp_ufoe },
-	[DDP_COMPONENT_WDMA0]		= { MTK_DISP_WDMA,		0, &ddp_wdma },
-	[DDP_COMPONENT_WDMA1]		= { MTK_DISP_WDMA,		1, &ddp_wdma },
+static const struct mtk_ddp_comp_funcs *mtk_ddp_funcs[MTK_DDP_COMP_TYPE_MAX] = {
+	[MTK_DISP_AAL]			= &ddp_aal,
+	[MTK_DISP_BLS]			= NULL,
+	[MTK_DISP_CCORR]		= &ddp_ccorr,
+	[MTK_DISP_COLOR]		= &ddp_color,
+	[MTK_DISP_DITHER]		= &ddp_dither,
+	[MTK_DISP_DSC]			= &ddp_dsc,
+	[MTK_DISP_GAMMA]		= &ddp_gamma,
+	[MTK_DISP_MERGE]		= &ddp_merge,
+	[MTK_DISP_OD]			= &ddp_od,
+	[MTK_DISP_OVL]			= &ddp_ovl,
+	[MTK_DISP_OVL_2L]		= &ddp_ovl,
+	[MTK_DISP_OVL_ADAPTOR]		= &ddp_ovl_adaptor,
+	[MTK_DISP_POSTMASK]		= &ddp_postmask,
+	[MTK_DISP_PWM]			= NULL,
+	[MTK_DISP_RDMA]			= &ddp_rdma,
+	[MTK_DISP_UFOE]			= &ddp_ufoe,
+	[MTK_DISP_WDMA]			= &ddp_wdma,
+	[MTK_DISP_DPI]			= &ddp_dpi,
+	[MTK_DISP_DP_INTF]		= &ddp_dpi,
+	[MTK_DISP_DSI]			= &ddp_dsi,
 };
 
 static bool mtk_ddp_find_comp_dev_in_table(const struct mtk_drm_comp_list *hlist,
-					   const unsigned int comp_id,
+					   const unsigned int comp_type,
 					   struct device *dev)
 {
 	struct mtk_ddp_comp *ddp_comp;
 
-	hash_for_each_possible(hlist->ddp_list, ddp_comp, lnode, comp_id) {
+	hash_for_each_possible(hlist->ddp_list, ddp_comp, lnode, comp_type) {
 		if (ddp_comp->dev == dev)
 			return true;
 	}
@@ -518,42 +493,23 @@ static int mtk_ddp_comp_find_in_route(struct device *dev,
 		return -EINVAL;
 
 	for (i = 0; i < num_routes; i++)
-		if (mtk_ddp_find_comp_dev_in_table(hlist, routes[i].route_ddp, dev))
+		if (mtk_ddp_find_comp_dev_in_table(hlist, routes[i].route_ddp_type, dev))
 			return BIT(routes[i].crtc_id);
 
 	return -ENODEV;
 }
 
-static bool mtk_ddp_path_available(const struct mtk_drm_path_definition *output_path,
-				   struct device_node **comp_node)
-{
-	unsigned int i;
-
-	for (i = 0U; i < output_path->len; i++) {
-		/* OVL_ADAPTOR doesn't have a device node */
-		if (output_path->comp[i].type == DDP_COMPONENT_DRM_OVL_ADAPTOR)
-			continue;
-
-		if (!comp_node[output_path->comp[i].type])
-			return false;
-	}
-
-	return true;
-}
-
 int mtk_ddp_comp_get_id(struct device_node *node,
 			enum mtk_ddp_comp_type comp_type)
 {
-	int id = of_alias_get_id(node, mtk_ddp_comp_stem[comp_type]);
-	int i;
-
-	for (i = 0; i < ARRAY_SIZE(mtk_ddp_matches); i++) {
-		if (comp_type == mtk_ddp_matches[i].type &&
-		    (id < 0 || id == mtk_ddp_matches[i].alias_id))
-			return i;
+	/* If there's an alias, return the ID from that */
+	if (mtk_ddp_comp_stem[comp_type]) {
+		int alias_id = of_alias_get_id(node, mtk_ddp_comp_stem[comp_type]);
+		if (alias_id >= 0)
+			return alias_id;
 	}
 
-	return -EINVAL;
+	return 0;
 }
 
 int mtk_find_possible_crtcs(struct drm_device *drm, struct device *dev)
@@ -561,7 +517,7 @@ int mtk_find_possible_crtcs(struct drm_device *drm, struct device *dev)
 	struct mtk_drm_private *private = drm->dev_private;
 	const struct mtk_mmsys_driver_data *data;
 	struct mtk_drm_private *priv_n;
-	int i = 0, j;
+	int i, j;
 	int ret;
 
 	for (j = 0; j < private->data->mmsys_dev_num; j++) {
@@ -673,24 +629,22 @@ static int mtk_ddp_comp_init_internal_comp(struct device *dev, struct device *co
 
 int mtk_ddp_comp_init(struct device *dev, struct device_node *node,
 		      struct mtk_drm_comp_list *hlist,
-		      unsigned int comp_id)
+		      enum mtk_ddp_comp_type comp_type, int comp_inst_id)
 {
 	struct platform_device *comp_pdev;
 	struct mtk_ddp_comp *comp;
-	enum mtk_ddp_comp_type type;
 	int ret;
 
-	if (comp_id >= DDP_COMPONENT_DRM_ID_MAX)
+	if (comp_type >= MTK_DDP_COMP_TYPE_MAX)
 		return -EINVAL;
 
 	comp = devm_kzalloc(dev, sizeof(*comp), GFP_KERNEL);
 	if (!comp)
 		return -ENOMEM;
 
-	type = mtk_ddp_matches[comp_id].type;
-
-	comp->id = comp_id;
-	comp->funcs = mtk_ddp_matches[comp_id].funcs;
+	comp->type = comp_type;
+	comp->inst_id = comp_inst_id;
+	comp->funcs = mtk_ddp_funcs[comp_type];
 	/* Not all drm components have a DTS device node, such as ovl_adaptor,
 	 * which is the drm bring up sub driver
 	 */
@@ -715,13 +669,14 @@ int mtk_ddp_comp_init(struct device *dev, struct device_node *node,
 		comp->mtx_trig_id = ret;
 
 	/* If there's no external driver for this component, allocate and init now */
-	if (mtk_ddp_comp_is_internal_comp(type) || mtk_ddp_comp_is_backlight_comp(type)) {
+	if (mtk_ddp_comp_is_internal_comp(comp->type) ||
+	    mtk_ddp_comp_is_backlight_comp(comp->type)) {
 		ret = mtk_ddp_comp_init_internal_comp(dev, comp->dev);
 		if (ret)
 			return ret;
 	}
 end:
-	hash_add(hlist->ddp_list, &comp->lnode, comp->id);
+	hash_add(hlist->ddp_list, &comp->lnode, comp->type);
 
 	return 0;
 }

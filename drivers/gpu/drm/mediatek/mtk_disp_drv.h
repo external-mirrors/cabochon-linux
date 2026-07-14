@@ -12,6 +12,7 @@
 #include <linux/soc/mediatek/mtk-cmdq.h>
 #include <linux/soc/mediatek/mtk-mmsys.h>
 #include <linux/soc/mediatek/mtk-mutex.h>
+#include "mtk_ddp_comp.h"
 #include "mtk_mdp_rdma.h"
 #include "mtk_plane.h"
 
@@ -121,10 +122,10 @@ bool mtk_ovl_is_afbc_supported(struct device *dev);
 void mtk_ovl_adaptor_add_comp(struct device *dev, struct mtk_mutex *mutex);
 void mtk_ovl_adaptor_remove_comp(struct device *dev, struct mtk_mutex *mutex);
 bool mtk_ovl_adaptor_is_comp_present(struct device_node *node);
-void mtk_ovl_adaptor_connect(struct device *dev, struct device *mmsys_dev,
-			     unsigned int next);
-void mtk_ovl_adaptor_disconnect(struct device *dev, struct device *mmsys_dev,
-				unsigned int next);
+void mtk_ovl_adaptor_connect(struct mtk_ddp_comp *comp, struct device *mmsys_dev,
+			     struct mtk_ddp_comp *next);
+void mtk_ovl_adaptor_disconnect(struct mtk_ddp_comp *comp, struct device *mmsys_dev,
+				struct mtk_ddp_comp *next);
 int mtk_ovl_adaptor_power_on(struct device *dev);
 void mtk_ovl_adaptor_power_off(struct device *dev);
 int mtk_ovl_adaptor_clk_enable(struct device *dev);

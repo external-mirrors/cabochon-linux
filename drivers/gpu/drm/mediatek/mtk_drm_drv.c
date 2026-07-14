@@ -102,8 +102,8 @@ static const struct mtk_mmsys_driver_data mt8186_mmsys_driver_data = {
 };
 
 static const struct mtk_drm_route mt8188_mtk_ddp_main_routes[] = {
-	{ 0, DDP_COMPONENT_DP_INTF0 },
-	{ 0, DDP_COMPONENT_DSI0 },
+	{ 0, MTK_DISP_DP_INTF, 0 },
+	{ 0, MTK_DISP_DSI, 0 },
 };
 
 static const struct mtk_mmsys_driver_data mt8188_vdosys0_driver_data = {
@@ -245,7 +245,8 @@ static bool mtk_drm_get_all_drm_priv(struct device *dev)
 	return false;
 }
 
-static bool mtk_drm_find_mmsys_comp(struct mtk_drm_private *private, int comp_id)
+static bool mtk_drm_find_mmsys_comp(struct mtk_drm_private *private,
+				    enum mtk_ddp_comp_type type, u8 inst_id)
 {
 	const struct mtk_mmsys_driver_data *data = private->data;
 	int i, j;
@@ -254,7 +255,8 @@ static bool mtk_drm_find_mmsys_comp(struct mtk_drm_private *private, int comp_id
 		const struct mtk_drm_path_definition *output_path = &data->output_paths[i];
 
 		for (j = 0; j < output_path->len; j++) {
-			if (output_path->comp[j].type != comp_id)
+			if (output_path->comp[j].type != type ||
+			    output_path->comp[j].inst_id != inst_id)
 				continue;
 
 			return true;
@@ -263,7 +265,8 @@ static bool mtk_drm_find_mmsys_comp(struct mtk_drm_private *private, int comp_id
 
 	if (data->num_conn_routes)
 		for (i = 0; i < data->num_conn_routes; i++)
-			if (data->conn_routes[i].route_ddp == comp_id)
+			if (data->conn_routes[i].route_ddp_type == type &&
+			    data->conn_routes[i].route_ddp_inst_id == inst_id)
 				return true;
 
 	return false;
@@ -637,7 +640,7 @@ static int mtk_drm_of_get_ddp_comp_type(struct device_node *node, enum mtk_ddp_c
 	return 0;
 }
 
-static int mtk_drm_of_get_ddp_ep_cid(struct device_node *node,
+static int mtk_drm_of_get_ddp_ep_cid(struct device *dev, struct device_node *node,
 				     int output_port, enum mtk_crtc_path crtc_path,
 				     struct device_node **next,
 				     struct mtk_drm_comp_definition *comp_def)
@@ -668,7 +671,9 @@ static int mtk_drm_of_get_ddp_ep_cid(struct device_node *node,
 	ret = mtk_drm_of_get_ddp_comp_type(ep_dev_node, &comp_type);
 	if (ret) {
 		if (mtk_ovl_adaptor_is_comp_present(ep_dev_node)) {
-			comp_def->type = DDP_COMPONENT_DRM_OVL_ADAPTOR;
+			comp_def->type = MTK_DISP_OVL_ADAPTOR;
+			comp_def->inst_id = 0;
+
 			return 0;
 		}
 		return ret;
@@ -679,7 +684,11 @@ static int mtk_drm_of_get_ddp_ep_cid(struct device_node *node,
 		return ret;
 
 	/* All ok! Pass the Component ID to the caller. */
-	comp_def->type = ret;
+	comp_def->type = comp_type;
+	comp_def->inst_id = ret;
+
+	dev_vdbg(dev, "Found component %pOF with Type:%u, HW Instance:%u\n",
+		 ep_dev_node, comp_def->type, comp_def->inst_id);
 
 	return 0;
 }
@@ -712,9 +721,9 @@ static int mtk_drm_of_ddp_path_build_one(struct device *dev, enum mtk_crtc_path 
 	int ret;
 
 	/* Get the first entry for the temp_path array */
-	ret = mtk_drm_of_get_ddp_ep_cid(vdo, 0, cpath, &next, &temp_path[idx]);
+	ret = mtk_drm_of_get_ddp_ep_cid(dev, vdo, 0, cpath, &next, &temp_path[idx]);
 	if (ret) {
-		if (next && temp_path[idx].type == DDP_COMPONENT_DRM_OVL_ADAPTOR) {
+		if (next && temp_path[idx].type == MTK_DISP_OVL_ADAPTOR) {
 			dev_dbg(dev, "Adding OVL Adaptor for %pOF\n", next);
 			ovl_adaptor_comp_added = true;
 		} else {
@@ -734,9 +743,10 @@ static int mtk_drm_of_ddp_path_build_one(struct device *dev, enum mtk_crtc_path 
 	 */
 	do {
 		prev = next;
-		ret = mtk_drm_of_get_ddp_ep_cid(next, 1, cpath, &next, &temp_path[idx]);
+		ret = mtk_drm_of_get_ddp_ep_cid(dev, next, 1, cpath, &next, &temp_path[idx]);
 		of_node_put(prev);
 		if (ret) {
+			dev_vdbg(dev, "Invalid comp reached with result %d\n", ret);
 			of_node_put(next);
 			break;
 		}
@@ -748,13 +758,13 @@ static int mtk_drm_of_ddp_path_build_one(struct device *dev, enum mtk_crtc_path 
 		 * to probe that component master driver of which only one instance
 		 * is needed and possible.
 		 */
-		if (temp_path[idx].type == DDP_COMPONENT_DRM_OVL_ADAPTOR) {
+		if (temp_path[idx].type == MTK_DISP_OVL_ADAPTOR) {
 			if (!ovl_adaptor_comp_added)
 				ovl_adaptor_comp_added = true;
 			else
 				idx--;
 		}
-	} while (++idx < DDP_COMPONENT_DRM_ID_MAX);
+	} while (++idx < MTK_DISP_CONTROLLER_MAX_COMP_PER_PATH);
 
 	/*
 	 * The device component might not be enabled: in that case, don't
@@ -765,18 +775,13 @@ static int mtk_drm_of_ddp_path_build_one(struct device *dev, enum mtk_crtc_path 
 
 	/* If the last entry is not a final display output, the configuration is wrong */
 	switch (temp_path[idx - 1].type) {
-	case DDP_COMPONENT_DP_INTF0:
-	case DDP_COMPONENT_DP_INTF1:
-	case DDP_COMPONENT_DPI0:
-	case DDP_COMPONENT_DPI1:
-	case DDP_COMPONENT_DSI0:
-	case DDP_COMPONENT_DSI1:
-	case DDP_COMPONENT_DSI2:
-	case DDP_COMPONENT_DSI3:
+	case MTK_DISP_DP_INTF:
+	case MTK_DISP_DPI:
+	case MTK_DISP_DSI:
 		break;
 	default:
-		dev_err(dev, "Invalid display hw pipeline. Last component: %d (ret=%d)\n",
-			temp_path[idx - 1].type, ret);
+		dev_err(dev, "Invalid display hw pipeline. Last component: %u-%u (ret=%d)\n",
+			temp_path[idx - 1].type, temp_path[idx - 1].inst_id, ret);
 		return -EINVAL;
 	}
 
@@ -854,7 +859,6 @@ static int mtk_drm_probe(struct platform_device *pdev)
 	struct device_node *node;
 	struct component_match *match = NULL;
 	int ret;
-	int i;
 
 	private = devm_kzalloc(dev, sizeof(*private), GFP_KERNEL);
 	if (!private)
@@ -903,7 +907,7 @@ static int mtk_drm_probe(struct platform_device *pdev)
 	/* Iterate over sibling DISP function blocks */
 	for_each_child_of_node(phandle->parent, node) {
 		enum mtk_ddp_comp_type comp_type;
-		int comp_id;
+		u8 comp_inst_id;
 
 		ret = mtk_drm_of_get_ddp_comp_type(node, &comp_type);
 		if (ret)
@@ -926,17 +930,15 @@ static int mtk_drm_probe(struct platform_device *pdev)
 			continue;
 		}
 
-		comp_id = mtk_ddp_comp_get_id(node, comp_type);
-		if (comp_id < 0) {
+		comp_inst_id = mtk_ddp_comp_get_id(node, comp_type);
+		if (comp_inst_id < 0) {
 			dev_warn(dev, "Skipping unknown component %pOF\n",
 				 node);
 			continue;
 		}
 
-		if (!mtk_drm_find_mmsys_comp(private, comp_id))
+		if (!mtk_drm_find_mmsys_comp(private, comp_type, comp_inst_id))
 			continue;
-
-		private->comp_node[comp_id] = of_node_get(node);
 
 		/*
 		 * Currently only the AAL, CCORR, COLOR, GAMMA, MERGE, OVL, RDMA, DSI, and DPI
@@ -951,7 +953,8 @@ static int mtk_drm_probe(struct platform_device *pdev)
 						   node);
 		}
 
-		ret = mtk_ddp_comp_init(dev, node, &private->hlist, comp_id);
+		ret = mtk_ddp_comp_init(dev, node, &private->hlist,
+					comp_type, comp_inst_id);
 		if (ret) {
 			of_node_put(node);
 			goto err_node;
@@ -972,7 +975,7 @@ static int mtk_drm_probe(struct platform_device *pdev)
 	}
 
 	/* Bringup ovl_adaptor */
-	if (mtk_drm_find_mmsys_comp(private, DDP_COMPONENT_DRM_OVL_ADAPTOR))
+	if (mtk_drm_find_mmsys_comp(private, MTK_DISP_OVL_ADAPTOR, 0))
 		mtk_drm_legacy_ovl_adaptor_probe(dev, private, &match);
 
 	pm_runtime_enable(dev);
@@ -989,21 +992,16 @@ err_pm:
 	pm_runtime_disable(dev);
 err_node:
 	of_node_put(private->mutex_node);
-	for (i = 0; i < DDP_COMPONENT_DRM_ID_MAX; i++)
-		of_node_put(private->comp_node[i]);
 	return ret;
 }
 
 static void mtk_drm_remove(struct platform_device *pdev)
 {
 	struct mtk_drm_private *private = platform_get_drvdata(pdev);
-	int i;
 
 	component_master_del(&pdev->dev, &mtk_drm_ops);
 	pm_runtime_disable(&pdev->dev);
 	of_node_put(private->mutex_node);
-	for (i = 0; i < DDP_COMPONENT_DRM_ID_MAX; i++)
-		of_node_put(private->comp_node[i]);
 }
 
 static void mtk_drm_shutdown(struct platform_device *pdev)
@@ -1087,4 +1085,6 @@ module_exit(mtk_drm_exit);
 
 MODULE_AUTHOR("YT SHEN <yt.shen@mediatek.com>");
 MODULE_DESCRIPTION("Mediatek SoC DRM driver");
+MODULE_IMPORT_NS("MTK_MMSYS");
+MODULE_IMPORT_NS("MTK_MUTEX");
 MODULE_LICENSE("GPL v2");
