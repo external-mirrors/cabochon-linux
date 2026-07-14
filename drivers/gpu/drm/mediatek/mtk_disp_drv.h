@@ -81,6 +81,20 @@ void mtk_dvo_start(struct device *dev);
 void mtk_dvo_stop(struct device *dev);
 unsigned int mtk_dvo_encoder_index(struct device *dev);
 
+int mtk_exdma_clk_enable(struct mtk_ddp_comp *comp);
+void mtk_exdma_clk_disable(struct mtk_ddp_comp *comp);
+void mtk_exdma_start(struct device *dev);
+void mtk_exdma_stop(struct device *dev);
+void mtk_exdma_config(struct mtk_ddp_comp *comp, unsigned int w,
+			   unsigned int h, unsigned int vrefresh,
+			   unsigned int bpc, struct cmdq_pkt *cmdq_pkt);
+void mtk_exdma_layer_config(struct device *dev, unsigned int idx,
+				 struct mtk_plane_state *state,
+				 struct cmdq_pkt *cmdq_pkt);
+unsigned int mtk_exdma_layer_nr(struct device *dev, int pipeline_index);
+const u32 *mtk_exdma_get_formats(struct device *dev);
+size_t mtk_exdma_get_num_formats(struct device *dev);
+
 int mtk_gamma_clk_enable(struct mtk_ddp_comp *comp);
 void mtk_gamma_clk_disable(struct mtk_ddp_comp *comp);
 void mtk_gamma_config(struct mtk_ddp_comp *comp, unsigned int w,
