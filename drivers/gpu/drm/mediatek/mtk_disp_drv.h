@@ -26,6 +26,21 @@ void mtk_aal_gamma_set(struct device *dev, struct drm_crtc_state *state);
 void mtk_aal_start(struct device *dev);
 void mtk_aal_stop(struct device *dev);
 
+int mtk_blender_clk_enable(struct mtk_ddp_comp *comp);
+void mtk_blender_clk_disable(struct mtk_ddp_comp *comp);
+void mtk_blender_connect(struct mtk_ddp_comp *comp, struct device *mmsys_dev,
+			 struct mtk_ddp_comp *next);
+void mtk_blender_config(struct mtk_ddp_comp *comp, unsigned int w,
+			unsigned int h, unsigned int vrefresh,
+			unsigned int bpc, struct cmdq_pkt *cmdq_pkt);
+u32 mtk_blender_get_blend_modes(struct device *dev);
+void mtk_blender_layer_config(struct device *dev, unsigned int idx,
+				   struct mtk_plane_state *state,
+				   struct cmdq_pkt *cmdq_pkt);
+unsigned int mtk_blender_layerstage_nr(struct device *dev);
+void mtk_blender_start(struct device *dev);
+void mtk_blender_stop(struct device *dev);
+
 void mtk_ccorr_ctm_set(struct device *dev, struct drm_crtc_state *state);
 int mtk_ccorr_clk_enable(struct mtk_ddp_comp *comp);
 void mtk_ccorr_clk_disable(struct mtk_ddp_comp *comp);

@@ -88,6 +88,7 @@ enum mtk_ddp_comp_type {
 	/* DISP Components */
 	MTK_DISP_AAL,
 	MTK_DISP_BLS,
+	MTK_DISP_BLENDER,
 	MTK_DISP_CCORR,
 	MTK_DISP_COLOR,
 	MTK_DISP_DITHER,

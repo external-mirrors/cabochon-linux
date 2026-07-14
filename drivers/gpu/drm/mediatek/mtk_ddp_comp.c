@@ -246,6 +246,18 @@ static const struct mtk_ddp_comp_funcs ddp_aal = {
 	.stop = mtk_aal_stop,
 };
 
+static const struct mtk_ddp_comp_funcs ddp_blender = {
+	.clk_enable = mtk_blender_clk_enable,
+	.clk_disable = mtk_blender_clk_disable,
+	.config = mtk_blender_config,
+	.start = mtk_blender_start,
+	.stop = mtk_blender_stop,
+	.layer_config = mtk_blender_layer_config,
+	.get_blend_modes = mtk_blender_get_blend_modes,
+	.layerstage_nr = mtk_blender_layerstage_nr,
+	.connect = mtk_blender_connect,
+};
+
 static const struct mtk_ddp_comp_funcs ddp_ccorr = {
 	.clk_enable = mtk_ccorr_clk_enable,
 	.clk_disable = mtk_ccorr_clk_disable,
@@ -416,6 +428,7 @@ static const struct mtk_ddp_comp_funcs ddp_ovl_adaptor = {
 
 static const char * const mtk_ddp_comp_stem[MTK_DDP_COMP_TYPE_MAX] = {
 	[MTK_DISP_AAL] = "aal",
+	[MTK_DISP_BLENDER] = "blender",
 	[MTK_DISP_BLS] = "bls",
 	[MTK_DISP_CCORR] = "ccorr",
 	[MTK_DISP_COLOR] = "color",
@@ -441,6 +454,7 @@ static const char * const mtk_ddp_comp_stem[MTK_DDP_COMP_TYPE_MAX] = {
 
 static const struct mtk_ddp_comp_funcs *mtk_ddp_funcs[MTK_DDP_COMP_TYPE_MAX] = {
 	[MTK_DISP_AAL]			= &ddp_aal,
+	[MTK_DISP_BLENDER]		= &ddp_blender,
 	[MTK_DISP_BLS]			= NULL,
 	[MTK_DISP_CCORR]		= &ddp_ccorr,
 	[MTK_DISP_COLOR]		= &ddp_color,
