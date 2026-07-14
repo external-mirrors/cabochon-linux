@@ -60,8 +60,8 @@ struct mtk_drm_private {
 	struct device_node *mutex_node;
 	struct device *mutex_dev;
 	struct device *mmsys_dev;
+	struct mtk_drm_comp_list hlist;
 	struct device_node *comp_node[DDP_COMPONENT_DRM_ID_MAX];
-	struct mtk_ddp_comp ddp_comp[DDP_COMPONENT_DRM_ID_MAX];
 	struct mtk_mmsys_driver_data *data;
 	struct drm_atomic_commit *suspend_state;
 	unsigned int mbox_index;

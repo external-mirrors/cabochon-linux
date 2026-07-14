@@ -1088,6 +1088,8 @@ static int mtk_drm_probe(struct platform_device *pdev)
 	if (!mtk_drm_data)
 		return -EINVAL;
 
+	hash_init(private->hlist.ddp_list);
+
 	/* Try to build the display pipeline from devicetree graphs */
 	if (of_graph_is_present(phandle)) {
 		dev_dbg(dev, "Building display pipeline for MMSYS %u\n",
@@ -1118,8 +1120,7 @@ static int mtk_drm_probe(struct platform_device *pdev)
 							    PLATFORM_DEVID_AUTO,
 							    (void *)private->mmsys_dev,
 							    sizeof(*private->mmsys_dev));
-		private->ddp_comp[DDP_COMPONENT_DRM_OVL_ADAPTOR].dev = &ovl_adaptor->dev;
-		mtk_ddp_comp_init(dev, NULL, &private->ddp_comp[DDP_COMPONENT_DRM_OVL_ADAPTOR],
+		mtk_ddp_comp_init(&ovl_adaptor->dev, NULL, &private->hlist,
 				  DDP_COMPONENT_DRM_OVL_ADAPTOR);
 		component_match_add(dev, &match, compare_dev, &ovl_adaptor->dev);
 	}
@@ -1187,7 +1188,7 @@ static int mtk_drm_probe(struct platform_device *pdev)
 						   node);
 		}
 
-		ret = mtk_ddp_comp_init(dev, node, &private->ddp_comp[comp_id], comp_id);
+		ret = mtk_ddp_comp_init(dev, node, &private->hlist, comp_id);
 		if (ret) {
 			of_node_put(node);
 			goto err_node;

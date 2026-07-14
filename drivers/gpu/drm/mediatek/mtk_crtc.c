@@ -724,8 +724,12 @@ static void mtk_crtc_update_output(struct drm_crtc *crtc,
 		crtc_state->connectors_changed, encoder_mask, crtc_index);
 
 	for (i = 0; i < mtk_crtc->num_conn_routes; i++) {
-		unsigned int comp_id = mtk_crtc->conn_routes[i].route_ddp;
-		struct mtk_ddp_comp *comp = &priv->ddp_comp[comp_id];
+		const struct mtk_drm_route *conn_route = &mtk_crtc->conn_routes[i];
+		struct mtk_ddp_comp *comp;
+
+		comp = mtk_ddp_comp_find_by_id(&priv->hlist, conn_route->route_ddp);
+		if (!comp)
+			continue;
 
 		if (comp->encoder_index >= 0 &&
 		    (encoder_mask & BIT(comp->encoder_index))) {
@@ -1027,10 +1031,11 @@ int mtk_crtc_create(struct drm_device *drm_dev, const unsigned int *path,
 {
 	struct mtk_drm_private *priv = drm_dev->dev_private;
 	struct device *dev = drm_dev->dev;
+	struct mtk_ddp_comp *dma_comp;
 	struct mtk_crtc *mtk_crtc;
 	unsigned int num_comp_planes = 0;
 	int ret;
-	int i;
+	int i, j;
 	bool has_ctm = false;
 	uint gamma_lut_size = 0;
 	struct drm_crtc *tmp;
@@ -1050,7 +1055,7 @@ int mtk_crtc_create(struct drm_device *drm_dev, const unsigned int *path,
 		struct mtk_ddp_comp *comp;
 
 		node = priv->comp_node[comp_id];
-		comp = &priv->ddp_comp[comp_id];
+		comp = mtk_ddp_comp_find_by_id(&priv->hlist, comp_id);
 
 		/* Not all drm components have a DTS device node, such as ovl_adaptor,
 		 * which is the drm bring up sub driver
@@ -1062,7 +1067,7 @@ int mtk_crtc_create(struct drm_device *drm_dev, const unsigned int *path,
 			return 0;
 		}
 
-		if (!comp->dev) {
+		if (!comp || !comp->dev) {
 			dev_err(dev, "Component %pOF not initialized\n", node);
 			return -ENODEV;
 		}
@@ -1084,12 +1089,17 @@ int mtk_crtc_create(struct drm_device *drm_dev, const unsigned int *path,
 		return ret;
 	}
 
-	for (i = 0; i < mtk_crtc->ddp_comp_nr; i++) {
+	for (i = 0, j = 0; i < mtk_crtc->ddp_comp_nr; i++, j++) {
 		unsigned int comp_id = path[i];
 		struct mtk_ddp_comp *comp;
 
-		comp = &priv->ddp_comp[comp_id];
-		mtk_crtc->ddp_comp[i] = comp;
+		comp = mtk_ddp_comp_find_by_id(&priv->hlist, comp_id);
+		if (!comp) {
+			j--;
+			dev_dbg(dev, "Cannot find component %d.\n", comp_id);
+			continue;
+		}
+		mtk_crtc->ddp_comp[j] = comp;
 
 		if (comp->funcs) {
 			if (comp->funcs->gamma_set && comp->funcs->gamma_get_lut_size) {
@@ -1126,7 +1136,14 @@ int mtk_crtc_create(struct drm_device *drm_dev, const unsigned int *path,
 	 * In the case of ovl_adaptor sub driver, it needs to use the
 	 * dma_dev_get function to get representative dma dev.
 	 */
-	mtk_crtc->dma_dev = mtk_ddp_comp_dma_dev_get(&priv->ddp_comp[path[0]]);
+	dma_comp = mtk_ddp_comp_find_by_id(&priv->hlist, path[0]);
+	if (dma_comp == NULL) {
+		dev_err(dev, "Could not find appropriate DMA device!\n");
+		return -EINVAL;
+	}
+
+	mtk_crtc->dma_dev = mtk_ddp_comp_dma_dev_get(dma_comp);
+	dev_dbg(dev, "Using DMA device %pOF\n", mtk_crtc->dma_dev->of_node);
 
 	ret = mtk_crtc_init(drm_dev, mtk_crtc, crtc_i);
 	if (ret < 0)
@@ -1183,17 +1200,18 @@ int mtk_crtc_create(struct drm_device *drm_dev, const unsigned int *path,
 		for (i = 0; i < num_conn_routes; i++) {
 			unsigned int comp_id = conn_routes[i].route_ddp;
 			struct device_node *node = priv->comp_node[comp_id];
-			struct mtk_ddp_comp *comp = &priv->ddp_comp[comp_id];
+			struct mtk_ddp_comp *comp = mtk_ddp_comp_find_by_id(&priv->hlist, comp_id);
 
-			if (!comp->dev) {
+			if (!comp || !comp->dev) {
 				dev_dbg(dev, "comp_id:%d, Component %pOF not initialized\n",
 					comp_id, node);
 				/* mark encoder_index to -1, if route comp device is not enabled */
-				comp->encoder_index = -1;
+				if (comp)
+					comp->encoder_index = -1;
 				continue;
 			}
 
-			mtk_ddp_comp_encoder_index_set(&priv->ddp_comp[comp_id]);
+			mtk_ddp_comp_encoder_index_set(comp);
 		}
 
 		mtk_crtc->num_conn_routes = num_conn_routes;
