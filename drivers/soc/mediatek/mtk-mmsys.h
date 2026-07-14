@@ -80,20 +80,13 @@
 
 #define MMSYS_RST_NR(bank, bit) (((bank) * 32) + (bit))
 
-/* Temporary compatibility definitions */
-#define DDP_COMPONENT_BLS0		DDP_COMPONENT_BLS
-#define DDP_COMPONENT_CCORR0		DDP_COMPONENT_CCORR
-#define DDP_COMPONENT_UFOE0		DDP_COMPONENT_UFOE
-#define DDP_COMPONENT_GAMMA0		DDP_COMPONENT_GAMMA
-#define DDP_COMPONENT_ETHDR_MIXER0	DDP_COMPONENT_ETHDR_MIXER
-
 /*
  * This macro adds a compile time check to make sure that the in/out
  * selection bit(s) fit in the register mask, similar to bitfield
  * macros, but this does not transform the value.
  */
 #define MMSYS_ROUTE(from, fsid, to, tsid, reg_addr, reg_mask, selection)	\
-	{ DDP_COMPONENT_##from##fsid, DDP_COMPONENT_##to##tsid, reg_addr, reg_mask,	\
+	{ MTK_DISP_##from, fsid, MTK_DISP_##to, tsid, reg_addr, reg_mask,	\
 	  (__BUILD_BUG_ON_ZERO_MSG((reg_mask) == 0, "Invalid mask") +		\
 	   __BUILD_BUG_ON_ZERO_MSG(~(reg_mask) & (selection),			\
 				   #selection " does not fit in "		\
@@ -102,8 +95,10 @@
 	}
 
 struct mtk_mmsys_routes {
-	u32 from_comp;
-	u32 to_comp;
+	u8 from_comp_type;
+	u8 from_comp_inst;
+	u8 to_comp_type;
+	u8 to_comp_inst;
 	u32 addr;
 	u32 mask;
 	u32 val;

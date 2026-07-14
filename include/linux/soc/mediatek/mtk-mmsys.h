@@ -118,14 +118,6 @@ enum mtk_ddp_comp_type {
 	MTK_DDP_COMP_TYPE_MAX
 };
 
-void mtk_mmsys_ddp_connect(struct device *dev,
-			   enum mtk_ddp_comp_id cur,
-			   enum mtk_ddp_comp_id next);
-
-void mtk_mmsys_ddp_disconnect(struct device *dev,
-			      enum mtk_ddp_comp_id cur,
-			      enum mtk_ddp_comp_id next);
-
 void mtk_mmsys_ddp_dpi_fmt_config(struct device *dev, u32 val);
 
 void mtk_mmsys_merge_async_config(struct device *dev, int idx, int width,
@@ -133,6 +125,14 @@ void mtk_mmsys_merge_async_config(struct device *dev, int idx, int width,
 
 void mtk_mmsys_hdr_config(struct device *dev, int be_width, int be_height,
 			  struct cmdq_pkt *cmdq_pkt);
+
+void mtk_mmsys_hw_connect(struct device *dev,
+			  enum mtk_ddp_comp_type src_type, u8 src_hw_inst_id,
+			  enum mtk_ddp_comp_type dst_type, u8 dst_hw_inst_id);
+
+void mtk_mmsys_hw_disconnect(struct device *dev,
+			     enum mtk_ddp_comp_type src_type, u8 src_hw_inst_id,
+			     enum mtk_ddp_comp_type dst_type, u8 dst_hw_inst_id);
 
 void mtk_mmsys_mixer_in_config(struct device *dev, int idx, bool alpha_sel, u16 alpha,
 			       u8 mode, u32 biwidth, struct cmdq_pkt *cmdq_pkt);
