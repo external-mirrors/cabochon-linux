@@ -112,6 +112,14 @@ struct mtk_dpi_sync_param {
 	bool shift_half_line;
 };
 
+struct mtk_dpi_sync {
+	struct mtk_dpi_sync_param hsync;
+	struct mtk_dpi_sync_param vsync_l_odd;
+	struct mtk_dpi_sync_param vsync_l_even;
+	struct mtk_dpi_sync_param vsync_r_odd;
+	struct mtk_dpi_sync_param vsync_r_even;
+};
+
 struct mtk_dpi_yc_limit {
 	u16 y_top;
 	u16 y_bottom;
@@ -600,14 +608,10 @@ static void mtk_dpi_set_pixel_clk(struct mtk_dpi *dpi, struct videomode *vm, int
 }
 
 static int mtk_dpi_set_display_mode(struct mtk_dpi *dpi,
+				    struct mtk_dpi_sync *sync,
 				    struct drm_display_mode *mode)
 {
 	struct mtk_dpi_polarities dpi_pol;
-	struct mtk_dpi_sync_param hsync;
-	struct mtk_dpi_sync_param vsync_lodd = { 0 };
-	struct mtk_dpi_sync_param vsync_leven = { 0 };
-	struct mtk_dpi_sync_param vsync_rodd = { 0 };
-	struct mtk_dpi_sync_param vsync_reven = { 0 };
 	struct videomode vm = { 0 };
 
 	drm_display_mode_to_videomode(mode, &vm);
@@ -624,42 +628,39 @@ static int mtk_dpi_set_display_mode(struct mtk_dpi *dpi,
 
 	/*
 	 * Depending on the IP version, we may output a different amount of
-	 * pixels for each iteration: divide the clock by this number and
-	 * adjust the display porches accordingly.
+	 * pixels for each iteration: adjust the display porches accordingly.
 	 */
-	hsync.sync_width = vm.hsync_len / dpi->conf->pixels_per_iter;
-	hsync.back_porch = vm.hback_porch / dpi->conf->pixels_per_iter;
-	hsync.front_porch = vm.hfront_porch / dpi->conf->pixels_per_iter;
+	sync->hsync.sync_width = vm.hsync_len / dpi->conf->pixels_per_iter;
+	sync->hsync.back_porch = vm.hback_porch / dpi->conf->pixels_per_iter;
+	sync->hsync.front_porch = vm.hfront_porch / dpi->conf->pixels_per_iter;
+	sync->hsync.shift_half_line = false;
 
-	hsync.shift_half_line = false;
-	vsync_lodd.sync_width = vm.vsync_len;
-	vsync_lodd.back_porch = vm.vback_porch;
-	vsync_lodd.front_porch = vm.vfront_porch;
-	vsync_lodd.shift_half_line = false;
+	sync->vsync_l_odd.sync_width = vm.vsync_len;
+	sync->vsync_l_odd.back_porch = vm.vback_porch;
+	sync->vsync_l_odd.front_porch = vm.vfront_porch;
+	sync->vsync_l_odd.shift_half_line = false;
 
-	if (vm.flags & DISPLAY_FLAGS_INTERLACED &&
-	    mode->flags & DRM_MODE_FLAG_3D_MASK) {
-		vsync_leven = vsync_lodd;
-		vsync_rodd = vsync_lodd;
-		vsync_reven = vsync_lodd;
-		vsync_leven.shift_half_line = true;
-		vsync_reven.shift_half_line = true;
-	} else if (vm.flags & DISPLAY_FLAGS_INTERLACED &&
-		   !(mode->flags & DRM_MODE_FLAG_3D_MASK)) {
-		vsync_leven = vsync_lodd;
-		vsync_leven.shift_half_line = true;
-	} else if (!(vm.flags & DISPLAY_FLAGS_INTERLACED) &&
-		   mode->flags & DRM_MODE_FLAG_3D_MASK) {
-		vsync_rodd = vsync_lodd;
+	if (vm.flags & DISPLAY_FLAGS_INTERLACED) {
+		sync->vsync_l_even = sync->vsync_l_odd;
+		sync->vsync_l_even.shift_half_line = true;
+
+		if (mode->flags & DRM_MODE_FLAG_3D_MASK) {
+			sync->vsync_r_odd = sync->vsync_l_odd;
+			sync->vsync_r_even = sync->vsync_l_odd;
+			sync->vsync_r_even.shift_half_line = true;
+		}
+	} else if (mode->flags & DRM_MODE_FLAG_3D_MASK) {
+		sync->vsync_r_odd = sync->vsync_l_odd;
 	}
+
 	mtk_dpi_sw_reset(dpi, true);
 	mtk_dpi_config_pol(dpi, &dpi_pol);
 
-	mtk_dpi_config_hsync(dpi, &hsync);
-	mtk_dpi_config_vsync_lodd(dpi, &vsync_lodd);
-	mtk_dpi_config_vsync_rodd(dpi, &vsync_rodd);
-	mtk_dpi_config_vsync_leven(dpi, &vsync_leven);
-	mtk_dpi_config_vsync_reven(dpi, &vsync_reven);
+	mtk_dpi_config_hsync(dpi, &sync->hsync);
+	mtk_dpi_config_vsync_lodd(dpi, &sync->vsync_l_odd);
+	mtk_dpi_config_vsync_rodd(dpi, &sync->vsync_r_odd);
+	mtk_dpi_config_vsync_leven(dpi, &sync->vsync_l_even);
+	mtk_dpi_config_vsync_reven(dpi, &sync->vsync_r_even);
 
 	mtk_dpi_config_3d(dpi, !!(mode->flags & DRM_MODE_FLAG_3D_MASK));
 	mtk_dpi_config_interface(dpi, !!(vm.flags &
@@ -863,12 +864,13 @@ static void mtk_dpi_bridge_disable(struct drm_bridge *bridge)
 static void mtk_dpi_bridge_enable(struct drm_bridge *bridge)
 {
 	struct mtk_dpi *dpi = bridge_to_dpi(bridge);
+	struct mtk_dpi_sync sync = { 0 };
 
 	if (dpi->pinctrl && dpi->pins_dpi)
 		pinctrl_select_state(dpi->pinctrl, dpi->pins_dpi);
 
 	mtk_dpi_power_on(dpi);
-	mtk_dpi_set_display_mode(dpi, &dpi->mode);
+	mtk_dpi_set_display_mode(dpi, &sync, &dpi->mode);
 	mtk_dpi_enable(dpi);
 }
 
