@@ -91,6 +91,7 @@ struct mtk_ddp_comp {
 	u8 controller_id;
 	int encoder_index;
 	const struct mtk_ddp_comp_funcs *funcs;
+	bool special_connect;
 
 	struct hlist_node lnode;
 };
@@ -334,9 +335,18 @@ static inline bool mtk_ddp_comp_remove(struct mtk_ddp_comp *comp, struct mtk_mut
 static inline bool mtk_ddp_comp_connect(struct mtk_ddp_comp *comp, struct device *mmsys_dev,
 					struct mtk_ddp_comp *next)
 {
-	if (comp->funcs && comp->funcs->connect) {
-		comp->funcs->connect(comp, mmsys_dev, next);
-		return true;
+	if (comp->funcs) {
+		const struct mtk_ddp_comp_funcs *funcs;
+
+		if (next->special_connect)
+			funcs = next->funcs;
+		else
+			funcs = comp->funcs;
+
+		if (funcs->connect) {
+			funcs->connect(comp, mmsys_dev, next);
+			return true;
+		}
 	}
 	return false;
 }
@@ -344,9 +354,18 @@ static inline bool mtk_ddp_comp_connect(struct mtk_ddp_comp *comp, struct device
 static inline bool mtk_ddp_comp_disconnect(struct mtk_ddp_comp *comp, struct device *mmsys_dev,
 					   struct mtk_ddp_comp *next)
 {
-	if (comp->funcs && comp->funcs->disconnect) {
-		comp->funcs->disconnect(comp, mmsys_dev, next);
-		return true;
+	if (comp->funcs) {
+		const struct mtk_ddp_comp_funcs *funcs;
+
+		if (next->special_connect)
+			funcs = next->funcs;
+		else
+			funcs = comp->funcs;
+
+		if (funcs->disconnect) {
+			funcs->disconnect(comp, mmsys_dev, next);
+			return true;
+		}
 	}
 	return false;
 }
@@ -375,7 +394,7 @@ bool mtk_ddp_find_comp_dev_in_table(const struct mtk_drm_comp_list *hlist,
 				    const unsigned int comp_type,
 				    struct device *dev);
 bool mtk_ddp_comp_is_internal_comp(enum mtk_ddp_comp_type type);
-int mtk_ddp_comp_get_id(struct device_node *node,
+int mtk_ddp_comp_get_id(struct device_node *node, struct device_node *ep_node,
 			enum mtk_ddp_comp_type comp_type);
 int mtk_find_possible_crtcs(struct drm_device *drm, struct device *dev);
 int mtk_ddp_comp_init(struct device *dev, struct device_node *node,

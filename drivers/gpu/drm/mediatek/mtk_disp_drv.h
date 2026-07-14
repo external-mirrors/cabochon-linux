@@ -58,6 +58,18 @@ void mtk_color_config(struct mtk_ddp_comp *comp, unsigned int w,
 		      unsigned int bpc, struct cmdq_pkt *cmdq_pkt);
 void mtk_color_start(struct device *dev);
 
+void mtk_direct_link_connect(struct mtk_ddp_comp *comp, struct device *mmsys_dev,
+			     struct mtk_ddp_comp *next);
+void mtk_direct_link_disconnect(struct mtk_ddp_comp *comp, struct device *mmsys_dev,
+				struct mtk_ddp_comp *next);
+int mtk_direct_link_clk_enable(struct mtk_ddp_comp *comp);
+void mtk_direct_link_clk_disable(struct mtk_ddp_comp *comp);
+void mtk_direct_link_config(struct mtk_ddp_comp *comp,
+			    unsigned int w, unsigned int h, unsigned int vrefresh,
+			    unsigned int bpc, struct cmdq_pkt *cmdq_pkt);
+void mtk_direct_link_mtx_remove(struct mtk_ddp_comp *comp, struct mtk_mutex *mutex);
+void mtk_direct_link_add(struct mtk_ddp_comp *comp, struct mtk_mutex *mutex);
+
 void mtk_dither_set_common(void __iomem *regs, struct cmdq_client_reg *cmdq_reg,
 			   unsigned int bpc, unsigned int cfg,
 			   unsigned int dither_en, struct cmdq_pkt *cmdq_pkt);

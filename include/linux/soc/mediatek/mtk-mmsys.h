@@ -91,6 +91,8 @@ enum mtk_ddp_comp_type {
 	MTK_DISP_BLENDER,
 	MTK_DISP_CCORR,
 	MTK_DISP_COLOR,
+	MTK_DISP_DIRECT_LINK_OUT,
+	MTK_DISP_DIRECT_LINK_IN,
 	MTK_DISP_DITHER,
 	MTK_DISP_DSC,
 	MTK_DISP_ETHDR_MIXER,
@@ -121,6 +123,8 @@ enum mtk_ddp_comp_type {
 
 	MTK_DDP_COMP_TYPE_MAX
 };
+
+#define MTK_DISP_DIRECT_LINK MTK_DISP_DIRECT_LINK_IN
 
 void mtk_mmsys_ddp_dpi_fmt_config(struct device *dev, u32 val);
 
