@@ -33,13 +33,18 @@ struct mtk_drm_route {
 	const unsigned int route_ddp;
 };
 
+struct mtk_drm_comp_definition {
+	enum mtk_ddp_comp_id type;
+};
+
+struct mtk_drm_path_definition {
+	const struct mtk_drm_comp_definition *comp;
+	u8 len;
+};
+
 struct mtk_mmsys_driver_data {
-	const unsigned int *main_path;
-	unsigned int main_len;
-	const unsigned int *ext_path;
-	unsigned int ext_len;
-	const unsigned int *third_path;
-	unsigned int third_len;
+	struct mtk_drm_path_definition *output_paths;
+	u8 num_output_paths;
 	const struct mtk_drm_route *conn_routes;
 	unsigned int num_conn_routes;
 

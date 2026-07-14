@@ -495,17 +495,13 @@ static bool mtk_ddp_find_comp_dev_in_table(const struct mtk_drm_comp_list *hlist
 }
 
 static bool mtk_ddp_comp_find(struct device *dev,
-			      const unsigned int *path,
-			      unsigned int path_len,
+			      const struct mtk_drm_path_definition *output_path,
 			      const struct mtk_drm_comp_list *hlist)
 {
 	unsigned int i;
 
-	if (path == NULL)
-		return false;
-
-	for (i = 0U; i < path_len; i++)
-		if (mtk_ddp_find_comp_dev_in_table(hlist, path[i], dev))
+	for (i = 0U; i < output_path->len; i++)
+		if (mtk_ddp_find_comp_dev_in_table(hlist, output_path->comp[i].type, dev))
 			return true;
 
 	return false;
@@ -528,21 +524,17 @@ static int mtk_ddp_comp_find_in_route(struct device *dev,
 	return -ENODEV;
 }
 
-static bool mtk_ddp_path_available(const unsigned int *path,
-				   unsigned int path_len,
+static bool mtk_ddp_path_available(const struct mtk_drm_path_definition *output_path,
 				   struct device_node **comp_node)
 {
 	unsigned int i;
 
-	if (!path || !path_len)
-		return false;
-
-	for (i = 0U; i < path_len; i++) {
+	for (i = 0U; i < output_path->len; i++) {
 		/* OVL_ADAPTOR doesn't have a device node */
-		if (path[i] == DDP_COMPONENT_DRM_OVL_ADAPTOR)
+		if (output_path->comp[i].type == DDP_COMPONENT_DRM_OVL_ADAPTOR)
 			continue;
 
-		if (!comp_node[path[i]])
+		if (!comp_node[output_path->comp[i].type])
 			return false;
 	}
 
@@ -576,31 +568,14 @@ int mtk_find_possible_crtcs(struct drm_device *drm, struct device *dev)
 		priv_n = private->all_drm_private[j];
 		data = priv_n->data;
 
-		if (mtk_ddp_path_available(data->main_path, data->main_len,
-					   priv_n->comp_node)) {
-			if (mtk_ddp_comp_find(dev, data->main_path,
-					      data->main_len,
-					      &priv_n->hlist))
-				return BIT(i);
-			i++;
-		}
+		for (i = 0; i < MAX_CRTC; i++) {
+			if (!data->output_paths[i].len)
+				continue;
 
-		if (mtk_ddp_path_available(data->ext_path, data->ext_len,
-					   priv_n->comp_node)) {
-			if (mtk_ddp_comp_find(dev, data->ext_path,
-					      data->ext_len,
-					      &priv_n->hlist))
+			ret = mtk_ddp_comp_find(dev, &data->output_paths[i],
+						&priv_n->hlist);
+			if (ret)
 				return BIT(i);
-			i++;
-		}
-
-		if (mtk_ddp_path_available(data->third_path, data->third_len,
-					   priv_n->comp_node)) {
-			if (mtk_ddp_comp_find(dev, data->third_path,
-					      data->third_len,
-					      &priv_n->hlist))
-				return BIT(i);
-			i++;
 		}
 	}
 

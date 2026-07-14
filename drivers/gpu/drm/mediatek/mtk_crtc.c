@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0-only
 /*
  * Copyright (c) 2015 MediaTek Inc.
+ * Copyright (c) 2026 Collabora Ltd.
+ *                    AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
  */
 
 #include <linux/clk.h>
@@ -1024,12 +1026,13 @@ struct device *mtk_crtc_dma_dev_get(struct drm_crtc *crtc)
 	return mtk_crtc->dma_dev;
 }
 
-int mtk_crtc_create(struct drm_device *drm_dev, const unsigned int *path,
-		    unsigned int path_len, int priv_data_index,
+int mtk_crtc_create(struct drm_device *drm_dev,
+		    enum mtk_crtc_path path_sel, int priv_data_index,
 		    const struct mtk_drm_route *conn_routes,
 		    unsigned int num_conn_routes)
 {
 	struct mtk_drm_private *priv = drm_dev->dev_private;
+	const struct mtk_drm_path_definition *output_path;
 	struct device *dev = drm_dev->dev;
 	struct mtk_ddp_comp *dma_comp;
 	struct mtk_crtc *mtk_crtc;
@@ -1041,16 +1044,14 @@ int mtk_crtc_create(struct drm_device *drm_dev, const unsigned int *path,
 	struct drm_crtc *tmp;
 	int crtc_i = 0;
 
-	if (!path)
-		return 0;
-
 	priv = priv->all_drm_private[priv_data_index];
+	output_path = &priv->data->output_paths[path_sel];
 
 	drm_for_each_crtc(tmp, drm_dev)
 		crtc_i++;
 
-	for (i = 0; i < path_len; i++) {
-		enum mtk_ddp_comp_id comp_id = path[i];
+	for (i = 0; i < output_path[i].len; i++) {
+		enum mtk_ddp_comp_id comp_id = output_path->comp[i].type;
 		struct device_node *node;
 		struct mtk_ddp_comp *comp;
 
@@ -1074,12 +1075,13 @@ int mtk_crtc_create(struct drm_device *drm_dev, const unsigned int *path,
 	}
 
 	mtk_crtc = devm_kzalloc(dev,
-				struct_size(mtk_crtc, ddp_comp, path_len + (conn_routes ? 1 : 0)),
+				struct_size(mtk_crtc, ddp_comp,
+					    output_path->len + (conn_routes ? 1 : 0)),
 				GFP_KERNEL);
 	if (!mtk_crtc)
 		return -ENOMEM;
 
-	mtk_crtc->ddp_comp_nr = path_len;
+	mtk_crtc->ddp_comp_nr = output_path->len;
 	mtk_crtc->mmsys_dev = priv->mmsys_dev;
 
 	mtk_crtc->mutex = mtk_mutex_get(priv->mutex_dev);
@@ -1090,7 +1092,7 @@ int mtk_crtc_create(struct drm_device *drm_dev, const unsigned int *path,
 	}
 
 	for (i = 0, j = 0; i < mtk_crtc->ddp_comp_nr; i++, j++) {
-		unsigned int comp_id = path[i];
+		unsigned int comp_id = output_path->comp[i].type;
 		struct mtk_ddp_comp *comp;
 
 		comp = mtk_ddp_comp_find_by_id(&priv->hlist, comp_id);
@@ -1136,7 +1138,7 @@ int mtk_crtc_create(struct drm_device *drm_dev, const unsigned int *path,
 	 * In the case of ovl_adaptor sub driver, it needs to use the
 	 * dma_dev_get function to get representative dma dev.
 	 */
-	dma_comp = mtk_ddp_comp_find_by_id(&priv->hlist, path[0]);
+	dma_comp = mtk_ddp_comp_find_by_id(&priv->hlist, output_path->comp[0].type);
 	if (dma_comp == NULL) {
 		dev_err(dev, "Could not find appropriate DMA device!\n");
 		return -EINVAL;

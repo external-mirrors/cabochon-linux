@@ -15,6 +15,8 @@
 
 #include <drm/drm_modes.h>
 
+#define MTK_DISP_CONTROLLER_MAX_COMP_PER_PATH		24
+
 struct device;
 struct device_node;
 struct drm_crtc;
