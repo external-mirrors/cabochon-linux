@@ -625,6 +625,12 @@ static const struct of_device_id mtk_ddp_comp_dt_ids[] = {
 	  .data = (void *)MTK_DISP_DSI },
 	{ .compatible = "mediatek,mt8196-dsi",
 	  .data = (void *)MTK_DISP_DSI },
+	{ .compatible = "mediatek,mt8189-dp-dvo",
+	  .data = (void *)MTK_DISP_DVO },
+	{ .compatible = "mediatek,mt8189-edp-dvo",
+	  .data = (void *)MTK_DISP_DVO },
+	{ .compatible = "mediatek,mt8196-edp-dvo",
+	  .data = (void *)MTK_DISP_DVO },
 	{ }
 };
 
@@ -778,6 +784,7 @@ static int mtk_drm_of_ddp_path_build_one(struct device *dev, enum mtk_crtc_path 
 	case MTK_DISP_DP_INTF:
 	case MTK_DISP_DPI:
 	case MTK_DISP_DSI:
+	case MTK_DISP_DVO:
 		break;
 	default:
 		dev_err(dev, "Invalid display hw pipeline. Last component: %u-%u (ret=%d)\n",
@@ -1061,6 +1068,7 @@ static struct platform_driver * const mtk_drm_drivers[] = {
 	&mtk_disp_rdma_driver,
 	&mtk_disp_wdma_driver,
 	&mtk_dpi_driver,
+	&mtk_dvo_driver,
 	&mtk_drm_platform_driver,
 	&mtk_dsi_driver,
 	&mtk_ethdr_driver,

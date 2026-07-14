@@ -114,6 +114,7 @@ enum mtk_ddp_comp_type {
 	MTK_DISP_DPI,
 	MTK_DISP_DP_INTF,
 	MTK_DISP_DSI,
+	MTK_DISP_DVO,
 
 	MTK_DDP_COMP_TYPE_MAX
 };

@@ -17,6 +17,25 @@
 #include <drm/drm_modes.h>
 #include <video/videomode.h>
 
+enum mtk_dpi_golden_setting_level {
+	MTK_DPI_FHD_60FPS_1920 = 0,
+	MTK_DPI_FHD_60FPS_2180,
+	MTK_DPI_FHD_60FPS_2400,
+	MTK_DPI_FHD_60FPS_2520,
+	MTK_DPI_FHD_90FPS,
+	MTK_DPI_FHD_120FPS,
+	MTK_DPI_WQHD_60FPS,
+	MTK_DPI_WQHD_120FPS,
+	MTK_DPI_8K_30FPS,
+	MTK_DPI_GSL_MAX,
+};
+
+struct mtk_dpi_gs_info {
+	u32 dpi_buf_sodi_high;
+	u32 dpi_buf_sodi_low;
+};
+
+
 enum mtk_dpi_out_bit_num {
 	MTK_DPI_OUT_BIT_NUM_8BITS,
 	MTK_DPI_OUT_BIT_NUM_10BITS,
@@ -65,6 +84,7 @@ struct mtk_dpi {
 	enum mtk_dpi_out_yc_map yc_map;
 	enum mtk_dpi_out_bit_num bit_num;
 	enum mtk_dpi_out_channel_swap channel_swap;
+	enum mtk_dpi_golden_setting_level gs_level;
 	struct pinctrl *pinctrl;
 	struct pinctrl_state *pins_gpio;
 	struct pinctrl_state *pins_dpi;
@@ -137,6 +157,8 @@ struct mtk_dpi_factor {
  *		     for DPI registers access.
  * @output_1pixel: Enable outputting one pixel per round; if the input is two pixel per
  *                 round, the DPI hardware will internally transform it to 1T1P.
+ * @quirk_hfp_bs_fix: Set back porch as back+front and use front porch as an adjustment
+ *                    setting (usually zero) to fix DisplayPort BS generation.
  */
 struct mtk_dpi_conf {
 	const struct mtk_dpi_factor *dpi_factor;
@@ -159,6 +181,7 @@ struct mtk_dpi_conf {
 	bool edge_cfg_in_mmsys;
 	bool clocked_by_hdmi;
 	bool output_1pixel;
+	bool quirk_hfp_bs_fix;
 };
 
 static inline struct mtk_dpi *bridge_to_dpi(struct drm_bridge *b)
