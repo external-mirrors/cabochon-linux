@@ -251,8 +251,15 @@ static unsigned int rdma_fmt_convert(struct mtk_disp_rdma *rdma,
 	}
 }
 
-unsigned int mtk_rdma_layer_nr(struct device *dev)
+unsigned int mtk_rdma_layer_nr(struct device *dev, int pipeline_index)
 {
+	/*
+	 * ReadDMA may participate in forming a layer only if it is the first
+	 * component in a pipeline, usually passing data to a DispHW Overlay (OVL)
+	 */
+	if (pipeline_index > 0)
+		return 0;
+
 	return 1;
 }
 

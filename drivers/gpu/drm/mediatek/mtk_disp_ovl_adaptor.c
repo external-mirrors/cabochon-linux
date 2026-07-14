@@ -360,7 +360,7 @@ enum drm_mode_status mtk_ovl_adaptor_mode_valid(struct device *dev,
 	return MODE_OK;
 }
 
-unsigned int mtk_ovl_adaptor_layer_nr(struct device *dev)
+unsigned int mtk_ovl_adaptor_layer_nr(struct device *dev, int pipeline_index)
 {
 	return MTK_OVL_ADAPTOR_LAYER_NUM;
 }

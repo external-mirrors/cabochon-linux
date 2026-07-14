@@ -264,7 +264,7 @@ static u32 wdma_fmt_convert(unsigned int fmt)
 	}
 }
 
-unsigned int mtk_wdma_layer_nr(struct device *dev)
+unsigned int mtk_wdma_layer_nr(struct device *dev, int pipeline_index)
 {
 	return 1;
 }
