@@ -308,6 +308,18 @@ static const struct mtk_ddp_comp_funcs ddp_dvo = {
 	.encoder_index = mtk_dvo_encoder_index,
 };
 
+static const struct mtk_ddp_comp_funcs ddp_exdma = {
+	.clk_enable = mtk_exdma_clk_enable,
+	.clk_disable = mtk_exdma_clk_disable,
+	.config = mtk_exdma_config,
+	.start = mtk_exdma_start,
+	.stop = mtk_exdma_stop,
+	.layer_config = mtk_exdma_layer_config,
+	.layer_nr = mtk_exdma_layer_nr,
+	.get_formats = mtk_exdma_get_formats,
+	.get_num_formats = mtk_exdma_get_num_formats,
+};
+
 static const struct mtk_ddp_comp_funcs ddp_gamma = {
 	.clk_enable = mtk_gamma_clk_enable,
 	.clk_disable = mtk_gamma_clk_disable,
@@ -434,6 +446,7 @@ static const char * const mtk_ddp_comp_stem[MTK_DDP_COMP_TYPE_MAX] = {
 	[MTK_DISP_COLOR] = "color",
 	[MTK_DISP_DITHER] = "dither",
 	[MTK_DISP_DSC] = "dsc",
+	[MTK_DISP_EXDMA] = "exdma",
 	[MTK_DISP_GAMMA] = "gamma",
 	[MTK_DISP_MERGE] = "merge",
 	[MTK_DISP_MUTEX] = "mutex",
@@ -460,6 +473,7 @@ static const struct mtk_ddp_comp_funcs *mtk_ddp_funcs[MTK_DDP_COMP_TYPE_MAX] = {
 	[MTK_DISP_COLOR]		= &ddp_color,
 	[MTK_DISP_DITHER]		= &ddp_dither,
 	[MTK_DISP_DSC]			= &ddp_dsc,
+	[MTK_DISP_EXDMA]		= &ddp_exdma,
 	[MTK_DISP_GAMMA]		= &ddp_gamma,
 	[MTK_DISP_MERGE]		= &ddp_merge,
 	[MTK_DISP_OD]			= &ddp_od,
