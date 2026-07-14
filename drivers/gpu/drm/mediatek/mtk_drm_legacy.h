@@ -25,4 +25,12 @@ extern struct mtk_drm_path_definition mt8192_legacy_paths[];
 extern struct mtk_drm_path_definition mt8195_vdo0_legacy_paths[];
 extern struct mtk_drm_path_definition mt8195_vdo1_legacy_paths[];
 
+int mtk_drm_legacy_inject_mutex_trig_ids(struct mtk_drm_comp_list *hlist,
+					 struct device_node *mutex_node);
+u8 mtk_drm_legacy_get_ovl_adaptor_mutex_trig_id(enum mtk_ddp_comp_id ddp_type,
+						struct device_node *mutex_node);
+
+void mtk_drm_legacy_ovl_adaptor_probe(struct device *dev, struct mtk_drm_private *priv,
+				      struct component_match **match);
+
 #endif /* MTK_DRM_LEGACY_H */

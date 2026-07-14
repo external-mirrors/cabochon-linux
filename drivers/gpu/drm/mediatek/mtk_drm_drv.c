@@ -409,11 +409,6 @@ static const struct drm_driver mtk_drm_driver = {
 	.minor = DRIVER_MINOR,
 };
 
-static int compare_dev(struct device *dev, void *data)
-{
-	return dev == (struct device *)data;
-}
-
 static int mtk_drm_bind(struct device *dev)
 {
 	struct mtk_drm_private *private = dev_get_drvdata(dev);
@@ -858,7 +853,6 @@ static int mtk_drm_probe(struct platform_device *pdev)
 	struct mtk_mmsys_driver_data *mtk_drm_data;
 	struct device_node *node;
 	struct component_match *match = NULL;
-	struct platform_device *ovl_adaptor;
 	int ret;
 	int i;
 
@@ -905,17 +899,6 @@ static int mtk_drm_probe(struct platform_device *pdev)
 						      GFP_KERNEL);
 	if (!private->all_drm_private)
 		return -ENOMEM;
-
-	/* Bringup ovl_adaptor */
-	if (mtk_drm_find_mmsys_comp(private, DDP_COMPONENT_DRM_OVL_ADAPTOR)) {
-		ovl_adaptor = platform_device_register_data(dev, "mediatek-disp-ovl-adaptor",
-							    PLATFORM_DEVID_AUTO,
-							    (void *)private->mmsys_dev,
-							    sizeof(*private->mmsys_dev));
-		mtk_ddp_comp_init(&ovl_adaptor->dev, NULL, &private->hlist,
-				  DDP_COMPONENT_DRM_OVL_ADAPTOR);
-		component_match_add(dev, &match, compare_dev, &ovl_adaptor->dev);
-	}
 
 	/* Iterate over sibling DISP function blocks */
 	for_each_child_of_node(phandle->parent, node) {
@@ -980,6 +963,17 @@ static int mtk_drm_probe(struct platform_device *pdev)
 		ret = -ENODEV;
 		goto err_node;
 	}
+
+	/* If mtk-mutex is not a trigger source, this is an old devicetree */
+	if (!of_property_present(private->mutex_node, "#trigger-source-cells")) {
+		ret = mtk_drm_legacy_inject_mutex_trig_ids(&private->hlist, private->mutex_node);
+		if (ret)
+			return ret;
+	}
+
+	/* Bringup ovl_adaptor */
+	if (mtk_drm_find_mmsys_comp(private, DDP_COMPONENT_DRM_OVL_ADAPTOR))
+		mtk_drm_legacy_ovl_adaptor_probe(dev, private, &match);
 
 	pm_runtime_enable(dev);
 

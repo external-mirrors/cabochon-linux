@@ -81,6 +81,7 @@ struct mtk_ddp_comp {
 	struct device *dev;
 	int irq;
 	unsigned int id;
+	u8 mtx_trig_id;
 	int encoder_index;
 	const struct mtk_ddp_comp_funcs *funcs;
 
@@ -360,6 +361,7 @@ int mtk_find_possible_crtcs(struct drm_device *drm, struct device *dev);
 int mtk_ddp_comp_init(struct device *dev, struct device_node *node,
 		      struct mtk_drm_comp_list *hlist,
 		      unsigned int comp_id);
+int mtk_ddp_comp_get_mutex_trigger(struct device_node *node, unsigned int index);
 enum mtk_ddp_comp_type mtk_ddp_comp_get_type(unsigned int comp_id);
 void mtk_ddp_write(struct cmdq_pkt *cmdq_pkt, unsigned int value,
 		   struct cmdq_client_reg *cmdq_reg, void __iomem *regs,
