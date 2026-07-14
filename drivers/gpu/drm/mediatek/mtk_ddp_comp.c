@@ -505,9 +505,9 @@ static const struct mtk_ddp_comp_funcs *mtk_ddp_funcs[MTK_DDP_COMP_TYPE_MAX] = {
 	[MTK_DISP_DVO]			= &ddp_dvo,
 };
 
-static bool mtk_ddp_find_comp_dev_in_table(const struct mtk_drm_comp_list *hlist,
-					   const unsigned int comp_type,
-					   struct device *dev)
+bool mtk_ddp_find_comp_dev_in_table(const struct mtk_drm_comp_list *hlist,
+				    const unsigned int comp_type,
+				    struct device *dev)
 {
 	struct mtk_ddp_comp *ddp_comp;
 
@@ -570,11 +570,14 @@ int mtk_find_possible_crtcs(struct drm_device *drm, struct device *dev)
 	int i, j;
 	int ret;
 
-	for (j = 0; j < private->data->mmsys_dev_num; j++) {
-		priv_n = private->all_drm_private[j];
-		data = priv_n->data;
+	for (i = 0; i < MAX_CRTC; i++) {
+		for (j = 0; j < private->data->mmsys_dev_num; j++) {
+			priv_n = private->all_drm_private[j];
+			if (!priv_n)
+				continue;
 
-		for (i = 0; i < MAX_CRTC; i++) {
+			data = priv_n->data;
+
 			if (!data->output_paths[i].len)
 				continue;
 

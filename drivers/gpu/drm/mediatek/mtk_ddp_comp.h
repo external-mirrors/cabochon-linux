@@ -15,6 +15,7 @@
 
 #include <drm/drm_modes.h>
 
+#define MTK_DISP_CONTROLLER_MAX_CONTROLLERS_NUM		7
 #define MTK_DISP_CONTROLLER_MAX_COMP_PER_PATH		24
 #define MTK_DISP_CONTROLLER_MAX_HW_COMP_INSTANCE	32
 
@@ -370,6 +371,9 @@ static inline struct mtk_ddp_comp
 	return NULL;
 }
 
+bool mtk_ddp_find_comp_dev_in_table(const struct mtk_drm_comp_list *hlist,
+				    const unsigned int comp_type,
+				    struct device *dev);
 bool mtk_ddp_comp_is_internal_comp(enum mtk_ddp_comp_type type);
 int mtk_ddp_comp_get_id(struct device_node *node,
 			enum mtk_ddp_comp_type comp_type);
