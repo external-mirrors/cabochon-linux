@@ -120,6 +120,20 @@ void mtk_merge_stop_cmdq(struct device *dev, struct cmdq_pkt *cmdq_pkt);
 enum drm_mode_status mtk_merge_mode_valid(struct device *dev,
 					  const struct drm_display_mode *mode);
 
+void mtk_outproc_start(struct device *dev);
+void mtk_outproc_stop(struct device *dev);
+int mtk_outproc_clk_enable(struct mtk_ddp_comp *comp);
+void mtk_outproc_clk_disable(struct mtk_ddp_comp *comp);
+void mtk_outproc_config(struct mtk_ddp_comp *comp, unsigned int w,
+			     unsigned int h, unsigned int vrefresh,
+			     unsigned int bpc, struct cmdq_pkt *cmdq_pkt);
+void mtk_outproc_register_vblank_cb(struct device *dev,
+					 void (*vblank_cb)(void *),
+					 void *vblank_cb_data);
+void mtk_outproc_unregister_vblank_cb(struct device *dev);
+void mtk_outproc_enable_vblank(struct device *dev);
+void mtk_outproc_disable_vblank(struct device *dev);
+
 void mtk_ovl_bgclr_in_on(struct device *dev);
 void mtk_ovl_bgclr_in_off(struct device *dev);
 void mtk_ovl_bypass_shadow(struct device *dev);
