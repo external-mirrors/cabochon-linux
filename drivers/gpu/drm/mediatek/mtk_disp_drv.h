@@ -242,6 +242,14 @@ void mtk_mdp_rdma_config(struct device *dev, struct mtk_mdp_rdma_cfg *cfg,
 const u32 *mtk_mdp_rdma_get_formats(struct device *dev);
 size_t mtk_mdp_rdma_get_num_formats(struct device *dev);
 
+int mtk_tdshp_clk_enable(struct mtk_ddp_comp *comp);
+void mtk_tdshp_clk_disable(struct mtk_ddp_comp *comp);
+void mtk_tdshp_config(struct mtk_ddp_comp *comp, unsigned int w,
+			   unsigned int h, unsigned int vrefresh,
+			   unsigned int bpc, struct cmdq_pkt *cmdq_pkt);
+void mtk_tdshp_start(struct device *dev);
+void mtk_tdshp_stop(struct device *dev);
+
 int mtk_wdma_clk_enable(struct mtk_ddp_comp *comp);
 void mtk_wdma_clk_disable(struct mtk_ddp_comp *comp);
 void mtk_wdma_config(struct mtk_ddp_comp *comp, unsigned int width,
