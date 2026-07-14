@@ -679,6 +679,7 @@ static int mtk_ddp_comp_init_internal_comp(struct device *dev, struct device *co
 
 int mtk_ddp_comp_init(struct device *dev, struct device_node *node,
 		      struct mtk_drm_comp_list *hlist,
+		      u8 comp_controller_id,
 		      enum mtk_ddp_comp_type comp_type, int comp_inst_id)
 {
 	struct platform_device *comp_pdev;
@@ -694,6 +695,7 @@ int mtk_ddp_comp_init(struct device *dev, struct device_node *node,
 
 	comp->type = comp_type;
 	comp->inst_id = comp_inst_id;
+	comp->controller_id = comp_controller_id;
 	comp->funcs = mtk_ddp_funcs[comp_type];
 	/* Not all drm components have a DTS device node, such as ovl_adaptor,
 	 * which is the drm bring up sub driver

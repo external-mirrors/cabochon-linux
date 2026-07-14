@@ -39,7 +39,9 @@ struct mtk_drm_comp_definition {
 
 struct mtk_drm_path_definition {
 	const struct mtk_drm_comp_definition *comp;
+	struct device_node *input_controller;
 	u8 len;
+	u8 order;
 };
 
 struct mtk_mmsys_driver_data {

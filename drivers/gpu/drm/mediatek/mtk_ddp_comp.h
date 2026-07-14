@@ -87,6 +87,7 @@ struct mtk_ddp_comp {
 	enum mtk_ddp_comp_type type;
 	u8 inst_id;
 	u8 mtx_trig_id;
+	u8 controller_id;
 	int encoder_index;
 	const struct mtk_ddp_comp_funcs *funcs;
 
@@ -375,6 +376,7 @@ int mtk_ddp_comp_get_id(struct device_node *node,
 int mtk_find_possible_crtcs(struct drm_device *drm, struct device *dev);
 int mtk_ddp_comp_init(struct device *dev, struct device_node *node,
 		      struct mtk_drm_comp_list *hlist,
+		      u8 comp_controller_id,
 		      enum mtk_ddp_comp_type comp_type, int comp_inst_id);
 int mtk_ddp_comp_get_mutex_trigger(struct device_node *node, unsigned int index);
 enum mtk_ddp_comp_type mtk_ddp_comp_get_type(unsigned int comp_id);

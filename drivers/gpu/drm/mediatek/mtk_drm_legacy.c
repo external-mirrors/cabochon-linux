@@ -873,6 +873,7 @@ void mtk_drm_legacy_ovl_adaptor_probe(struct device *dev, struct mtk_drm_private
 						    PLATFORM_DEVID_AUTO,
 						    (void *)priv, sizeof(*priv));
 
-	mtk_ddp_comp_init(&ovl_adaptor->dev, NULL, &priv->hlist, MTK_DISP_OVL_ADAPTOR, 0);
+	mtk_ddp_comp_init(&ovl_adaptor->dev, NULL, &priv->hlist, priv->data->mmsys_id,
+			  MTK_DISP_OVL_ADAPTOR, 0);
 	component_match_add(dev, match, component_compare_dev, &ovl_adaptor->dev);
 }
