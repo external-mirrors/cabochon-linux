@@ -64,16 +64,16 @@ struct mtk_disp_gamma {
 	const struct mtk_disp_gamma_data *data;
 };
 
-int mtk_gamma_clk_enable(struct device *dev)
+int mtk_gamma_clk_enable(struct mtk_ddp_comp *comp)
 {
-	struct mtk_disp_gamma *gamma = dev_get_drvdata(dev);
+	struct mtk_disp_gamma *gamma = dev_get_drvdata(comp->dev);
 
 	return clk_prepare_enable(gamma->clk);
 }
 
-void mtk_gamma_clk_disable(struct device *dev)
+void mtk_gamma_clk_disable(struct mtk_ddp_comp *comp)
 {
-	struct mtk_disp_gamma *gamma = dev_get_drvdata(dev);
+	struct mtk_disp_gamma *gamma = dev_get_drvdata(comp->dev);
 
 	clk_disable_unprepare(gamma->clk);
 }
@@ -206,11 +206,11 @@ void mtk_gamma_set(struct device *dev, struct drm_crtc_state *state)
 	writel(cfg_val, gamma->regs + DISP_GAMMA_CFG);
 }
 
-void mtk_gamma_config(struct device *dev, unsigned int w,
+void mtk_gamma_config(struct mtk_ddp_comp *comp, unsigned int w,
 		      unsigned int h, unsigned int vrefresh,
 		      unsigned int bpc, struct cmdq_pkt *cmdq_pkt)
 {
-	struct mtk_disp_gamma *gamma = dev_get_drvdata(dev);
+	struct mtk_disp_gamma *gamma = dev_get_drvdata(comp->dev);
 	u32 sz;
 
 	sz = FIELD_PREP(DISP_GAMMA_SIZE_HSIZE, w);

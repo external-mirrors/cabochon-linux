@@ -157,16 +157,16 @@ size_t mtk_rdma_get_num_formats(struct device *dev)
 	return rdma->data->num_formats;
 }
 
-int mtk_rdma_clk_enable(struct device *dev)
+int mtk_rdma_clk_enable(struct mtk_ddp_comp *comp)
 {
-	struct mtk_disp_rdma *rdma = dev_get_drvdata(dev);
+	struct mtk_disp_rdma *rdma = dev_get_drvdata(comp->dev);
 
 	return clk_prepare_enable(rdma->clk);
 }
 
-void mtk_rdma_clk_disable(struct device *dev)
+void mtk_rdma_clk_disable(struct mtk_ddp_comp *comp)
 {
-	struct mtk_disp_rdma *rdma = dev_get_drvdata(dev);
+	struct mtk_disp_rdma *rdma = dev_get_drvdata(comp->dev);
 
 	clk_disable_unprepare(rdma->clk);
 }
@@ -182,13 +182,13 @@ void mtk_rdma_stop(struct device *dev)
 	rdma_update_bits(dev, DISP_REG_RDMA_GLOBAL_CON, RDMA_ENGINE_EN, 0);
 }
 
-void mtk_rdma_config(struct device *dev, unsigned int width,
+void mtk_rdma_config(struct mtk_ddp_comp *comp, unsigned int width,
 		     unsigned int height, unsigned int vrefresh,
 		     unsigned int bpc, struct cmdq_pkt *cmdq_pkt)
 {
 	unsigned int threshold;
 	unsigned int reg;
-	struct mtk_disp_rdma *rdma = dev_get_drvdata(dev);
+	struct mtk_disp_rdma *rdma = dev_get_drvdata(comp->dev);
 	u32 rdma_fifo_size;
 
 	mtk_ddp_write_mask(cmdq_pkt, width, &rdma->cmdq_reg, rdma->regs,

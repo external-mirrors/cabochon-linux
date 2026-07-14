@@ -40,25 +40,25 @@ struct mtk_disp_ccorr {
 	const struct mtk_disp_ccorr_data	*data;
 };
 
-int mtk_ccorr_clk_enable(struct device *dev)
+int mtk_ccorr_clk_enable(struct mtk_ddp_comp *comp)
 {
-	struct mtk_disp_ccorr *ccorr = dev_get_drvdata(dev);
+	struct mtk_disp_ccorr *ccorr = dev_get_drvdata(comp->dev);
 
 	return clk_prepare_enable(ccorr->clk);
 }
 
-void mtk_ccorr_clk_disable(struct device *dev)
+void mtk_ccorr_clk_disable(struct mtk_ddp_comp *comp)
 {
-	struct mtk_disp_ccorr *ccorr = dev_get_drvdata(dev);
+	struct mtk_disp_ccorr *ccorr = dev_get_drvdata(comp->dev);
 
 	clk_disable_unprepare(ccorr->clk);
 }
 
-void mtk_ccorr_config(struct device *dev, unsigned int w,
+void mtk_ccorr_config(struct mtk_ddp_comp *comp, unsigned int w,
 			     unsigned int h, unsigned int vrefresh,
 			     unsigned int bpc, struct cmdq_pkt *cmdq_pkt)
 {
-	struct mtk_disp_ccorr *ccorr = dev_get_drvdata(dev);
+	struct mtk_disp_ccorr *ccorr = dev_get_drvdata(comp->dev);
 
 	mtk_ddp_write(cmdq_pkt, w << 16 | h, &ccorr->cmdq_reg, ccorr->regs,
 		      DISP_CCORR_SIZE);

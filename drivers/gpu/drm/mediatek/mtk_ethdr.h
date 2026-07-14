@@ -8,8 +8,8 @@
 
 void mtk_ethdr_start(struct device *dev);
 void mtk_ethdr_stop(struct device *dev);
-int mtk_ethdr_clk_enable(struct device *dev);
-void mtk_ethdr_clk_disable(struct device *dev);
+int mtk_ethdr_clk_enable(struct mtk_ddp_comp *comp);
+void mtk_ethdr_clk_disable(struct mtk_ddp_comp *comp);
 void mtk_ethdr_config(struct device *dev, unsigned int w,
 		      unsigned int h, unsigned int vrefresh,
 		      unsigned int bpc, struct cmdq_pkt *cmdq_pkt);

@@ -36,9 +36,9 @@ struct mtk_drm_comp_list {
 struct mtk_ddp_comp_funcs {
 	int (*power_on)(struct device *dev);
 	void (*power_off)(struct device *dev);
-	int (*clk_enable)(struct device *dev);
-	void (*clk_disable)(struct device *dev);
-	void (*config)(struct device *dev, unsigned int w,
+	int (*clk_enable)(struct mtk_ddp_comp *comp);
+	void (*clk_disable)(struct mtk_ddp_comp *comp);
+	void (*config)(struct mtk_ddp_comp *comp, unsigned int w,
 		       unsigned int h, unsigned int vrefresh,
 		       unsigned int bpc, struct cmdq_pkt *cmdq_pkt);
 	void (*dsc_setup)(struct device *dev, struct drm_dsc_config *dsc);
@@ -75,8 +75,8 @@ struct mtk_ddp_comp_funcs {
 			struct mtk_ddp_comp *next);
 	void (*disconnect)(struct mtk_ddp_comp *comp, struct device *mmsys_dev,
 			   struct mtk_ddp_comp *next);
-	void (*add)(struct device *dev, struct mtk_mutex *mutex);
-	void (*remove)(struct device *dev, struct mtk_mutex *mutex);
+	void (*add)(struct mtk_ddp_comp *comp, struct mtk_mutex *mutex);
+	void (*remove)(struct mtk_ddp_comp *comp, struct mtk_mutex *mutex);
 	unsigned int (*encoder_index)(struct device *dev);
 	enum drm_mode_status (*mode_valid)(struct device *dev, const struct drm_display_mode *mode);
 };
@@ -113,7 +113,7 @@ static inline void mtk_ddp_comp_power_off(struct mtk_ddp_comp *comp)
 static inline int mtk_ddp_comp_clk_enable(struct mtk_ddp_comp *comp)
 {
 	if (comp->funcs && comp->funcs->clk_enable)
-		return comp->funcs->clk_enable(comp->dev);
+		return comp->funcs->clk_enable(comp);
 
 	return 0;
 }
@@ -121,7 +121,7 @@ static inline int mtk_ddp_comp_clk_enable(struct mtk_ddp_comp *comp)
 static inline void mtk_ddp_comp_clk_disable(struct mtk_ddp_comp *comp)
 {
 	if (comp->funcs && comp->funcs->clk_disable)
-		comp->funcs->clk_disable(comp->dev);
+		comp->funcs->clk_disable(comp);
 }
 
 static inline
@@ -139,7 +139,7 @@ static inline void mtk_ddp_comp_config(struct mtk_ddp_comp *comp,
 				       struct cmdq_pkt *cmdq_pkt)
 {
 	if (comp->funcs && comp->funcs->config)
-		comp->funcs->config(comp->dev, w, h, vrefresh, bpc, cmdq_pkt);
+		comp->funcs->config(comp, w, h, vrefresh, bpc, cmdq_pkt);
 }
 
 static inline void mtk_ddp_comp_dsc_setup(struct mtk_ddp_comp *comp,
@@ -314,7 +314,7 @@ static inline bool mtk_ddp_comp_is_afbc_supported(struct mtk_ddp_comp *comp)
 static inline bool mtk_ddp_comp_add(struct mtk_ddp_comp *comp, struct mtk_mutex *mutex)
 {
 	if (comp->funcs && comp->funcs->add) {
-		comp->funcs->add(comp->dev, mutex);
+		comp->funcs->add(comp, mutex);
 		return true;
 	}
 	return false;
@@ -323,7 +323,7 @@ static inline bool mtk_ddp_comp_add(struct mtk_ddp_comp *comp, struct mtk_mutex 
 static inline bool mtk_ddp_comp_remove(struct mtk_ddp_comp *comp, struct mtk_mutex *mutex)
 {
 	if (comp->funcs && comp->funcs->remove) {
-		comp->funcs->remove(comp->dev, mutex);
+		comp->funcs->remove(comp, mutex);
 		return true;
 	}
 	return false;

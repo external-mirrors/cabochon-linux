@@ -136,16 +136,16 @@ struct mtk_dsc {
 	bool			dsc_config_done;
 };
 
-int mtk_dsc_clk_enable(struct device *dev)
+int mtk_dsc_clk_enable(struct mtk_ddp_comp *comp)
 {
-	struct mtk_dsc *disp_dsc = dev_get_drvdata(dev);
+	struct mtk_dsc *disp_dsc = dev_get_drvdata(comp->dev);
 
 	return clk_prepare_enable(disp_dsc->clk);
 }
 
-void mtk_dsc_clk_disable(struct device *dev)
+void mtk_dsc_clk_disable(struct mtk_ddp_comp *comp)
 {
-	struct mtk_dsc *disp_dsc = dev_get_drvdata(dev);
+	struct mtk_dsc *disp_dsc = dev_get_drvdata(comp->dev);
 
 	clk_disable_unprepare(disp_dsc->clk);
 }

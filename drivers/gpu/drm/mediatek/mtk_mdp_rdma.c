@@ -257,16 +257,16 @@ void mtk_mdp_rdma_power_off(struct device *dev)
 	pm_runtime_put(dev);
 }
 
-int mtk_mdp_rdma_clk_enable(struct device *dev)
+int mtk_mdp_rdma_clk_enable(struct mtk_ddp_comp *comp)
 {
-	struct mtk_mdp_rdma *rdma = dev_get_drvdata(dev);
+	struct mtk_mdp_rdma *rdma = dev_get_drvdata(comp->dev);
 
 	return clk_prepare_enable(rdma->clk);
 }
 
-void mtk_mdp_rdma_clk_disable(struct device *dev)
+void mtk_mdp_rdma_clk_disable(struct mtk_ddp_comp *comp)
 {
-	struct mtk_mdp_rdma *rdma = dev_get_drvdata(dev);
+	struct mtk_mdp_rdma *rdma = dev_get_drvdata(comp->dev);
 
 	clk_disable_unprepare(rdma->clk);
 }

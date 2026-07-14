@@ -126,11 +126,11 @@ static void mtk_merge_fifo_setting(struct mtk_disp_merge *priv,
 			   FLD_PREULTRA_TH_LOW | FLD_PREULTRA_TH_HIGH);
 }
 
-void mtk_merge_config(struct device *dev, unsigned int w,
+void mtk_merge_config(struct mtk_ddp_comp *comp, unsigned int w,
 		      unsigned int h, unsigned int vrefresh,
 		      unsigned int bpc, struct cmdq_pkt *cmdq_pkt)
 {
-	mtk_merge_advance_config(dev, w, 0, h, vrefresh, bpc, cmdq_pkt);
+	mtk_merge_advance_config(comp->dev, w, 0, h, vrefresh, bpc, cmdq_pkt);
 }
 
 void mtk_merge_advance_config(struct device *dev, unsigned int l_w, unsigned int r_w,
@@ -191,14 +191,14 @@ void mtk_merge_advance_config(struct device *dev, unsigned int l_w, unsigned int
 			   DISP_REG_MERGE_CFG_12, FLD_CFG_MERGE_MODE);
 }
 
-int mtk_merge_clk_enable(struct device *dev)
+int mtk_merge_clk_enable(struct mtk_ddp_comp *comp)
 {
-	int ret = 0;
-	struct mtk_disp_merge *priv = dev_get_drvdata(dev);
+	struct mtk_disp_merge *priv = dev_get_drvdata(comp->dev);
+	int ret;
 
 	ret = clk_prepare_enable(priv->clk);
 	if (ret) {
-		dev_err(dev, "merge clk prepare enable failed\n");
+		dev_err(comp->dev, "merge clk prepare enable failed\n");
 		return ret;
 	}
 
@@ -207,16 +207,16 @@ int mtk_merge_clk_enable(struct device *dev)
 		/* should clean up the state of priv->clk */
 		clk_disable_unprepare(priv->clk);
 
-		dev_err(dev, "async clk prepare enable failed\n");
+		dev_err(comp->dev, "async clk prepare enable failed\n");
 		return ret;
 	}
 
 	return ret;
 }
 
-void mtk_merge_clk_disable(struct device *dev)
+void mtk_merge_clk_disable(struct mtk_ddp_comp *comp)
 {
-	struct mtk_disp_merge *priv = dev_get_drvdata(dev);
+	struct mtk_disp_merge *priv = dev_get_drvdata(comp->dev);
 
 	clk_disable_unprepare(priv->async_clk);
 	clk_disable_unprepare(priv->clk);

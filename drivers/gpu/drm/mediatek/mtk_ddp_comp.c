@@ -109,16 +109,16 @@ void mtk_ddp_write_mask(struct cmdq_pkt *cmdq_pkt, unsigned int value,
 #endif
 }
 
-static int mtk_ddp_clk_enable(struct device *dev)
+static int mtk_ddp_clk_enable(struct mtk_ddp_comp *comp)
 {
-	struct mtk_ddp_comp_dev *priv = dev_get_drvdata(dev);
+	struct mtk_ddp_comp_dev *priv = dev_get_drvdata(comp->dev);
 
 	return clk_prepare_enable(priv->clk);
 }
 
-static void mtk_ddp_clk_disable(struct device *dev)
+static void mtk_ddp_clk_disable(struct mtk_ddp_comp *comp)
 {
-	struct mtk_ddp_comp_dev *priv = dev_get_drvdata(dev);
+	struct mtk_ddp_comp_dev *priv = dev_get_drvdata(comp->dev);
 
 	clk_disable_unprepare(priv->clk);
 }
@@ -149,11 +149,11 @@ void mtk_dither_set_common(void __iomem *regs, struct cmdq_client_reg *cmdq_reg,
 	}
 }
 
-static void mtk_dither_config(struct device *dev, unsigned int w,
+static void mtk_dither_config(struct mtk_ddp_comp *comp, unsigned int w,
 			      unsigned int h, unsigned int vrefresh,
 			      unsigned int bpc, struct cmdq_pkt *cmdq_pkt)
 {
-	struct mtk_ddp_comp_dev *priv = dev_get_drvdata(dev);
+	struct mtk_ddp_comp_dev *priv = dev_get_drvdata(comp->dev);
 
 	mtk_ddp_write(cmdq_pkt, w << 16 | h, &priv->cmdq_reg, priv->regs, DISP_REG_DITHER_SIZE);
 	mtk_ddp_write(cmdq_pkt, DITHER_RELAY_MODE, &priv->cmdq_reg, priv->regs,
@@ -185,15 +185,15 @@ static void mtk_dither_set(struct device *dev, unsigned int bpc,
 			      DISP_DITHERING, cmdq_pkt);
 }
 
-static void mtk_od_config(struct device *dev, unsigned int w,
+static void mtk_od_config(struct mtk_ddp_comp *comp, unsigned int w,
 			  unsigned int h, unsigned int vrefresh,
 			  unsigned int bpc, struct cmdq_pkt *cmdq_pkt)
 {
-	struct mtk_ddp_comp_dev *priv = dev_get_drvdata(dev);
+	struct mtk_ddp_comp_dev *priv = dev_get_drvdata(comp->dev);
 
 	mtk_ddp_write(cmdq_pkt, w << 16 | h, &priv->cmdq_reg, priv->regs, DISP_REG_OD_SIZE);
 	mtk_ddp_write(cmdq_pkt, OD_RELAYMODE, &priv->cmdq_reg, priv->regs, DISP_REG_OD_CFG);
-	mtk_dither_set(dev, bpc, DISP_REG_OD_CFG, cmdq_pkt);
+	mtk_dither_set(comp->dev, bpc, DISP_REG_OD_CFG, cmdq_pkt);
 }
 
 static void mtk_od_start(struct device *dev)
@@ -203,11 +203,11 @@ static void mtk_od_start(struct device *dev)
 	writel(1, priv->regs + DISP_REG_OD_EN);
 }
 
-static void mtk_postmask_config(struct device *dev, unsigned int w,
+static void mtk_postmask_config(struct mtk_ddp_comp *comp, unsigned int w,
 				unsigned int h, unsigned int vrefresh,
 				unsigned int bpc, struct cmdq_pkt *cmdq_pkt)
 {
-	struct mtk_ddp_comp_dev *priv = dev_get_drvdata(dev);
+	struct mtk_ddp_comp_dev *priv = dev_get_drvdata(comp->dev);
 
 	mtk_ddp_write(cmdq_pkt, w << 16 | h, &priv->cmdq_reg, priv->regs,
 		      DISP_REG_POSTMASK_SIZE);
