@@ -20,6 +20,7 @@
 #include "mtk_ddp_comp.h"
 #include "mtk_disp_drv.h"
 #include "mtk_drm_drv.h"
+#include "mtk_drm_legacy.h"
 #include "mtk_ethdr.h"
 
 #define MTK_OVL_ADAPTOR_RDMA_MAX_WIDTH 1920
@@ -68,6 +69,7 @@ struct ovl_adaptor_comp_match {
 struct mtk_disp_ovl_adaptor {
 	struct device *ovl_adaptor_comp[OVL_ADAPTOR_ID_MAX];
 	struct device *mmsys_dev;
+	u8 mtx_trig_ids[OVL_ADAPTOR_ID_MAX];
 	bool children_bound;
 };
 
@@ -534,7 +536,8 @@ static void ovl_adaptor_put_device(void *_dev)
 	put_device(dev);
 }
 
-static int ovl_adaptor_comp_init(struct device *dev, struct component_match **match)
+static int ovl_adaptor_comp_init(struct device *dev, struct device_node *mutex_node,
+				 struct component_match **match)
 {
 	struct mtk_disp_ovl_adaptor *priv = dev_get_drvdata(dev);
 	struct device_node *parent;
@@ -544,7 +547,9 @@ static int ovl_adaptor_comp_init(struct device *dev, struct component_match **ma
 
 	for_each_child_of_node_scoped(parent, node) {
 		enum mtk_ovl_adaptor_comp_type type;
+		enum mtk_ddp_comp_id ddp_type;
 		int id, ret;
+		u8 mtx_id;
 
 		ret = ovl_adaptor_of_get_ddp_comp_type(node, &type);
 		if (ret)
@@ -563,6 +568,10 @@ static int ovl_adaptor_comp_init(struct device *dev, struct component_match **ma
 			continue;
 		}
 
+		ddp_type = comp_matches[id].comp_id;
+		mtx_id = mtk_drm_legacy_get_ovl_adaptor_mutex_trig_id(ddp_type,
+								      mutex_node);
+
 		comp_pdev = of_find_device_by_node(node);
 		if (!comp_pdev)
 			return -EPROBE_DEFER;
@@ -573,6 +582,7 @@ static int ovl_adaptor_comp_init(struct device *dev, struct component_match **ma
 			return ret;
 
 		priv->ovl_adaptor_comp[id] = &comp_pdev->dev;
+		priv->mtx_trig_ids[id] = mtx_id;
 
 		drm_of_component_match_add(dev, match, component_compare_of, node);
 		dev_dbg(dev, "Adding component match for %pOF\n", node);
@@ -635,6 +645,7 @@ static const struct component_master_ops mtk_disp_ovl_adaptor_master_ops = {
 
 static int mtk_disp_ovl_adaptor_probe(struct platform_device *pdev)
 {
+	struct mtk_drm_private *drm_private = pdev->dev.platform_data;
 	struct mtk_disp_ovl_adaptor *priv;
 	struct device *dev = &pdev->dev;
 	struct component_match *match = NULL;
@@ -646,11 +657,11 @@ static int mtk_disp_ovl_adaptor_probe(struct platform_device *pdev)
 
 	platform_set_drvdata(pdev, priv);
 
-	ret = ovl_adaptor_comp_init(dev, &match);
+	ret = ovl_adaptor_comp_init(dev, drm_private->mutex_node, &match);
 	if (ret < 0)
 		return ret;
 
-	priv->mmsys_dev = pdev->dev.platform_data;
+	priv->mmsys_dev = drm_private->mmsys_dev;
 
 	ret = component_master_add_with_match(dev, &mtk_disp_ovl_adaptor_master_ops, match);
 	if (ret)

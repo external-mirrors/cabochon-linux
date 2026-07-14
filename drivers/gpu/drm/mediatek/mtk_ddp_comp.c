@@ -604,6 +604,21 @@ static void mtk_ddp_comp_clk_put(void *_clk)
 	clk_put(clk);
 }
 
+int mtk_ddp_comp_get_mutex_trigger(struct device_node *node, unsigned int index)
+{
+	struct fwnode_reference_args mutex_trigger;
+	int ret;
+
+	ret = fwnode_property_get_reference_args(of_fwnode_handle(node),
+						 "trigger-sources",
+						 "#trigger-source-cells",
+						 0, index, &mutex_trigger);
+	if (ret < 0)
+		return ret;
+
+	return mutex_trigger.args[0];
+}
+
 static bool mtk_ddp_comp_is_backlight_comp(enum mtk_ddp_comp_type type)
 {
 	return type == MTK_DISP_BLS || type == MTK_DISP_PWM;
@@ -694,6 +709,10 @@ int mtk_ddp_comp_init(struct device *dev, struct device_node *node,
 	ret = devm_add_action_or_reset(dev, mtk_ddp_comp_put_device, comp->dev);
 	if (ret)
 		return ret;
+
+	ret = mtk_ddp_comp_get_mutex_trigger(node, 0);
+	if (ret >= 0)
+		comp->mtx_trig_id = ret;
 
 	/* If there's no external driver for this component, allocate and init now */
 	if (mtk_ddp_comp_is_internal_comp(type) || mtk_ddp_comp_is_backlight_comp(type)) {
