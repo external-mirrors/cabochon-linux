@@ -227,7 +227,7 @@ generate-tests:
   variables:
     DEVICE_TYPE: mt8365-genio-350-evk
     DTB: mt8365-evk
-    GLMARK2_RENDERER: "Mali-G52 r1 (Panfrost)"
+    GLMARK2_RENDERER: "Mali-G52 r1 MC1 (Panfrost)"
     GLMARK2_MIN_SCORE: 100
 
 .genio-510:
@@ -236,7 +236,7 @@ generate-tests:
   variables:
     DEVICE_TYPE: mt8370-genio-510-evk
     DTB: mt8370-genio-510-evk
-    GLMARK2_RENDERER: "Mali-G57 (Panfrost)"
+    GLMARK2_RENDERER: "Mali-G57 MC2 (Panfrost)"
     GLMARK2_MIN_SCORE: 800
 
 .genio-700:
@@ -245,7 +245,7 @@ generate-tests:
   variables:
     DEVICE_TYPE: mt8390-genio-700-evk
     DTB: mt8390-genio-700-evk
-    GLMARK2_RENDERER: "Mali-G57 (Panfrost)"
+    GLMARK2_RENDERER: "Mali-G57 MC3 (Panfrost)"
     GLMARK2_MIN_SCORE: 800
 
 .genio-1200:
@@ -254,7 +254,7 @@ generate-tests:
   variables:
     DEVICE_TYPE: mt8395-genio-1200-evk
     DTB: mt8395-genio-1200-evk
-    GLMARK2_RENDERER: "Mali-G57 (Panfrost)"
+    GLMARK2_RENDERER: "Mali-G57 MC5 (Panfrost)"
     GLMARK2_MIN_SCORE: 1100
 
 .mt8196-navi:
