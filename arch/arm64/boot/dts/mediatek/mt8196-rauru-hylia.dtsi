@@ -83,6 +83,45 @@
 	spi-cs-hold-delay-ns = <43>;
 };
 
+&dsc1_out {
+	remote-endpoint = <&dsi0_in>;
+};
+
+&dsi0 {
+	status = "okay";
+
+	ports {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		port@0 {
+			#address-cells = <1>;
+			#size-cells = <0>;
+			reg = <0>;
+
+			dsi0_in: endpoint@2 {
+				reg = <2>;
+				remote-endpoint = <&dsc1_out>;
+			};
+		};
+
+		port@1 {
+			reg = <1>;
+			dsi0_out: endpoint {
+				remote-endpoint = <&anx7625_dp_in>;
+			};
+		};
+	};
+};
+
+&edp_phy {
+	status = "okay";
+};
+
+&edp_tx {
+	status = "okay";
+};
+
 &i2c0 {
 	/* carewe trackpad */
 	trackpad@68 {
@@ -97,6 +136,11 @@
 };
 
 &i2c2 {
+	clock-frequency = <400000>;
+	pinctrl-names = "default";
+	pinctrl-0 = <&i2c2_pins>;
+	status = "okay";
+
 	touchscreen@41 {
 		compatible = "ilitek,ili2901";
 		reg = <0x41>;
@@ -139,6 +183,39 @@
 		analogix,audio-enable;
 		#sound-dai-cells = <0>;
 
+		connector {
+			compatible = "usb-c-connector";
+			power-role = "dual";
+			data-role = "dual";
+			vbus-supply = <&pp5000_usb>;
+
+			ports {
+				#address-cells = <1>;
+				#size-cells = <0>;
+
+				port@0 {
+					reg = <0>;
+					anx7625_hs: endpoint {
+						remote-endpoint = <&usb1_hs>;
+					};
+				};
+
+				port@1 {
+					reg = <1>;
+					anx7625_ss: endpoint {
+						remote-endpoint = <&usb1_ss>;
+					};
+				};
+
+				port@2 {
+					reg = <2>;
+					anx7625_sbu: endpoint {
+						remote-endpoint = <&typec1_sbu>;
+					};
+				};
+			};
+		};
+
 		ports {
 			#address-cells = <1>;
 			#size-cells = <0>;
@@ -148,11 +225,12 @@
 
 				anx7625_dp_in: endpoint {
 					data-lanes = <0 1 2 3>;
+					remote-endpoint = <&dsi0_out>;
 				};
 			};
 
 		};
-
+#if 0
 		switches {
 			#address-cells = <1>;
 			#size-cells = <0>;
@@ -176,7 +254,7 @@
 				};
 			};
 		};
-
+#endif
 	};
 };
 
@@ -223,6 +301,10 @@
 
 &mt6363_vsram_mdfe {
 	regulator-always-on;
+};
+
+&panel {
+	power-supply = <&pp3300_edp>;
 };
 
 &pcie1 {
@@ -575,7 +657,7 @@
 	compatible = "mediatek,mt8196-rt5650-sound";
 	model = "mt8196_rt5650";
 	mediatek,adsp = <&adsp>;
-	status = "okay";
+	status = "disabled";
 
 	dai-link-0 {
 		link-name = "I2SOUT6_BE";
@@ -597,10 +679,11 @@
 
 	dai-link-2 {
 		link-name = "TDM_DPTX_BE";
-
+/*
 		codec {
-			/* sound-dai = <&dp_tx>; */
+			sound-dai = <&dp_tx>;
 		};
+*/
 	};
 
 	dai-link-3 {
@@ -621,7 +704,35 @@
 	};
 };
 
+&ssusb1 {
+	ports {
+		#address-cells = <1>;
+		#size-cells = <0>;
 
+		port@0 {
+			reg = <0>;
+			usb1_hs: endpoint {
+				remote-endpoint = <&anx7625_hs>;
+			};
+		};
+
+		port@1 {
+			reg = <1>;
+			usb1_ss: endpoint {
+				remote-endpoint = <&anx7625_ss>;
+			};
+		};
+	};
+};
+/*
+&usb_c1 {
+	port {
+		typec1_sbu: endpoint {
+			remote-endpoint = <&anx7625_sbu>;
+		};
+	};
+};
+*/
 &usb_c1 {
 	ports {
 		#address-cells = <1>;
@@ -630,8 +741,8 @@
 		port@1 {
 			reg = <1>;
 
-			typec_port1: endpoint {
-				remote-endpoint = <&anx_typec1>;
+			typec1_sbu: endpoint {
+				remote-endpoint = <&anx7625_sbu>;
 			};
 		};
 	};
