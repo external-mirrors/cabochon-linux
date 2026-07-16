@@ -1090,3 +1090,203 @@
 	usb2-lpm-disable;
 	status = "okay";
 };
+
+&gce0 {
+	status = "disabled";
+};
+
+&gce1 {
+	status = "disabled";
+};
+
+&dispsys0 {
+	status = "disabled";
+};
+
+&dispsys1 {
+	status = "disabled";
+};
+
+&ovlsys0 {
+	status = "disabled";
+};
+
+&ovlsys1  {
+	status = "disabled";
+};
+
+&vdecsys_soc {
+	status = "disabled";
+};
+
+&vdecsys1 {
+	status = "disabled";
+};
+
+&vencsys0 {
+	status = "disabled";
+};
+
+&vencsys1 {
+	status = "disabled";
+};
+
+&vencsys2 {
+	status = "disabled";
+};
+
+&mdpsys0 {
+	status = "disabled";
+};
+
+&mdpsys1 {
+	status = "disabled";
+};
+
+&mm_smmu {
+	status = "disabled";
+};
+
+&smi_disp_common {
+	status = "disabled";
+};
+
+&smi_mdp_common {
+	status = "disabled";
+};
+
+&disp_ssc0_smi_2x1_sub_comm {
+	status = "disabled";
+};
+
+&disp_ssc1_smi_2x1_sub_comm {
+	status = "disabled";
+};
+
+&mdp_ssc4_smi_2x1_sub_comm {
+	status = "disabled";
+};
+
+&mdp_ssc5_smi_2x1_sub_comm {
+	status = "disabled";
+};
+
+&smi_larb32 {
+	status = "disabled";
+};
+
+&smi_larb33 {
+	status = "disabled";
+};
+
+&smi_larb0 {
+	status = "disabled";
+};
+
+&smi_larb1 {
+	status = "disabled";
+};
+
+&smi_larb20 {
+	status = "disabled";
+};
+
+&smi_larb21 {
+	status = "disabled";
+};
+
+&smi_larb34 {
+	status = "disabled";
+};
+
+&smi_larb35 {
+	status = "disabled";
+};
+
+&smi_larb36 {
+	status = "disabled";
+};
+
+&smi_larb37 {
+	status = "disabled";
+};
+
+&smi_larb5 {
+	status = "disabled";
+};
+
+&smi_larb6 {
+	status = "disabled";
+};
+
+&smi_larb4 {
+	status = "disabled";
+};
+
+&smi_larb7 {
+	status = "disabled";
+};
+
+&smi_disp_venc_sub_comm0 {
+	status = "disabled";
+};
+
+&smi_larb41 {
+	status = "disabled";
+};
+
+&smi_larb8 {
+	status = "disabled";
+};
+
+&smi_mdp_venc_sub_comm1 {
+	status = "disabled";
+};
+
+&smi_larb42 {
+	status = "disabled";
+};
+
+&smi_larb24 {
+	status = "disabled";
+};
+
+&smi_mdp_venc_sub_comm2 {
+	status = "disabled";
+};
+
+&smi_larb47 {
+	status = "disabled";
+};
+
+&smi_larb2 {
+	status = "disabled";
+};
+
+&smi_larb3 {
+	status = "disabled";
+};
+
+&smi_disp_dram_sub_comm0 {
+	status = "disabled";
+};
+
+&smi_disp_dram_sub_comm1 {
+	status = "disabled";
+};
+
+&smi_mdp_dram_sub_comm2 {
+	status = "disabled";
+};
+
+&smi_mdp_dram_sub_comm3 {
+	status = "disabled";
+};
+
+&vcp {
+	status = "disabled";
+};
+
+&vdisp_ctrl {
+	status = "disabled";
+};
