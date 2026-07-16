@@ -278,6 +278,137 @@
 	cpu-supply = <&mt6316kp_vbuck0>;
 };
 
+&disp_pwm0 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&pwm_pin>;
+
+	status = "okay";
+};
+
+&dp_intf0 {
+	status = "disabled";
+
+	ports {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		port@0 {
+			#address-cells = <1>;
+			#size-cells = <0>;
+			reg = <0>;
+
+			disp1_dp_intf0_in: endpoint@1 {
+				reg = <1>;
+				remote-endpoint = <&dsc0_out>;
+			};
+		};
+
+		port@1 {
+			#address-cells = <1>;
+			#size-cells = <0>;
+			reg = <1>;
+
+			disp1_dp_intf0_out: endpoint@1 {
+				reg = <1>;
+				//remote-endpoint = <&dptx_in0>;
+			};
+		};
+	};
+};
+
+&dp_intf1 {
+	status = "disabled";
+
+	ports {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		port@0 {
+			#address-cells = <1>;
+			#size-cells = <0>;
+			reg = <0>;
+
+			disp1_dp_intf1_in: endpoint@2 {
+				reg = <2>;
+				remote-endpoint = <&dsc1_out>;
+			};
+		};
+
+		port@1 {
+			#address-cells = <1>;
+			#size-cells = <0>;
+			reg = <1>;
+
+			disp1_dp_intf1_out: endpoint@2 {
+				reg = <2>;
+				//remote-endpoint = <&dptx_in1>;
+			};
+		};
+	};
+};
+
+&dsc0_out {
+	remote-endpoint = <&disp1_dp_intf0_in>;
+};
+
+&dsc1_out {
+	remote-endpoint = <&disp1_dp_intf1_in>;
+};
+
+&dvo0 {
+	status = "okay";
+};
+
+&dvo0_out {
+	remote-endpoint = <&edp_in>;
+};
+
+&edp_phy {
+	status = "okay";
+};
+
+&edp_tx {
+	pinctrl-names = "default";
+	pinctrl-0 = <&edp_hpd_pins>;
+	status = "okay";
+
+	ports {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		port@0 {
+			reg = <0>;
+			edp_in: endpoint {
+				remote-endpoint = <&dvo0_out>;
+			};
+		};
+
+		port@1 {
+			reg = <1>;
+			edp_out: endpoint {
+				data-lanes = <0 1 2 3>;
+				remote-endpoint = <&edp_panel_in>;
+			};
+		};
+	};
+
+	aux-bus {
+		panel: panel {
+			compatible = "edp-panel";
+			power-supply = <&mt6373_vcn33_3>;
+			backlight = <&backlight>;
+
+			status = "okay";
+
+			port {
+				edp_panel_in: endpoint {
+					remote-endpoint = <&edp_out>;
+				};
+			};
+		};
+	};
+};
+
 &i2c0 {
 	clock-frequency = <400000>;
 	pinctrl-names = "default";
@@ -438,6 +569,10 @@
 };
 
 &mt6363_vufs18 {
+	regulator-always-on;
+};
+
+&mt6373_vbuck1 { /* hack */
 	regulator-always-on;
 };
 
@@ -983,6 +1118,12 @@
 		};
 	};
 
+	edp_hpd_pins: edp-hpd-pins {
+		pins-hpd {
+			pinmux = <PINMUX_GPIO13__FUNC_EDP_TX_HPD>;
+			bias-pull-up;
+		};
+	};
 
 	gsc_ap_pins: gsc-ap-pins {
 		pins-int {
@@ -1002,6 +1143,12 @@
 		pins-pwr {
 			pinmux = <PINMUX_GPIO28__FUNC_GPIO28>;
 			bias-pull-up;
+		};
+	};
+
+	pwm_pin: pwm-pins {
+		pins-pwm {
+			pinmux = <PINMUX_GPIO103__FUNC_DISP_PWM>;
 		};
 	};
 
