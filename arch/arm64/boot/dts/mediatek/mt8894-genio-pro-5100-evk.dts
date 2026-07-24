@@ -1249,6 +1249,12 @@
 
 &ufshci {
 	status = "okay";
+	avdd09-supply = <&mt6363_vsram_modem>;
+	avdd09-1-supply = <&mt6363_vsram_modem>;
+	avdd12-supply = <&mt6363_va12_2>;
+	vcc-supply = <&mt6363_vemc>;
+	vccq-supply = <&mt6363_vufs12>;
+	vccq2-supply = <&mt6363_vufs18>;
 };
 
 &xhci0 {
