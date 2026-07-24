@@ -462,28 +462,6 @@
 		clock-output-names = "clk26m";
 	};
 
-	ufs_opp_table: opp-table-ufs {
-		compatible = "operating-points-v2";
-
-		opp-499200000 {
-			opp-hz = /bits/ 64 <499200000>, /bits/ 64 <0>,
-				 /bits/ 64 <0>, /bits/ 64 <0>, /bits/ 64 <0>,
-				 /bits/ 64 <0>, /bits/ 64 <0>, /bits/ 64 <0>,
-				 /bits/ 64 <0>, /bits/ 64 <0>, /bits/ 64 <0>,
-				 /bits/ 64 <0>, /bits/ 64 <0>, /bits/ 64 <0>,
-				 /bits/ 64 <0>, /bits/ 64 <0>;
-		};
-
-		opp-273000000 {
-			opp-hz = /bits/ 64 <273000000>, /bits/ 64 <0>,
-				 /bits/ 64 <0>, /bits/ 64 <0>, /bits/ 64 <0>,
-				 /bits/ 64 <0>, /bits/ 64 <0>, /bits/ 64 <0>,
-				 /bits/ 64 <0>, /bits/ 64 <0>, /bits/ 64 <0>,
-				 /bits/ 64 <0>, /bits/ 64 <0>, /bits/ 64 <0>,
-				 /bits/ 64 <0>, /bits/ 64 <0>;
-		};
-	};
-
 	oscillator-104m {
 		compatible = "fixed-clock";
 		#clock-cells = <0>;
@@ -1665,7 +1643,6 @@
 			compatible = "mediatek,mt8196-ufshci";
 			reg = <0 0x16810000 0 0x2a00>;
 
-			interrupts = <GIC_SPI 320 IRQ_TYPE_LEVEL_HIGH 0>;
 			clocks = <&ufs_ao_clk CLK_UFSAO_UFSHCI_UFS>,
 				 <&ufs_ao_clk CLK_UFSAO_UFSHCI_AES>,
 				 <&clk26m>,
@@ -1674,35 +1651,15 @@
 				 <&ufs_ao_clk CLK_UFSAO_UNIPRO_SAP>,
 				 <&ufs_ao_clk CLK_UFSAO_UNIPRO_TX_SYM>,
 				 <&topckgen CLK_TOP_PEXPT0_MEM_SUB>,
-				 <&topckgen CLK_TOP_AES_UFSFDE>,
-				 <&topckgen CLK_TOP_UNIVPLL_D6>,
-				 <&topckgen CLK_TOP_MAINPLL_D4>,
 				 <&ufs_ao_clk CLK_UFSAO_UNIPRO_RX_SYM0>,
-				 <&ufs_ao_clk CLK_UFSAO_UNIPRO_RX_SYM1>,
-				 <&topckgen CLK_TOP_UFS>,
-				 <&topckgen CLK_TOP_MAINPLL_D4_D2>,
-				 <&topckgen CLK_TOP_UNIVPLL_D5>;
-			clock-names = "ufs",
-				      "ufs_aes",
-				      "ufs_tick",
-				      "unipro_sysclk",
-				      "unipro_tick",
-				      "unipro_mp_bclk",
-				      "ufs_tx_symbol",
-				      "ufs_mem_sub",
-				      "crypt_mux",
-				      "crypt_lp",
-				      "crypt_perf",
-				      "ufs_rx_symbol0",
-				      "ufs_rx_symbol1",
-				      "ufs_sel",
-				      "ufs_sel_min_src",
-				      "ufs_sel_max_src";
-
-			phys = <&ufsphy>;
-
+				 <&ufs_ao_clk CLK_UFSAO_UNIPRO_RX_SYM1>;
+			clock-names = "main", "aes", "tick", "unipro_sysclk",
+				      "unipro_tick", "unipro_mp_bclk",
+				      "tx_symbol", "mem_sub",
+				      "rx_symbol0", "rx_symbol1";
+			interrupts = <GIC_SPI 320 IRQ_TYPE_LEVEL_HIGH 0>;
 			operating-points-v2 = <&ufs_opp_table>;
-
+			phys = <&ufsphy>;
 			resets = <&ufs_ao_clk MT8196_UFSAO_RST1_UFS_UNIPRO>,
 				 <&ufs_ao_clk MT8196_UFSAO_RST1_UFS_CRYPTO>,
 				 <&ufs_ao_clk MT8196_UFSAO_RST1_UFSHCI>;
@@ -1711,6 +1668,25 @@
 				      "hci";
 			mediatek,ufs-disable-mcq;
 			status = "disabled";
+
+			ufs_opp_table: opp-table {
+				compatible = "operating-points-v2";
+
+				opp-499200000 {
+					opp-hz = /bits/ 64 <499200000>, /bits/ 64 <0>,
+						 /bits/ 64 <0>, /bits/ 64 <0>, /bits/ 64 <0>,
+						 /bits/ 64 <0>, /bits/ 64 <0>, /bits/ 64 <0>,
+						 /bits/ 64 <0>, /bits/ 64 <0>;
+				};
+
+				opp-273000000 {
+					opp-hz = /bits/ 64 <273000000>, /bits/ 64 <0>,
+						 /bits/ 64 <0>, /bits/ 64 <0>, /bits/ 64 <0>,
+						 /bits/ 64 <0>, /bits/ 64 <0>, /bits/ 64 <0>,
+						 /bits/ 64 <0>, /bits/ 64 <0>;
+				};
+			};
+
 		};
 
 		ufs_ao_clk: clock-controller@168a0000 {
