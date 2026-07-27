@@ -762,9 +762,9 @@
 			bias-pull-up;
 		};
 
-		pins-bus1 {
+		pins-clkreq {
 			pinmux = <PINMUX_GPIO170__FUNC_PCIE_CLKREQN>;
-			bias-pull-up;
+			bias-pull-up = <5000>;
 			input-enable;
 		};
 
