@@ -838,6 +838,22 @@
 		};
 	};
 
+	spi5_pins: spi5-pins {
+		pins-down {
+			pinmux = <PINMUX_GPIO118__FUNC_GPIO118>,
+				 <PINMUX_GPIO119__FUNC_GPIO119>,
+				 <PINMUX_GPIO121__FUNC_GPIO121>;
+			bias-pull-down;
+			input-enable;
+		};
+
+		pins-up {
+			pinmux = <PINMUX_GPIO120__FUNC_GPIO120>;
+			bias-pull-up;
+			input-enable;
+		};
+	};
+
 	uart2_pins: uart2-pins {
 		pins-bus {
 			pinmux = <PINMUX_GPIO155__FUNC_UCTS2>,
@@ -1001,6 +1017,13 @@
 		pinctrl-1 = <&can0_sleep_pins>;
 		status = "failed";
 	};
+};
+
+&spi5 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&spi5_pins>;
+	mediatek,pad-select = <0>;
+	status = "okay";
 };
 
 &ssusb0 {
