@@ -388,7 +388,8 @@ generate-tests:
     LAVA_TEST_RTCWAKE: true
     FS_VARIANT: minimal
 
-lava-test-dmesg-genio-350:
+# TODO: enable once lava lab issues are fixed
+.lava-test-dmesg-genio-350:
   extends:
     - .lava-test
     - .lava-test-dmesg
@@ -430,7 +431,8 @@ lava-test-dmesg-mt8196-navi:
     - .lava-test-dmesg
     - .mt8196-navi
 
-lava-test-kselftest-dt-genio-350:
+# TODO: enable once lava lab issues are fixed
+.lava-test-kselftest-dt-genio-350:
   extends:
     - .lava-test
     - .lava-test-kselftest-dt
@@ -474,7 +476,8 @@ lava-test-kselftest-dt-mt8196-navi:
     - .mt8196-navi
   allow_failure: true
 
-lava-test-glmark2-genio-350:
+# TODO: enable once lava lab issues are fixed
+.lava-test-glmark2-genio-350:
   extends:
     - .lava-test
     - .lava-test-glmark2
@@ -578,7 +581,8 @@ lava-test-avvideocompare-mdp-genio-1200:
     - .lava-test-avvideocompare-mdp
     - .genio-1200
 
-lava-test-rtcwake-genio-350:
+# TODO: enable once lava lab issues are fixed
+.lava-test-rtcwake-genio-350:
   extends:
     - .lava-test
     - .lava-test-rtcwake
