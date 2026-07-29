@@ -1009,13 +1009,14 @@
 		reg = <0>;
 		clocks = <&can_clk>;
 		spi-max-frequency = <20000000>;
+		spi-cs-setup-delay-ns = <100>;
 		interrupts-extended = <&pio 15 IRQ_TYPE_LEVEL_LOW>;
 		vdd-supply = <&vcan_5v>;
 		xceiver-supply = <&vcan_5v>;
 		pinctrl-names = "default", "sleep";
 		pinctrl-0 = <&can0_default_pins>;
 		pinctrl-1 = <&can0_sleep_pins>;
-		status = "failed";
+		status = "okay";
 	};
 };
 
