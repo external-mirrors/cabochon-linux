@@ -949,10 +949,15 @@ static void mtk_crtc_atomic_enable(struct drm_crtc *crtc,
 {
 	struct mtk_crtc *mtk_crtc = to_mtk_crtc(crtc);
 	struct mtk_ddp_comp *comp = mtk_crtc->ddp_comp[mtk_crtc->config_comp_idx];
+	struct mtk_drm_private *priv = crtc->dev->dev_private;
 	struct drm_device *dev = mtk_crtc->base.dev;
 	int ret;
 
 	drm_dbg_driver(dev, "%s %d\n", __func__, crtc->base.id);
+
+	ret = pm_runtime_resume_and_get(priv->mmsys_dev);
+	if (ret)
+		dev_warn(dev->dev, "Could not enable MMSYS device!\n");
 
 	ret = mtk_ddp_comp_power_on(comp);
 	if (ret < 0) {
@@ -977,6 +982,7 @@ static void mtk_crtc_atomic_disable(struct drm_crtc *crtc,
 {
 	struct mtk_crtc *mtk_crtc = to_mtk_crtc(crtc);
 	struct mtk_ddp_comp *comp = mtk_crtc->ddp_comp[mtk_crtc->config_comp_idx];
+	struct mtk_drm_private *priv = crtc->dev->dev_private;
 	struct drm_device *dev = mtk_crtc->base.dev;
 	int i;
 
@@ -1009,6 +1015,8 @@ static void mtk_crtc_atomic_disable(struct drm_crtc *crtc,
 	drm_crtc_vblank_off(crtc);
 	mtk_crtc_ddp_hw_fini(mtk_crtc);
 	mtk_ddp_comp_power_off(comp);
+
+	pm_runtime_put(priv->mmsys_dev);
 
 	mtk_crtc->enabled = false;
 }
@@ -1362,6 +1370,7 @@ static int mtk_crtc_init_multi_controller_properties(struct device *dev,
 	}
 
 	priv = crtc->dev->dev_private;
+	z = 0;
 
 	for_each_set_bit(i, &controllers_mask, MTK_DISP_CONTROLLER_MAX_CONTROLLERS_NUM) {
 		for (j = 0; j < mtk_crtc->ddp_comp_nr; j++) {
@@ -1417,10 +1426,16 @@ static int mtk_crtc_init_mutex(struct device *dev, struct mtk_crtc *mtk_crtc)
 
 	for (i = 0; i < mtk_crtc->num_controllers; i++) {
 		u8 controller_num = mtk_crtc->controller_idmap[i];
-		struct mtk_drm_private *priv = mtk_crtc_get_controller_priv(mtk_crtc, controller_num);
+		struct mtk_drm_private *priv;
 
+		priv = mtk_crtc_get_controller_priv(mtk_crtc, controller_num);
 		if (!priv)
 			return -ENODEV;
+
+		if (!priv->mutex_dev) {
+			dev_err(dev, "MuteX device not present for Controller %u!\n", i);
+			return -ENODEV;
+		}
 
 		mtk_crtc->mutex[i] = mtk_mutex_get(priv->mutex_dev);
 		if (IS_ERR(mtk_crtc->mutex[i])) {

@@ -75,7 +75,7 @@ void mtk_ddp_write(struct cmdq_pkt *cmdq_pkt, unsigned int value,
 {
 #if IS_REACHABLE(CONFIG_MTK_CMDQ)
 	if (cmdq_pkt)
-		cmdq_pkt_write(cmdq_pkt, cmdq_reg->subsys,
+		cmdq_reg->pkt_write(cmdq_pkt, cmdq_reg->subsys, cmdq_reg->pa_base,
 			       cmdq_reg->offset + offset, value);
 	else
 #endif
@@ -88,7 +88,7 @@ void mtk_ddp_write_relaxed(struct cmdq_pkt *cmdq_pkt, unsigned int value,
 {
 #if IS_REACHABLE(CONFIG_MTK_CMDQ)
 	if (cmdq_pkt)
-		cmdq_pkt_write(cmdq_pkt, cmdq_reg->subsys,
+		cmdq_reg->pkt_write(cmdq_pkt, cmdq_reg->subsys, cmdq_reg->pa_base,
 			       cmdq_reg->offset + offset, value);
 	else
 #endif
@@ -101,7 +101,7 @@ void mtk_ddp_write_mask(struct cmdq_pkt *cmdq_pkt, unsigned int value,
 {
 #if IS_REACHABLE(CONFIG_MTK_CMDQ)
 	if (cmdq_pkt) {
-		cmdq_pkt_write_mask(cmdq_pkt, cmdq_reg->subsys,
+		cmdq_reg->pkt_write_mask(cmdq_pkt, cmdq_reg->subsys, cmdq_reg->pa_base,
 				    cmdq_reg->offset + offset, value, mask);
 	} else {
 #endif
@@ -730,6 +730,7 @@ bool mtk_ddp_comp_is_internal_comp(enum mtk_ddp_comp_type type)
 		break;
 	};
 
+
 	return false;
 }
 
@@ -818,8 +819,8 @@ int mtk_ddp_comp_init(struct device *dev, struct device_node *node,
 		comp->mtx_trig_id = ret;
 
 	/* If there's no external driver for this component, allocate and init now */
-	if (mtk_ddp_comp_is_internal_comp(comp->type) ||
-	    mtk_ddp_comp_is_backlight_comp(comp->type)) {
+	if (mtk_ddp_comp_is_internal_comp(comp->type) &&
+	    !mtk_ddp_comp_is_backlight_comp(comp->type)) {
 		ret = mtk_ddp_comp_init_internal_comp(dev, comp->dev);
 		if (ret)
 			return ret;

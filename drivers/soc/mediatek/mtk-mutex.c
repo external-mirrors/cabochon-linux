@@ -958,6 +958,11 @@ struct mtk_mutex *mtk_mutex_get(struct device *dev)
 	struct mtk_mutex_ctx *mtx = dev_get_drvdata(dev);
 	int i;
 
+	if (!mtx) {
+		dev_err(dev, "MuteX not fully initialized yet\n");
+		return ERR_PTR(-EINVAL);
+	}
+
 	for (i = 0; i < MTK_MUTEX_MAX_HANDLES; i++)
 		if (!mtx->mutex[i].claimed) {
 			mtx->mutex[i].claimed = true;

@@ -142,6 +142,38 @@ static const struct mtk_mmsys_driver_data mt8365_mmsys_driver_data = {
 	.mmsys_dev_num = 1,
 };
 
+static const struct mtk_mmsys_driver_data mt8196_dispsys0_driver_data = {
+	.mmsys_id = 0,
+	.mmsys_dev_num = 4,
+	.max_width = 8191,
+	.min_width = 2,
+	.min_height = 1,
+};
+
+static const struct mtk_mmsys_driver_data mt8196_dispsys1_driver_data = {
+	.mmsys_id = 1,
+	.mmsys_dev_num = 4,
+	.max_width = 8191,
+	.min_width = 2,
+	.min_height = 1,
+};
+
+static const struct mtk_mmsys_driver_data mt8196_ovlsys0_driver_data = {
+	.mmsys_id = 2,
+	.mmsys_dev_num = 4,
+	.max_width = 8191,
+	.min_width = 2,
+	.min_height = 1,
+};
+
+static const struct mtk_mmsys_driver_data mt8196_ovlsys1_driver_data = {
+	.mmsys_id = 3,
+	.mmsys_dev_num = 4,
+	.max_width = 8191,
+	.min_width = 2,
+	.min_height = 1,
+};
+
 static const struct of_device_id mtk_drm_of_ids[] = {
 	{ .compatible = "mediatek,mt2701-mmsys",
 	  .data = &mt2701_mmsys_driver_data},
@@ -171,6 +203,10 @@ static const struct of_device_id mtk_drm_of_ids[] = {
 	  .data = &mt8195_vdosys1_driver_data},
 	{ .compatible = "mediatek,mt8365-mmsys",
 	  .data = &mt8365_mmsys_driver_data},
+	{ .compatible = "mediatek,mt8196-dispsys0", .data = &mt8196_dispsys0_driver_data },
+	{ .compatible = "mediatek,mt8196-dispsys1", .data = &mt8196_dispsys1_driver_data },
+	{ .compatible = "mediatek,mt8196-ovlsys0", .data = &mt8196_ovlsys0_driver_data },
+	{ .compatible = "mediatek,mt8196-ovlsys1", .data = &mt8196_ovlsys1_driver_data },
 	{ }
 };
 MODULE_DEVICE_TABLE(of, mtk_drm_of_ids);
@@ -562,6 +598,12 @@ static int mtk_drm_bind(struct device *dev)
 		return -EPROBE_DEFER;
 	}
 
+	if (!platform_get_drvdata(pdev)) {
+		dev_err(dev, "Waiting for MuteX driver to register for %pOF\n",
+			private->mutex_node);
+		return -EPROBE_DEFER;
+	}
+
 	private->mutex_dev = &pdev->dev;
 	private->mtk_drm_bound = true;
 	private->dev = dev;
@@ -689,6 +731,8 @@ static const struct of_device_id mtk_ddp_comp_dt_ids[] = {
 	{ .compatible = "mediatek,mt8192-disp-mutex",
 	  .data = (void *)MTK_DISP_MUTEX },
 	{ .compatible = "mediatek,mt8195-disp-mutex",
+	  .data = (void *)MTK_DISP_MUTEX },
+	{ .compatible = "mediatek,mt8196-disp-mutex",
 	  .data = (void *)MTK_DISP_MUTEX },
 	{ .compatible = "mediatek,mt8365-disp-mutex",
 	  .data = (void *)MTK_DISP_MUTEX },
@@ -1392,8 +1436,10 @@ static int mtk_drm_probe(struct platform_device *pdev)
 	}
 
 	of_id = of_match_node(mtk_drm_of_ids, phandle);
-	if (!of_id)
+	if (!of_id) {
+		dev_err(dev, "Cannot find main display controller node match\n");
 		return -ENODEV;
+	}
 
 	mtk_drm_data = (struct mtk_mmsys_driver_data *)of_id->data;
 	if (!mtk_drm_data)
