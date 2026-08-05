@@ -268,24 +268,35 @@
 	pinctrl-0 = <&i2c6_pins>;
 	status = "okay";
 
-	usb1_redriver: redriver@43 {
+	usb1_repeater: repeater@43 {
 		compatible = "nxp,ptn3222";
 		reg = <0x43>;
 		#phy-cells = <0>;
 		reset-gpios = <&pio 49 GPIO_ACTIVE_LOW>;
 		pinctrl-names = "default";
-		pinctrl-0 = <&usb1_redriver_pins>;
+		pinctrl-0 = <&usb1_repeater_pins>;
 		vdd3v3-supply = <&vusb33>;
 		vdd1v8-supply = <&mt6363_vio18>;
 	};
 
-	usb2_redriver: redriver@4f {
+	usb3_repeater: repeater@4b {
+		compatible = "nxp,ptn3222";
+		reg = <0x4b>;
+		#phy-cells = <0>;
+		reset-gpios = <&pio 216 GPIO_ACTIVE_LOW>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&usb3_repeater_pins>;
+		vdd3v3-supply = <&vusb33>;
+		vdd1v8-supply = <&mt6363_vio18>;
+	};
+
+	usb2_repeater: repeater@4f {
 		compatible = "nxp,ptn3222";
 		reg = <0x4f>;
 		#phy-cells = <0>;
 		reset-gpios = <&pio 206 GPIO_ACTIVE_LOW>;
 		pinctrl-names = "default";
-		pinctrl-0 = <&usb2_redriver_pins>;
+		pinctrl-0 = <&usb2_repeater_pins>;
 		vdd3v3-supply = <&vusb33>;
 		vdd1v8-supply = <&mt6363_vio18>;
 	};
@@ -297,13 +308,13 @@
 	pinctrl-0 = <&i2c9_pins>;
 	status = "okay";
 
-	usb0_redriver: redriver@4f {
+	usb0_repeater: repeater@4f {
 		compatible = "nxp,ptn3222";
 		reg = <0x4f>;
 		#phy-cells = <0>;
 		reset-gpios = <&pio 72 GPIO_ACTIVE_LOW>;
 		pinctrl-names = "default";
-		pinctrl-0 = <&usb0_redriver_pins>;
+		pinctrl-0 = <&usb0_repeater_pins>;
 		vdd3v3-supply = <&vusb33>;
 		vdd1v8-supply = <&mt6363_vio18>;
 	};
@@ -874,7 +885,7 @@
 		};
 	};
 
-	usb0_redriver_pins: usb0-redriver-default {
+	usb0_repeater_pins: usb0-repeater-default {
 		pins-reset {
 			pinmux = <PINMUX_GPIO72__FUNC_GPIO72>;
 			output-high;
@@ -888,7 +899,7 @@
 		};
 	};
 
-	usb1_redriver_pins: usb1-redriver-default {
+	usb1_repeater_pins: usb1-repeater-default {
 		pins-reset {
 			pinmux = <PINMUX_GPIO49__FUNC_GPIO49>;
 			output-high;
@@ -902,7 +913,7 @@
 		};
 	};
 
-	usb2_redriver_pins: usb2-redriver-default {
+	usb2_repeater_pins: usb2-repeater-default {
 		pins-reset {
 			pinmux = <PINMUX_GPIO206__FUNC_GPIO206>;
 			output-high;
@@ -912,6 +923,13 @@
 	usb2_vbus_pins: usb2-vbus-default {
 		pins-regulator {
 			pinmux = <PINMUX_GPIO255__FUNC_GPIO255>;
+			output-high;
+		};
+	};
+
+	usb3_repeater_pins: usb3-repeater-default {
+		pins-reset {
+			pinmux = <PINMUX_GPIO216__FUNC_GPIO216>;
 			output-high;
 		};
 	};
@@ -1027,8 +1045,6 @@
 	vbus-supply = <&vbus_usb0>;
 	vusb33-supply = <&vsys_3v3>;
 	mediatek,force-vbus;
-	phys = <&u2port0 PHY_TYPE_USB2>, <&u3port0 PHY_TYPE_USB3>,
-	       <&usb0_redriver>;
 	status = "okay";
 };
 
@@ -1036,7 +1052,6 @@
 	dr_mode = "host";
 	vbus-supply = <&vbus_usb1>;
 	vusb33-supply = <&vusb33>;
-	phys = <&u2port1 PHY_TYPE_USB2>, <&usb1_redriver>;
 	status = "okay";
 };
 
@@ -1044,8 +1059,6 @@
 	dr_mode = "host";
 	vbus-supply = <&vbus_usb2>;
 	vusb33-supply = <&vusb33>;
-	phys = <&u2port2 PHY_TYPE_USB2>, <&u3port1 PHY_TYPE_USB3>,
-	       <&usb2_redriver>;
 	status = "okay";
 };
 
@@ -1053,12 +1066,28 @@
 	status = "okay";
 };
 
+&u2port0 {
+	phys = <&usb0_repeater>;
+};
+
 &u2phy1 {
 	status = "okay";
 };
 
+&u2port1 {
+	phys = <&usb1_repeater>;
+};
+
 &u2phy2 {
 	status = "okay";
+};
+
+&u2port2 {
+	phys = <&usb2_repeater>;
+};
+
+&u2port3 {
+	phys = <&usb3_repeater>;
 };
 
 &u3phy0 {
