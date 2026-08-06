@@ -768,21 +768,14 @@
 			input-enable;
 		};
 
-		pins-repeater {
-			pinmux = <PINMUX_GPIO216__FUNC_GPIO216>; // eUSB2 repeater (port 3)
-			bias-pull-up;
-			output-high;
-		};
-
 		pins-shifter {
 			pinmux = <PINMUX_GPIO111__FUNC_GPIO111>; // WCN_3V3_EN (WiFi/BT level shifter)
 			bias-pull-up;
 			output-high;
 		};
 
-		pins-wifi {
-			pinmux = <PINMUX_GPIO110__FUNC_GPIO110>, // WF_RST (active low)
-				 <PINMUX_GPIO112__FUNC_GPIO112>; // BT_RST (active low)
+		pins-wf-reset {
+			pinmux = <PINMUX_GPIO110__FUNC_GPIO110>;
 			bias-pull-up;
 			output-high;
 		};
