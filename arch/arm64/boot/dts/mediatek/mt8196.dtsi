@@ -1566,7 +1566,7 @@
 				 <&topckgen CLK_TOP_USB_FMCNT_P1>;
 			clock-names = "sys_ck", "ref_ck", "mcu_ck",
 				      "dma_ck", "xhci_ck", "frmcnt_ck";
-			phys = <&u2port2 PHY_TYPE_USB2>, <&u3port1 PHY_TYPE_USB3>;
+			phys = <&u2port2 PHY_TYPE_USB2>, <&u2port3 PHY_TYPE_USB2>;
 			power-domains = <&spm MT8196_POWER_DOMAIN_SSUSB_P23>;
 			status = "disabled";
 
@@ -1625,7 +1625,7 @@
 				#phy-cells = <1>;
 			};
 
-			u3port1: usb-phy@10000 {
+			u2port3: usb-phy@10000 {
 				reg = <0x10000 0x400>;
 				clocks = <&clk26m>;
 				clock-names = "ref";
