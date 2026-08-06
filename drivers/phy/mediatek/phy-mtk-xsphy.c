@@ -94,6 +94,7 @@ struct xsphy_instance {
 	struct phy *phy;
 	void __iomem *port_base;
 	struct clk *ref_clk;	/* reference clock of anolog phy */
+	struct phy *repeater;
 	u32 index;
 	u32 type;
 	struct regmap *type_sw;
@@ -391,6 +392,11 @@ static int mtk_phy_init(struct phy *phy)
 
 	switch (inst->type) {
 	case PHY_TYPE_USB2:
+		ret = phy_init(inst->repeater);
+		if (ret) {
+			clk_disable_unprepare(inst->ref_clk);
+			return ret;
+		}
 		u2_phy_instance_init(xsphy, inst);
 		u2_phy_props_set(xsphy, inst);
 		break;
@@ -439,6 +445,8 @@ static int mtk_phy_exit(struct phy *phy)
 	struct xsphy_instance *inst = phy_get_drvdata(phy);
 
 	clk_disable_unprepare(inst->ref_clk);
+	if (inst->type == PHY_TYPE_USB2)
+		phy_exit(inst->repeater);
 	return 0;
 }
 
@@ -590,6 +598,10 @@ static int mtk_xsphy_probe(struct platform_device *pdev)
 		retval = phy_type_syscon_get(inst, child_np);
 		if (retval)
 			return retval;
+
+		inst->repeater = devm_of_phy_optional_get(dev, child_np, NULL);
+		if (IS_ERR(inst->repeater))
+			return PTR_ERR(inst->repeater);
 	}
 
 	provider = devm_of_phy_provider_register(dev, mtk_phy_xlate);
