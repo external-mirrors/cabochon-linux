@@ -934,6 +934,13 @@
 		};
 	};
 
+	bt_reset_pins: bt-reset-default {
+		pins-reset {
+			pinmux = <PINMUX_GPIO112__FUNC_GPIO112>;
+			output-high;
+		};
+	};
+
 	vsys5_pins: vsys5-default {
 		pins-regulator {
 			pinmux = <PINMUX_GPIO26__FUNC_GPIO26>;
@@ -1133,8 +1140,18 @@
 };
 
 &xhci2 {
+	#address-cells = <1>;
+	#size-cells = <0>;
 	usb2-lpm-disable;
+	pinctrl-names = "default";
+	pinctrl-0 = <&bt_reset_pins>;
 	status = "okay";
+
+	bluetooth@2 {
+		compatible = "usb13d3,3604";
+		reg = <2>;
+		reset-gpios = <&pio 112 GPIO_ACTIVE_LOW>;
+	};
 };
 
 &gce0 {
