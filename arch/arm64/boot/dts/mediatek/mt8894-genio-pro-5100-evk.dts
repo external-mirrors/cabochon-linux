@@ -8,6 +8,7 @@
 
 #include <dt-bindings/gpio/gpio.h>
 #include <dt-bindings/leds/common.h>
+#include <dt-bindings/spmi/spmi.h>
 #include "mt8196.dtsi"
 #include "mt6363.dtsi"
 #include "mt6373.dtsi"
@@ -385,6 +386,21 @@
 	};
 };
 
+&gpu {
+	status = "okay";
+};
+
+&gpueb_mbox {
+	status = "okay";
+};
+
+&gpufreq {
+	core-supply = <&mt6373_vbuck7>;
+	stack-supply = <&mt6319_s7_vbuck1>;
+	sram-supply = <&mt6319_s15_vbuck3>;
+	status = "okay";
+};
+
 &mmc1 {
 	bus-width = <4>;
 	cap-sd-highspeed;
@@ -552,6 +568,8 @@
 
 &mt6373_vbuck7 {
 	regulator-name = "dvdd_gpu";
+	regulator-min-microvolt = <490000>;
+	regulator-max-microvolt = <935000>;
 	regulator-always-on;
 };
 
@@ -1043,6 +1061,58 @@
 	pinctrl-0 = <&spi5_pins>;
 	mediatek,pad-select = <0>;
 	status = "okay";
+};
+
+&spmi1 {
+	/*
+	 * GPU shader stack rail (dvdd_gpustack).
+	 * This board uses MT6319 instead of the MT6316 found on the reference
+	 * design: the register layout differs (VOSEL at BUCK_TOP_ELR+1, 6.25mV
+	 * step), so MT6319 is handled by the mt6315-regulator driver.
+	 *
+	 * TODO: add pvdd1..4-supply once the PVDD input rail is confirmed
+	 * against the schematic.
+	 */
+	pmic@7 {
+		compatible = "mediatek,mt6319-regulator", "mediatek,mt6315-regulator";
+		reg = <0x7 SPMI_USID>;
+
+		regulators {
+			mt6319_s7_vbuck1: vbuck1 {
+				regulator-name = "dvdd_gpustack";
+				regulator-min-microvolt = <490000>;
+				regulator-max-microvolt = <935000>;
+				regulator-enable-ramp-delay = <256>;
+				regulator-allowed-modes = <0 1 2>;
+			};
+		};
+	};
+
+	/* CPU big cluster rail + GPU SRAM rail */
+	pmic@15 {
+		compatible = "mediatek,mt6319-regulator", "mediatek,mt6315-regulator";
+		reg = <0xf SPMI_USID>;
+
+		regulators {
+			mt6319_s15_vbuck1: vbuck1 {
+				regulator-name = "dvdd_proc_b";
+				regulator-min-microvolt = <450000>;
+				regulator-max-microvolt = <1193750>;
+				regulator-enable-ramp-delay = <256>;
+				regulator-allowed-modes = <0 1 2>;
+				regulator-always-on;
+			};
+
+			mt6319_s15_vbuck3: vbuck3 {
+				regulator-name = "dvdd_sram_gpu";
+				regulator-min-microvolt = <672500>;
+				regulator-max-microvolt = <827500>;
+				regulator-enable-ramp-delay = <256>;
+				regulator-allowed-modes = <0 1 2>;
+				regulator-always-on;
+			};
+		};
+	};
 };
 
 &ssusb0 {
