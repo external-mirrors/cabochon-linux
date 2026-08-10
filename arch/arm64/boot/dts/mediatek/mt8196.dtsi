@@ -1316,6 +1316,13 @@
 				 <&pericfg_ao CLK_PERI_AO_PWM_PWM_BCLK2>,
 				 <&pericfg_ao CLK_PERI_AO_PWM_PWM_BCLK3>;
 			clock-names = "top", "main", "pwm1", "pwm2", "pwm3", "pwm4";
+			assigned-clocks = <&pericfg_ao CLK_PERI_AO_PWM_X16W_BCLK_SEL>,
+					  <&pericfg_ao CLK_PERI_AO_PWM_PWM_BCLK0_SEL>,
+					  <&pericfg_ao CLK_PERI_AO_PWM_PWM_BCLK1_SEL>,
+					  <&pericfg_ao CLK_PERI_AO_PWM_PWM_BCLK2_SEL>,
+					  <&pericfg_ao CLK_PERI_AO_PWM_PWM_BCLK3_SEL>;
+			assigned-clock-parents = <&clk26m>, <&clk26m>, <&clk26m>,
+						 <&clk26m>, <&clk26m>;
 			status = "disabled";
 		};
 
