@@ -28,8 +28,14 @@
 		#size-cells = <2>;
 		ranges;
 
+		/*
+		 * AP <-> GPUEB shared memory. Must be no-map: the gpufreq
+		 * driver ioremap()s it, and arm64 refuses ioremap() on pages
+		 * that are still part of the linear mapping.
+		 */
 		gpueb_shared_memory: memory@a0000000 {
 			reg = <0x0 0xa0000000 0x0 0x4000>;
+			no-map;
 		};
 
 		/* GPUEB MCU's private carveout - not available to AP */
