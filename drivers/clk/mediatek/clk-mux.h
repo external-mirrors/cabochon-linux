@@ -85,6 +85,7 @@ extern const struct clk_ops mtk_mux_clr_set_upd_ops;
 extern const struct clk_ops mtk_mux_gate_clr_set_upd_ops;
 extern const struct clk_ops mtk_mux_gate_fenc_clr_set_upd_ops;
 extern const struct clk_ops mtk_mux_gate_hwv_fenc_clr_set_upd_ops;
+extern const struct clk_ops mtk_mux_rmw_ops;
 
 #define MUX_GATE_CLR_SET_UPD_FLAGS(_id, _name, _parents, _mux_ofs,	\
 			_mux_set_ofs, _mux_clr_ofs, _shift, _width,	\
@@ -139,6 +140,38 @@ extern const struct clk_ops mtk_mux_gate_hwv_fenc_clr_set_upd_ops;
 		    _mux_set_ofs, _mux_clr_ofs, _shift, _width)		\
 		    MUX_CLR_SET_UPD(_id, _name, _parents, _mux_ofs,	\
 		    _mux_set_ofs, _mux_clr_ofs, _shift, _width, 0, -1)
+
+/*
+ * For muxes backed by a plain read-modify-write register with no
+ * dedicated SET/CLR/UPD offsets (e.g. legacy per-channel clock source
+ * select regs).
+ */
+#define __MUX_RMW(_id, _name, _parents, _paridx, _num_parents,	\
+			_mux_ofs, _shift, _width, _flags) {		\
+		.id = _id,						\
+		.name = _name,						\
+		.mux_ofs = _mux_ofs,					\
+		.mux_shift = _shift,					\
+		.mux_width = _width,					\
+		.gate_shift = -1,					\
+		.upd_shift = -1,					\
+		.parent_names = _parents,				\
+		.parent_index = _paridx,				\
+		.num_parents = _num_parents,				\
+		.flags = _flags,					\
+		.ops = &mtk_mux_rmw_ops,				\
+	}
+
+#define MUX_RMW(_id, _name, _parents, _mux_ofs, _shift, _width)	\
+		__MUX_RMW(_id, _name, _parents, NULL,			\
+			ARRAY_SIZE(_parents), _mux_ofs, _shift, _width,	\
+			CLK_SET_RATE_PARENT)
+
+#define MUX_RMW_INDEXED(_id, _name, _parents, _paridx, _mux_ofs,	\
+			_shift, _width)					\
+		__MUX_RMW(_id, _name, _parents, _paridx,		\
+			ARRAY_SIZE(_paridx), _mux_ofs, _shift, _width,	\
+			CLK_SET_RATE_PARENT)
 
 #define MUX_GATE_HWV_FENC_CLR_SET_UPD_FLAGS(_id, _name, _parents,			\
 				_mux_ofs, _mux_set_ofs, _mux_clr_ofs,			\

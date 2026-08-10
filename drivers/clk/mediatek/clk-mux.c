@@ -226,6 +226,32 @@ static int mtk_clk_mux_determine_rate(struct clk_hw *hw,
 	return clk_mux_determine_rate_flags(hw, req, 0);
 }
 
+static int mtk_clk_mux_set_parent_rmw(struct clk_hw *hw, u8 index)
+{
+	struct mtk_clk_mux *mux = to_mtk_clk_mux(hw);
+	u32 mask = GENMASK(mux->data->mux_width - 1, 0);
+	unsigned long flags = 0;
+
+	if (mux->data->parent_index)
+		index = mux->data->parent_index[index];
+
+	if (mux->lock)
+		spin_lock_irqsave(mux->lock, flags);
+	else
+		__acquire(mux->lock);
+
+	regmap_update_bits(mux->regmap, mux->data->mux_ofs,
+			    mask << mux->data->mux_shift,
+			    index << mux->data->mux_shift);
+
+	if (mux->lock)
+		spin_unlock_irqrestore(mux->lock, flags);
+	else
+		__release(mux->lock);
+
+	return 0;
+}
+
 static bool mtk_clk_mux_uses_hwv(const struct clk_ops *ops)
 {
 	if (ops == &mtk_mux_gate_hwv_fenc_clr_set_upd_ops)
@@ -240,6 +266,13 @@ const struct clk_ops mtk_mux_clr_set_upd_ops = {
 	.determine_rate = mtk_clk_mux_determine_rate,
 };
 EXPORT_SYMBOL_GPL(mtk_mux_clr_set_upd_ops);
+
+const struct clk_ops mtk_mux_rmw_ops = {
+	.get_parent = mtk_clk_mux_get_parent,
+	.set_parent = mtk_clk_mux_set_parent_rmw,
+	.determine_rate = mtk_clk_mux_determine_rate,
+};
+EXPORT_SYMBOL_GPL(mtk_mux_rmw_ops);
 
 const struct clk_ops mtk_mux_gate_clr_set_upd_ops  = {
 	.enable = mtk_clk_mux_enable_setclr,
