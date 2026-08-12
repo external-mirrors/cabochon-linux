@@ -1252,9 +1252,10 @@
 			status = "disabled";
 		};
 
-		pwm@16330000 {
+		pwm: pwm@16330000 {
 			compatible = "mediatek,mt8196-pwm", "mediatek,mt6991-pwm";
 			reg = <0 0x16330000 0 0x1000>;
+			#pwm-cells = <2>;
 			interrupts = <GIC_SPI 319 IRQ_TYPE_LEVEL_HIGH 0>;
 			clocks = <&pericfg_ao CLK_PERI_AO_PWM_X16W_HCLK>,
 				 <&pericfg_ao CLK_PERI_AO_PWM_X16W_BCLK>,
