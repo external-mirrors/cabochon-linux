@@ -254,6 +254,19 @@
 		vin-supply = <&vvideo_5v>;
 		regulator-always-on;
 	};
+
+	fan0: pwm-fan {
+		compatible = "pwm-fan";
+		pwms = <&pwm 0 40000>;
+		fan-supply = <&vsys_12v>;
+		#cooling-cells = <2>;
+		cooling-levels = <0 64 128 192 255>;
+		fan-no-pwm-release;
+		pinctrl-names = "default";
+		pinctrl-0 = <&fan_tach_pins>;
+		interrupts-extended = <&pio 35 IRQ_TYPE_EDGE_RISING>;
+		pulses-per-revolution = <2>;
+	};
 };
 
 &i2c2 {
@@ -839,6 +852,21 @@
 		};
 	};
 
+	pwm_pins: pwm-pins {
+		pwm0-pins {
+			pinmux = <PINMUX_GPIO174__FUNC_PWM_0>;
+			bias-disable;
+		};
+	};
+
+	fan_tach_pins: fan-tach-pins {
+		tach-pins {
+			pinmux = <PINMUX_GPIO35__FUNC_GPIO35>;
+			bias-pull-up;
+			input-enable;
+		};
+	};
+
 	/* SPI3: Raspberry Pi & JTAG header (GPIO106-109) */
 	spi3_pins: spi3-pins {
 		pins-bus {
@@ -1014,6 +1042,12 @@
 			output-high;
 		};
 	};
+};
+
+&pwm {
+	pinctrl-names = "default";
+	pinctrl-0 = <&pwm_pins>;
+	status = "okay";
 };
 
 /* SPI3: Raspberry Pi & JTAG header (GPIO106/CLK, GPIO107/CSB, GPIO108/MO, GPIO109/MI) */
@@ -1422,4 +1456,46 @@
 
 &vdisp_ctrl {
 	status = "disabled";
+};
+
+&thermal_zones {
+	cpu0-thermal {
+		trips {
+			cpu0_active0: trip-active0 {
+				temperature = <60000>;
+				hysteresis = <5000>;
+				type = "active";
+			};
+			cpu0_active1: trip-active1 {
+				temperature = <75000>;
+				hysteresis = <5000>;
+				type = "active";
+			};
+			cpu0_active2: trip-active2 {
+				temperature = <88000>;
+				hysteresis = <5000>;
+				type = "active";
+			};
+			cpu0_crit: trip-crit {
+				temperature = <100000>;
+				hysteresis = <0>;
+				type = "critical";
+			};
+		};
+
+		cooling-maps {
+			map0 {
+				trip = <&cpu0_active0>;
+				cooling-device = <&fan0 1 2>;
+			};
+			map1 {
+				trip = <&cpu0_active1>;
+				cooling-device = <&fan0 2 3>;
+			};
+			map2 {
+				trip = <&cpu0_active2>;
+				cooling-device = <&fan0 4 4>;
+			};
+		};
+	};
 };
