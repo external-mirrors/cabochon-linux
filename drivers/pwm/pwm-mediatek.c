@@ -201,12 +201,9 @@ static int pwm_mediatek_round_waveform_tohw(struct pwm_chip *chip, struct pwm_de
 	if (cnt_duty > cnt_period)
 		cnt_duty = cnt_period;
 
-	if (cnt_duty) {
+	if (cnt_duty)
 		cnt_duty -= 1;
-		enable = BIT(pwm->hwpwm);
-	} else {
-		enable = 0;
-	}
+	enable = BIT(pwm->hwpwm);
 
 	cnt_period -= 1;
 
@@ -230,6 +227,7 @@ static int pwm_mediatek_round_waveform_fromhw(struct pwm_chip *chip, struct pwm_
 	const struct pwm_mediatek_waveform *wfhw = _wfhw;
 	struct pwm_mediatek_chip *pc = to_pwm_mediatek_chip(chip);
 	u32 clkdiv, cnt_period, cnt_duty;
+	u64 duty_ns;
 	unsigned long clk_rate;
 
 	/*
@@ -243,6 +241,10 @@ static int pwm_mediatek_round_waveform_fromhw(struct pwm_chip *chip, struct pwm_
 		cnt_period = FIELD_GET(PWMDWIDTH_PERIOD, wfhw->width);
 		cnt_duty = FIELD_GET(PWMTHRES_DUTY, wfhw->thres);
 
+		duty_ns = cnt_duty ?
+			DIV_ROUND_UP_ULL((u64)(cnt_duty + 1) * NSEC_PER_SEC << clkdiv,
+					 clk_rate) : 0;
+
 		/*
 		 * cnt_period is a 13 bit value, NSEC_PER_SEC is 30 bits wide
 		 * and clkdiv is less than 8, so the multiplication doesn't
@@ -250,25 +252,16 @@ static int pwm_mediatek_round_waveform_fromhw(struct pwm_chip *chip, struct pwm_
 		 */
 		*wf = (typeof(*wf)){
 			.period_length_ns =
-				DIV_ROUND_UP_ULL((u64)(cnt_period + 1) * NSEC_PER_SEC << clkdiv, clk_rate),
-			.duty_length_ns =
-				DIV_ROUND_UP_ULL((u64)(cnt_duty + 1) * NSEC_PER_SEC << clkdiv, clk_rate),
+				DIV_ROUND_UP_ULL((u64)(cnt_period + 1) * NSEC_PER_SEC << clkdiv,
+						 clk_rate),
+			.duty_length_ns = duty_ns,
 		};
 	} else {
 		clkdiv = 0;
 		cnt_period = 0;
 		cnt_duty = 0;
 
-		/*
-		 * .enable = 0 is also used for too small duty_cycle values, so
-		 * report the HW as being enabled to communicate the minimal
-		 * period.
-		 */
-		*wf = (typeof(*wf)){
-			.period_length_ns =
-				DIV_ROUND_UP_ULL(NSEC_PER_SEC, clk_rate),
-			.duty_length_ns = 0,
-		};
+		*wf = (typeof(*wf)){};
 	}
 
 	dev_dbg(&chip->dev, "pwm#%u: ENABLE: %x, CLKDIV: %x, PERIOD: %x, DUTY: %x @%lu -> %lld/%lld\n",
