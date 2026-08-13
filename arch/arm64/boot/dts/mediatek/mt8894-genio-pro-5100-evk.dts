@@ -1319,10 +1319,6 @@
 	status = "disabled";
 };
 
-&mm_smmu {
-	status = "disabled";
-};
-
 &smi_disp_common {
 	status = "disabled";
 };
