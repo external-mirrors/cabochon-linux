@@ -652,6 +652,15 @@
 	status = "okay";
 };
 
+/*
+ * TODO: check why the MT8196 driver doesn't work here
+ */
+&performance {
+	compatible = "mediatek,cpufreq-hw";
+	reg = <0 0xc2c0f20 0 0x120>, <0 0xc2c1040 0 0x120>,
+	      <0 0xc2c1160 0 0x120>;
+};
+
 &pio {
 	can0_default_pins: can0-default-pins {
 		pins-irq {
