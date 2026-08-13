@@ -44,6 +44,18 @@
 		#size-cells = <2>;
 		ranges;
 
+		/* 3 MiB reserved for SPM firmware */
+		spmfw_reserved: fw@94200000 {
+			no-map;
+			reg = <0 0x94200000 0x0 0x300000>;
+		};
+
+		/* 1 MiB reserved for MCUPM */
+		mcupm_reserved: fw@94500000 {
+			no-map;
+			reg = <0 0x94500000 0x0 0x100000>;
+		};
+
 		/* 2 MiB reserved for ARM Trusted Firmware (BL31) */
 		bl31_secmon_reserved: secmon@94600000 {
 			no-map;
