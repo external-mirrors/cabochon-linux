@@ -824,13 +824,11 @@
 
 		pins-shifter {
 			pinmux = <PINMUX_GPIO111__FUNC_GPIO111>; // WCN_3V3_EN (WiFi/BT level shifter)
-			bias-pull-up;
 			output-high;
 		};
 
 		pins-wf-reset {
 			pinmux = <PINMUX_GPIO110__FUNC_GPIO110>;
-			bias-pull-up;
 			output-high;
 		};
 	};
@@ -859,7 +857,6 @@
 
 		pins-hub-reset {
 			pinmux = <PINMUX_GPIO186__FUNC_GPIO186>; // USBHOST_RST_N
-			bias-pull-up;
 			output-high;
 		};
 	};
