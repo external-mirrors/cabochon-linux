@@ -549,7 +549,10 @@ static int pwm_fan_probe(struct platform_device *pdev)
 		return -EINVAL;
 	}
 
-	ctx->enable_mode = pwm_disable_reg_enable;
+	if (device_property_present(dev, "fan-no-pwm-release"))
+		ctx->enable_mode = pwm_enable_reg_enable;
+	else
+		ctx->enable_mode = pwm_disable_reg_enable;
 
 	ret = pwm_fan_get_cooling_data(dev, ctx);
 	if (ret)
