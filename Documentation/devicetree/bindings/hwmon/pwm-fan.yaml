@@ -31,6 +31,14 @@ properties:
       it must be self resetting edge interrupts.
     maxItems: 1
 
+  fan-no-pwm-release:
+    description:
+      If present, the PWM signal is kept enabled (with duty cycle 0) when the
+      fan is stopped. This is needed on boards where the PWM pin has an external
+      pull-up that would otherwise drive the fan at full speed when the pin is
+      released.
+    type: boolean
+
   fan-shutdown-percent:
     description:
       Fan RPM in percent set during shutdown. This is used to keep the fan
