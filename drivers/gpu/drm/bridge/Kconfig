@@ -106,6 +106,26 @@ config DRM_INNO_HDMI
 	select DRM_DISPLAY_HELPER
 	select DRM_KMS_HELPER
 
+config DRM_ITE_IT6162
+	tristate "ITE IT6162 MIPI-DSI/HDMI bridge"
+	depends on OF
+	select DRM_BRIDGE_CONNECTOR
+	select DRM_DISPLAY_HDMI_HELPER
+	select DRM_DISPLAY_HELPER
+	select DRM_KMS_HELPER
+	select DRM_MIPI_DSI
+	select REGMAP_I2C
+	select CEC_CORE
+	select CEC_NOTIFIER
+	select VIDEOMODE_HELPERS
+	select SND_SOC_HDMI_CODEC if SND_SOC
+	help
+	  ITE IT6162 MIPI-DSI to HDMI 2.0 bridge chip driver. The chip has
+	  two MIPI-DSI receivers and an HDMI 2.0 transmitter driven by an
+	  on-chip MCU, which the driver talks to through a firmware mailbox
+	  ("infoblock") over I2C rather than by programming the transmitter
+	  directly. Supports CEC, HDCP 1.4/2.3 and I2S/SPDIF HDMI audio.
+
 config DRM_ITE_IT6263
 	tristate "ITE IT6263 LVDS/HDMI bridge"
 	depends on OF
