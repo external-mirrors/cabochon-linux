@@ -94,6 +94,7 @@ struct xsphy_instance {
 	struct phy *phy;
 	void __iomem *port_base;
 	struct clk *ref_clk;	/* reference clock of anolog phy */
+	struct phy *repeater;
 	u32 index;
 	u32 type;
 	struct regmap *type_sw;
@@ -391,6 +392,11 @@ static int mtk_phy_init(struct phy *phy)
 
 	switch (inst->type) {
 	case PHY_TYPE_USB2:
+		ret = phy_init(inst->repeater);
+		if (ret) {
+			clk_disable_unprepare(inst->ref_clk);
+			return ret;
+		}
 		u2_phy_instance_init(xsphy, inst);
 		u2_phy_props_set(xsphy, inst);
 		break;
@@ -438,7 +444,11 @@ static int mtk_phy_exit(struct phy *phy)
 {
 	struct xsphy_instance *inst = phy_get_drvdata(phy);
 
+	if (inst->type == PHY_TYPE_USB2)
+		phy_exit(inst->repeater);
+
 	clk_disable_unprepare(inst->ref_clk);
+
 	return 0;
 }
 
@@ -446,9 +456,16 @@ static int mtk_phy_set_mode(struct phy *phy, enum phy_mode mode, int submode)
 {
 	struct xsphy_instance *inst = phy_get_drvdata(phy);
 	struct mtk_xsphy *xsphy = dev_get_drvdata(phy->dev.parent);
+	int ret;
 
-	if (inst->type == PHY_TYPE_USB2)
-		u2_phy_instance_set_mode(xsphy, inst, mode);
+	if (inst->type != PHY_TYPE_USB2)
+		return 0;
+
+	ret = phy_set_mode_ext(inst->repeater, mode, submode);
+	if (ret)
+		return ret;
+
+	u2_phy_instance_set_mode(xsphy, inst, mode);
 
 	return 0;
 }
@@ -590,6 +607,11 @@ static int mtk_xsphy_probe(struct platform_device *pdev)
 		retval = phy_type_syscon_get(inst, child_np);
 		if (retval)
 			return retval;
+
+		inst->repeater = devm_of_phy_optional_get(dev, child_np, NULL);
+		if (IS_ERR(inst->repeater))
+			return dev_err_probe(dev, PTR_ERR(inst->repeater),
+					 "failed to get repeater\n");
 	}
 
 	provider = devm_of_phy_provider_register(dev, mtk_phy_xlate);
