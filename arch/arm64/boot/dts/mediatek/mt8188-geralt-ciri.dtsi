@@ -66,6 +66,21 @@
 	};
 };
 
+&i2c4 {
+	/* Trackpad connected to Embedded Controller (cros-ec-tunnel) */
+	hammer_tp: trackpad@56 {
+		compatible = "hid-over-i2c";
+		reg = <0x56>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&trackpad_default>;
+
+		interrupts-extended = <&pio 148 IRQ_TYPE_LEVEL_LOW>;
+
+		post-power-on-delay-ms = <10>;
+		hid-descr-addr = <0x0001>;
+	};
+};
+
 &mipi_tx_config0 {
 	drive-strength-microamp = <5200>;
 };
@@ -311,6 +326,18 @@
 	speaker_en: speaker-en-pins {
 		pins-en-spkr {
 			pinmux = <PINMUX_GPIO111__FUNC_B_GPIO111>;
+		};
+	};
+
+	trackpad_default: tp-pins {
+		pins-intn {
+			pinmux = <PINMUX_GPIO148__FUNC_B_GPIO148>;
+			input-enable;
+			bias-pull-up;
+		};
+
+		pins-rst {
+			pinmux = <PINMUX_GPIO149__FUNC_B_GPIO149>;
 		};
 	};
 };
