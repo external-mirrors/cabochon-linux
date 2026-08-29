@@ -636,6 +636,12 @@
 	regulator-always-on;
 };
 
+/* Built-in MT7921E WiFi "card" is powered using this regulator*/
+&mt6359_vcn18_ldo_reg {
+        regulator-name = "vcn18_pmu";
+        regulator-always-on;
+};
+
 &nor_flash {
 	pinctrl-names = "default";
 	pinctrl-0 = <&nor_pins>;
@@ -656,6 +662,8 @@
 	pinctrl-names = "default";
 	pinctrl-0 = <&pcie_pins>;
 	status = "okay";
+	pcie1v8-supply = <&mt6359_vcn18_ldo_reg>;
+	pcie3v3-supply = <&pp3300_wlan>;
 };
 
 &pciephy {
@@ -1105,6 +1113,11 @@
 				 <PINMUX_GPIO48__FUNC_O_PERSTN>,
 				 <PINMUX_GPIO49__FUNC_B1_CLKREQN>;
 		};
+	};
+	
+	pcie-hog {
+		gpio-hog;
+		gpios = <&pio 145 GPIO_ACTIVE_HIGH>;
 	};
 
 	scp_pins: scp-pins {
