@@ -21,64 +21,79 @@
 #include "mtk_drm_drv.h"
 
 #define DISP_REG_OVL_INTEN			0x0004
-#define OVL_FME_CPL_INT					BIT(1)
 #define DISP_REG_OVL_INTSTA			0x0008
+#  define OVL_FME_CPL_INT			BIT(1)
+
 #define DISP_REG_OVL_EN				0x000c
+#  define OVL_EN				BIT(0)
+
 #define DISP_REG_OVL_RST			0x0014
+#  define OVL_SW_RST				BIT(0)
+
 #define DISP_REG_OVL_ROI_SIZE			0x0020
+#  define OVL_ROI_W				GENMASK(15, 0)
+#  define OVL_ROI_H				GENMASK(31, 16)
+
 #define DISP_REG_OVL_DATAPATH_CON		0x0024
-#define OVL_LAYER_SMI_ID_EN				BIT(0)
-#define OVL_BGCLR_SEL_IN				BIT(2)
-#define OVL_LAYER_AFBC_EN(n)				BIT(4+n)
+#  define OVL_LAYER_SMI_ID_EN			BIT(0)
+#  define OVL_BGCLR_SEL_IN			BIT(2)
+#  define OVL_LAYER_AFBC_EN(n)			BIT(4+n)
+
 #define DISP_REG_OVL_ROI_BGCLR			0x0028
+#  define OVL_COLOR_ALPHA			GENMASK(31, 24)
+
 #define DISP_REG_OVL_SRC_CON			0x002c
+#  define OVL_LAYER_EN_MASK			GENMASK(3, 0) /* L[0..3]_EN */
+#  define OVL_Lx_EN(x)				FIELD_PREP(OVL_LAYER_EN_MASK, BIT(x))
+
 #define DISP_REG_OVL_CON(n)			(0x0030 + 0x20 * (n))
+#  define OVL_CON_AEN				BIT(8)
+#  define OVL_CON_ALPHA				0xff
+#  define OVL_CON_VIRT_FLIP			BIT(9)
+#  define OVL_CON_HORZ_FLIP			BIT(10)
+#  define OVL_CON_CLRFMT_MAN			BIT(23)
+#  define OVL_CON_BYTE_SWAP			BIT(24)
+/* OVL_CON_RGB_SWAP works only if OVL_CON_CLRFMT_MAN is enabled */
+#  define OVL_CON_RGB_SWAP			BIT(25)
+/* OVL_CON compatibility macros */
+#  define OVL_CON_CLRFMT_SHIFT			12
+#  define OVL_CON_CLRFMT_RGB565(shift)		(0 << (shift))
+#  define OVL_CON_CLRFMT_RGB888(shift)		(1 << (shift))
+#  define OVL_CON_CLRFMT_ARGB8888(shift)	(2 << (shift))
+#  define OVL_CON_CLRFMT_RGBA8888(shift)	(3 << (shift))
+#  define OVL_CON_CLRFMT_UYVY(shift)		(4 << (shift))
+#  define OVL_CON_CLRFMT_YUYV(shift)		(5 << (shift))
+#  define OVL_CON_MTX_YUV_TO_RGB		(6 << 16)
+#  define OVL_CON_CLRFMT_PARGB8888(shift, man)	((3 << (shift)) | (man))
+
 #define DISP_REG_OVL_SRC_SIZE(n)		(0x0038 + 0x20 * (n))
 #define DISP_REG_OVL_OFFSET(n)			(0x003c + 0x20 * (n))
 #define DISP_REG_OVL_PITCH_MSB(n)		(0x0040 + 0x20 * (n))
-#define OVL_PITCH_MSB_2ND_SUBBUF			BIT(16)
+#  define OVL_PITCH_MSB_2ND_SUBBUF		BIT(16)
+
 #define DISP_REG_OVL_PITCH(n)			(0x0044 + 0x20 * (n))
-#define OVL_CONST_BLEND					BIT(28)
+#  define OVL_CONST_BLEND			BIT(28)
+
 #define DISP_REG_OVL_RDMA_CTRL(n)		(0x00c0 + 0x20 * (n))
+#  define RDMA_EN				BIT(0)
+
 #define DISP_REG_OVL_RDMA_GMC(n)		(0x00c8 + 0x20 * (n))
-#define DISP_REG_OVL_ADDR_MT2701		0x0040
+#  define GMC_THRESHOLD_BITS			16
+#  define GMC_THRESHOLD_HIGH			((1 << GMC_THRESHOLD_BITS) / 4)
+#  define GMC_THRESHOLD_LOW			((1 << GMC_THRESHOLD_BITS) / 8)
+
 #define DISP_REG_OVL_CLRFMT_EXT			0x02d0
-#define OVL_CON_CLRFMT_BIT_DEPTH_MASK(n)		(GENMASK(1, 0) << (4 * (n)))
-#define OVL_CON_CLRFMT_BIT_DEPTH(depth, n)		((depth) << (4 * (n)))
-#define OVL_CON_CLRFMT_8_BIT				(0)
-#define OVL_CON_CLRFMT_10_BIT				(1)
+#  define OVL_CON_CLRFMT_NB			GENMASK(1, 0)
+#  define OVL_CON_CLRFMT_BIT_DEPTH_MASK(n)	(OVL_CON_CLRFMT_NB << (4 * (n)))
+#  define OVL_CON_CLRFMT_BIT_DEPTH(depth, n)	((depth) << (4 * (n)))
+#    define OVL_CON_CLRFMT_8_BIT		0
+#    define OVL_CON_CLRFMT_10_BIT		1
+
+#define DISP_REG_OVL_ADDR_MT2701		0x0040
 #define DISP_REG_OVL_ADDR_MT8173		0x0f40
 #define DISP_REG_OVL_ADDR(ovl, n)		((ovl)->data->addr + 0x20 * (n))
 #define DISP_REG_OVL_HDR_ADDR(ovl, n)		((ovl)->data->addr + 0x20 * (n) + 0x04)
 #define DISP_REG_OVL_HDR_PITCH(ovl, n)		((ovl)->data->addr + 0x20 * (n) + 0x08)
-
-#define GMC_THRESHOLD_BITS	16
-#define GMC_THRESHOLD_HIGH	((1 << GMC_THRESHOLD_BITS) / 4)
-#define GMC_THRESHOLD_LOW	((1 << GMC_THRESHOLD_BITS) / 8)
-
-#define OVL_CON_CLRFMT_MAN	BIT(23)
-#define OVL_CON_BYTE_SWAP	BIT(24)
-
-/* OVL_CON_RGB_SWAP works only if OVL_CON_CLRFMT_MAN is enabled */
-#define OVL_CON_RGB_SWAP	BIT(25)
-
-#define OVL_CON_CLRFMT_SHIFT			(12)
-#define OVL_CON_CLRFMT_RGB565(shift)		(0 << (shift))
-#define OVL_CON_CLRFMT_RGB888(shift)		(1 << (shift))
-#define OVL_CON_CLRFMT_ARGB8888(shift)		(2 << (shift))
-#define OVL_CON_CLRFMT_RGBA8888(shift)		(3 << (shift))
-#define OVL_CON_CLRFMT_UYVY(shift)		(4 << (shift))
-#define OVL_CON_CLRFMT_YUYV(shift)		(5 << (shift))
-#define OVL_CON_MTX_YUV_TO_RGB			(6 << 16)
-#define OVL_CON_CLRFMT_PARGB8888(shift, man)	((3 << (shift)) | (man))
-
-#define	OVL_CON_AEN		BIT(8)
-#define	OVL_CON_ALPHA		0xff
-#define	OVL_CON_VIRT_FLIP	BIT(9)
-#define	OVL_CON_HORZ_FLIP	BIT(10)
-
-#define OVL_COLOR_ALPHA		GENMASK(31, 24)
-
 
 static const u32 mt8173_ovl_formats[] = {
 	DRM_FORMAT_XRGB8888,
@@ -285,7 +300,7 @@ void mtk_ovl_start(struct device *dev)
 		reg = reg | OVL_LAYER_SMI_ID_EN;
 		writel_relaxed(reg, ovl->regs + DISP_REG_OVL_DATAPATH_CON);
 	}
-	writel_relaxed(0x1, ovl->regs + DISP_REG_OVL_EN);
+	writel_relaxed(OVL_EN, ovl->regs + DISP_REG_OVL_EN);
 }
 
 void mtk_ovl_stop(struct device *dev)
@@ -334,8 +349,9 @@ void mtk_ovl_config(struct mtk_ddp_comp *comp, unsigned int w,
 	struct mtk_disp_ovl *ovl = dev_get_drvdata(comp->dev);
 
 	if (w != 0 && h != 0)
-		mtk_ddp_write_relaxed(cmdq_pkt, h << 16 | w, &ovl->cmdq_reg, ovl->regs,
-				      DISP_REG_OVL_ROI_SIZE);
+		mtk_ddp_write_relaxed(cmdq_pkt,
+				      FIELD_PREP(OVL_ROI_H, h) | FIELD_PREP(OVL_ROI_W, w),
+				      &ovl->cmdq_reg, ovl->regs, DISP_REG_OVL_ROI_SIZE);
 
 	/*
 	 * The background color must be opaque black (ARGB),
@@ -344,8 +360,8 @@ void mtk_ovl_config(struct mtk_ddp_comp *comp, unsigned int w,
 	mtk_ddp_write_relaxed(cmdq_pkt, OVL_COLOR_ALPHA, &ovl->cmdq_reg,
 			      ovl->regs, DISP_REG_OVL_ROI_BGCLR);
 
-	mtk_ddp_write(cmdq_pkt, 0x1, &ovl->cmdq_reg, ovl->regs, DISP_REG_OVL_RST);
-	mtk_ddp_write(cmdq_pkt, 0x0, &ovl->cmdq_reg, ovl->regs, DISP_REG_OVL_RST);
+	mtk_ddp_write(cmdq_pkt, OVL_SW_RST, &ovl->cmdq_reg, ovl->regs, DISP_REG_OVL_RST);
+	mtk_ddp_write(cmdq_pkt, 0, &ovl->cmdq_reg, ovl->regs, DISP_REG_OVL_RST);
 }
 
 unsigned int mtk_ovl_layer_nr(struct device *dev, int pipeline_index)
@@ -400,7 +416,7 @@ void mtk_ovl_layer_on(struct device *dev, unsigned int idx,
 	unsigned int gmc_value;
 	struct mtk_disp_ovl *ovl = dev_get_drvdata(dev);
 
-	mtk_ddp_write(cmdq_pkt, 0x1, &ovl->cmdq_reg, ovl->regs,
+	mtk_ddp_write(cmdq_pkt, RDMA_EN, &ovl->cmdq_reg, ovl->regs,
 		      DISP_REG_OVL_RDMA_CTRL(idx));
 	gmc_thrshd_l = GMC_THRESHOLD_LOW >>
 		      (GMC_THRESHOLD_BITS - ovl->data->gmc_bits);
@@ -413,8 +429,8 @@ void mtk_ovl_layer_on(struct device *dev, unsigned int idx,
 			    gmc_thrshd_h << 16 | gmc_thrshd_h << 24;
 	mtk_ddp_write(cmdq_pkt, gmc_value,
 		      &ovl->cmdq_reg, ovl->regs, DISP_REG_OVL_RDMA_GMC(idx));
-	mtk_ddp_write_mask(cmdq_pkt, BIT(idx), &ovl->cmdq_reg, ovl->regs,
-			   DISP_REG_OVL_SRC_CON, BIT(idx));
+	mtk_ddp_write_mask(cmdq_pkt, OVL_Lx_EN(idx), &ovl->cmdq_reg, ovl->regs,
+			   DISP_REG_OVL_SRC_CON, OVL_Lx_EN(idx));
 }
 
 void mtk_ovl_layer_off(struct device *dev, unsigned int idx,
@@ -423,7 +439,7 @@ void mtk_ovl_layer_off(struct device *dev, unsigned int idx,
 	struct mtk_disp_ovl *ovl = dev_get_drvdata(dev);
 
 	mtk_ddp_write_mask(cmdq_pkt, 0, &ovl->cmdq_reg, ovl->regs,
-			   DISP_REG_OVL_SRC_CON, BIT(idx));
+			   DISP_REG_OVL_SRC_CON, OVL_Lx_EN(idx));
 	mtk_ddp_write(cmdq_pkt, 0, &ovl->cmdq_reg, ovl->regs,
 		      DISP_REG_OVL_RDMA_CTRL(idx));
 }
