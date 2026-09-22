@@ -484,6 +484,16 @@
 	pinctrl-0 = <&i2c4_pins>;
 	clock-frequency = <400000>;
 	status = "okay";
+
+	hammer_tp: trackpad@56 {
+		compatible = "hid-over-i2c";
+		reg = <0x56>;
+		hid-descr-addr = <0x0001>;
+		interrupts-extended = <&pio 148 IRQ_TYPE_LEVEL_LOW>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&hid_int>;
+		status = "disabled";
+	};
 };
 
 &i2c5 {
@@ -1180,6 +1190,14 @@
 		pins-en-pp3300-wlan {
 			pinmux = <PINMUX_GPIO12__FUNC_B_GPIO12>;
 			output-low;
+		};
+	};
+
+	hid_int: hid-int-pins {
+		pins-ec-ap-hid-int-odl {
+			pinmux = <PINMUX_GPIO148__FUNC_B_GPIO148>;
+			input-enable;
+			bias-disable;
 		};
 	};
 };
