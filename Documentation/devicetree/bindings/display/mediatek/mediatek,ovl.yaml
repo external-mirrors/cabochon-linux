@@ -44,7 +44,9 @@ properties:
               - mediatek,mt8365-disp-ovl
           - const: mediatek,mt8192-disp-ovl
       - items:
-          - const: mediatek,mt8188-disp-ovl
+          - enum:
+              - mediatek,mt8188-disp-ovl
+              - mediatek,mt8189-disp-ovl
           - const: mediatek,mt8195-disp-ovl
       - items:
           - const: mediatek,mt8188-mdp3-ovl
