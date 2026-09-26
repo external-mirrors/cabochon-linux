@@ -193,15 +193,15 @@
 		#size-cells = <2>;
 		ranges;
 
-		afe_dma_mem: memory@90600000 {
-			compatible = "shared-dma-pool";
-			reg = <0 0x90600000 0 0x200000>;
+		adsp_mem: memory@90000000 {
+			compatible = "mediatek,adsp-reserved-memory";
+			reg = <0 0x90000000 0 0x600000>;
 			no-map;
 		};
 
-		adsp_mem: memory@90000000 {
+		afe_dma_mem: memory@90600000 {
 			compatible = "shared-dma-pool";
-			reg = <0 0x90000000 0 0x600000>;
+			reg = <0 0x90600000 0 0x200000>;
 			no-map;
 		};
 
@@ -210,6 +210,47 @@
 			reg = <0 0x90800000 0 0x100000>;
 			no-map;
 		};
+
+		apu_mem: memory@95000000 {
+			compatible = "mediatek,apu-resv-mem";
+			reg = <0 0x95000000 0 0x1400000>;
+			no-map;
+		};
+
+		gpu_eb_mem: memory@a0000000 {
+			compatible = "mediatek,gpueb-resv-mem";
+			reg = <0 0xa0000000 0 0x200000>;
+			no-map;
+		};
+
+		vcp_mem: memory@a0200000 {
+			compatible = "mediatek,me-vcp-reserved";
+			reg = <0 0xa0200000 0 0x1e00000>;
+			iommu-addresses = <0x0 0x0 0x1 0x40000000>;
+			no-map;
+		};
+
+		gpu_mem: memory@a2000000 {
+			compatible = "mali-reserved";
+			reg = <0 0xa2000000 0 0x1000000>;
+			no-map;
+		};
+
+		secure_mem: memory@a3000000 {
+			compatible = "mediatek,dynamic-restricted-region";
+			reg = <0 0xa3000000 0 0x1bc00000>;
+			no-map;
+		};
+
+		/*
+		// 0x20 == apusys??
+		smmu_mem: iommu-memory {
+			compatible = "mediatek,apu-smmu-resv-mem";
+			iommu-addresses = <0x20 0x00 0x00 0x00 0x40000000>,
+							0x20 0x00 0x4c000000 0x00 0x4000000>,
+							0x20 0x00 0x6c000000 0x00 0x4000000>;
+		};
+		*/
 	};
 };
 
@@ -409,6 +450,21 @@
 	};
 };
 
+&gpu {
+	status = "okay";
+};
+
+&gpueb_mbox {
+	status = "okay";
+};
+
+&gpufreq {
+	core-supply = <&mt6373_vbuck7>;
+	stack-supply = <&mt6316dp_vbuck0>;
+	sram-supply = <&mt6316kp_vbuck1>;
+	status = "okay";
+};
+
 &i2c0 {
 	clock-frequency = <400000>;
 	pinctrl-names = "default";
@@ -429,6 +485,13 @@
 		pinctrl-names = "default";
 		pinctrl-0 = <&gsc_ap_pins>;
 	};
+};
+
+&i2c2 {
+	clock-frequency = <400000>;
+	pinctrl-names = "default";
+	pinctrl-0 = <&i2c2_pins>;
+	status = "okay";
 };
 
 &i2c3 {
@@ -597,6 +660,9 @@
 };
 
 &mt6373_vbuck7 {
+	regulator-name = "dvdd_gpu";
+	regulator-max-microvolt = <935000>;
+	regulator-min-microvolt = <490000>;
 	regulator-always-on;
 };
 
@@ -1406,6 +1472,12 @@
 };
 
 &spmi1 {
+	/* Missing UFS and Touchscreen PMICs?:
+	 * - pmic@4: MT6363
+	 * - pmic@5: MT6373
+	 * - mfd@9: MT6685 (provides some clocks and rtc)
+	*/
+
 	pmic@6 {
 		compatible = "mediatek,mt6316c-regulator";
 		reg = <0x6 SPMI_USID>;
@@ -1425,6 +1497,19 @@
 			regulator-max-microvolt = <1122500>;
 			regulator-enable-ramp-delay = <256>;
 			regulator-always-on;
+		};
+	};
+
+	pmic@7 {
+		compatible = "mediatek,mt6316d-regulator";
+		reg = <0x7 SPMI_USID>;
+		#address-cells = <0>;
+
+		mt6316dp_vbuck0: vbuck1234 {
+			regulator-enable-ramp-delay = <256>;
+			regulator-name = "dvdd_gpustack";
+			regulator-max-microvolt = <935000>;
+			regulator-min-microvolt = <490000>;
 		};
 	};
 
@@ -1471,6 +1556,31 @@
 			regulator-always-on;
 		};
 	};
+};
+
+/* Might need to move this under Navi and Hylia's DTSes,
+ * as Google's hardware partners might be planning to release
+ * MT8196-based boards with M.2 SSDs instead of UFS. */
+
+/* Elly's note:
+ * Much like MT6789/MT8781 in motorola-vicky or zinwa-q25,
+ * UFS reset pins are controlled by ti,syscon-reset.
+ *
+ * 0x48 0x08 0x4c 0x08 0x00 0x00 0x1c
+ * 0x148 0x00 0x14c 0x00 0x00 0x00 0x1c
+ * 0x148 0x01 0x14c 0x01 0x00 0x00 0x1c
+ * 0x148 0x02 0x14c 0x02 0x00 0x00 0x1c>;
+ *
+ * Make sure to enable this in your kernel config <3 */
+&ufsphy {
+	status = "okay";
+};
+
+&ufshci {
+	status = "okay";
+
+	vcc-supply = <&mt6363_vemc>;
+	vccq-supply = <&mt6363_vufs12>;
 };
 
 &ssusb0 {

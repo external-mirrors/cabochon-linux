@@ -14,6 +14,7 @@
 #include <dt-bindings/power/mediatek,mt8196-power.h>
 #include <dt-bindings/reset/mediatek,mt8196-resets.h>
 #include <dt-bindings/thermal/mediatek,lvts-thermal.h>
+#include <dt-bindings/reset/ti-syscon.h>
 #include "mt8196-gce.h"
 #include "mt8196-pinfunc.h"
 
@@ -687,7 +688,6 @@
 			power-domains = <&hpm_hwv MT8196_POWER_DOMAIN_DSI_PHY0>;
 			#clock-cells = <0>;
 			#phy-cells = <0>;
-			status = "disabled";
 		};
 
 		mipi_tx_config1: dsi-phy@130c0000 {
@@ -698,7 +698,6 @@
 			power-domains = <&hpm_hwv MT8196_POWER_DOMAIN_DSI_PHY1>;
 			#clock-cells = <0>;
 			#phy-cells = <0>;
-			status = "disabled";
 		};
 
 		mipi_tx_config2: dsi-phy@130d0000 {
@@ -709,7 +708,6 @@
 			power-domains = <&hpm_hwv MT8196_POWER_DOMAIN_DSI_PHY2>;
 			#clock-cells = <0>;
 			#phy-cells = <0>;
-			status = "disabled";
 		};
 
 		i2c0: i2c@13130000 {
@@ -1665,47 +1663,67 @@
 			compatible = "mediatek,mt8196-ufshci";
 			reg = <0 0x16810000 0 0x2a00>;
 
-			interrupts = <GIC_SPI 320 IRQ_TYPE_LEVEL_HIGH 0>;
-			clocks = <&ufs_ao_clk CLK_UFSAO_UFSHCI_UFS>,
-				 <&ufs_ao_clk CLK_UFSAO_UFSHCI_AES>,
-				 <&clk26m>,
-				 <&ufs_ao_clk CLK_UFSAO_UNIPRO_SYS>,
-				 <&clk26m>,
-				 <&ufs_ao_clk CLK_UFSAO_UNIPRO_SAP>,
-				 <&ufs_ao_clk CLK_UFSAO_UNIPRO_TX_SYM>,
-				 <&topckgen CLK_TOP_PEXPT0_MEM_SUB>,
-				 <&topckgen CLK_TOP_AES_UFSFDE>,
-				 <&topckgen CLK_TOP_UNIVPLL_D6>,
-				 <&topckgen CLK_TOP_MAINPLL_D4>,
-				 <&ufs_ao_clk CLK_UFSAO_UNIPRO_RX_SYM0>,
-				 <&ufs_ao_clk CLK_UFSAO_UNIPRO_RX_SYM1>,
-				 <&topckgen CLK_TOP_UFS>,
-				 <&topckgen CLK_TOP_MAINPLL_D4_D2>,
-				 <&topckgen CLK_TOP_UNIVPLL_D5>;
-			clock-names = "ufs",
-				      "ufs_aes",
-				      "ufs_tick",
-				      "unipro_sysclk",
-				      "unipro_tick",
-				      "unipro_mp_bclk",
-				      "ufs_tx_symbol",
-				      "ufs_mem_sub",
-				      "crypt_mux",
-				      "crypt_lp",
-				      "crypt_perf",
-				      "ufs_rx_symbol0",
-				      "ufs_rx_symbol1",
-				      "ufs_sel",
-				      "ufs_sel_min_src",
-				      "ufs_sel_max_src";
-
 			phys = <&ufsphy>;
 
-			operating-points-v2 = <&ufs_opp_table>;
+			interrupts =	<GIC_SPI 320 IRQ_TYPE_LEVEL_HIGH 0>,
+					<GIC_SPI 329 IRQ_TYPE_LEVEL_HIGH 0>,
+					<GIC_SPI 330 IRQ_TYPE_LEVEL_HIGH 0>,
+					<GIC_SPI 331 IRQ_TYPE_LEVEL_HIGH 0>,
+					<GIC_SPI 332 IRQ_TYPE_LEVEL_HIGH 0>,
+					<GIC_SPI 333 IRQ_TYPE_LEVEL_HIGH 0>,
+					<GIC_SPI 334 IRQ_TYPE_LEVEL_HIGH 0>,
+					<GIC_SPI 335 IRQ_TYPE_LEVEL_HIGH 0>,
+					<GIC_SPI 336 IRQ_TYPE_LEVEL_HIGH 0>;
 
-			resets = <&ufs_ao_clk MT8196_UFSAO_RST1_UFS_UNIPRO>,
-				 <&ufs_ao_clk MT8196_UFSAO_RST1_UFS_CRYPTO>,
-				 <&ufs_ao_clk MT8196_UFSAO_RST1_UFSHCI>;
+			clocks =	<&topckgen CLK_TOP_UFS>,
+					<&topckgen CLK_TOP_MAINPLL_D4_D2>,
+					<&topckgen CLK_TOP_UNIVPLL_D5>,
+					<&topckgen CLK_TOP_AES_UFSFDE>,
+					<&topckgen CLK_TOP_UNIVPLL_D6>,
+					<&topckgen CLK_TOP_MAINPLL_D4>,
+					<&ufs_ao_clk CLK_UFSAO_UNIPRO_TX_SYM>,
+					<&ufs_ao_clk CLK_UFSAO_UNIPRO_RX_SYM0>,
+					<&ufs_ao_clk CLK_UFSAO_UNIPRO_RX_SYM1>,
+					<&ufs_ao_clk CLK_UFSAO_UNIPRO_SYS>,
+					<&ufs_ao_clk CLK_UFSAO_UNIPRO_SAP>,
+					<&topckgen CLK_TOP_PEXPT0_MEM_SUB>,
+					<&ufs_ao_clk CLK_UFSAO_UFSHCI_UFS>,
+					<&ufs_ao_clk CLK_UFSAO_UFSHCI_AES>;
+
+			clock-names =	"ufs_sel",
+					"ufs_sel_min_src",
+					"ufs_sel_max_src",
+					"crypt_mux",
+					"crypt_lp",
+					"crypt_perf",
+					"unipro_tx_symbol",
+					"unipro_rx_symbol0",
+					"unipro_rx_symbol1",
+					"unipro_sysclk",
+					"unipro_sapclk",
+					"ufs_mem_sub",
+					"ufs",
+					"ufs_aes";
+
+			freq-table-hz =
+					<273000000 499200000>,
+					<0 0>,
+					<0 0>,
+					<0 0>,
+					<0 0>,
+					<0 0>,
+					<0 0>,
+					<0 0>,
+					<0 0>,
+					<0 0>,
+					<0 0>,
+					<0 0>,
+					<0 0>,
+					<0 0>;
+
+			resets = <&ufs_ao_rst MT8196_UFSAO_RST1_UFS_UNIPRO>,
+				 <&ufs_ao_rst MT8196_UFSAO_RST1_UFS_CRYPTO>,
+				 <&ufs_ao_rst MT8196_UFSAO_RST1_UFSHCI>;
 			reset-names = "unipro",
 				      "crypto",
 				      "hci";
@@ -1718,6 +1736,27 @@
 			reg = <0 0x168a0000 0 0x1000>;
 			#clock-cells = <1>;
 			#reset-cells = <1>;
+
+			ufs_ao_rst: reset-controller {
+				compatible = "ti,syscon-reset";
+				#reset-cells = <1>;
+
+				ti,reset-bits = <
+					/* ufs mphy/ufschi/crypto/unipro reset */
+					/* 0: mphy */
+					0x48   8 0x4c   8 0 0
+					(ASSERT_SET | DEASSERT_SET | STATUS_NONE)
+					/* 1: unipro */
+					0x148  0 0x14c  0 0 0
+					(ASSERT_SET | DEASSERT_SET | STATUS_NONE)
+					/* 2: ufs-crypto */
+					0x148  1 0x14c  1 0 0
+					(ASSERT_SET | DEASSERT_SET | STATUS_NONE)
+					/* 3: ufshci */
+					0x148  2 0x14c  2 0 0
+					(ASSERT_SET | DEASSERT_SET | STATUS_NONE)
+					>;
+			};
 		};
 
 		pciephy0: phy@16900000 {
@@ -2707,14 +2746,14 @@
 							remote-endpoint = <&dl_out_async0_1>;
 							mediatek,port-id = <1>;
 						};
-/*
+
 						dl_in_async1_2: endpoint@1 {
 							reg = <1>;
 							clocks = <&dispsys1 CLK_MM1_DISP_DLI_ASYNC22>;
-							//remote-endpoint = <&dsc0_in>;
+							remote-endpoint = <&dsc0_in>;
 							mediatek,port-id = <2>;
 						};
-*/
+
 						dl_in_async1_3: endpoint@2 {
 							reg = <2>;
 							clocks = <&dispsys1 CLK_MM1_DISP_DLI_ASYNC23>;
@@ -2733,13 +2772,13 @@
 							clocks = <&dispsys1 CLK_MM1_DISPSYS1_CONFIG>;
 							mediatek,port-id = <1>;
 						};
-/*
+
 						dl_out_async1_1: endpoint@1 {
 							reg = <1>;
 							clocks = <&dispsys1 CLK_MM1_DISPSYS1_CONFIG>;
 							mediatek,port-id = <1>;
 						};
-*/
+
 					};
 
 					port@2 {
@@ -2752,13 +2791,13 @@
 							remote-endpoint = <&dvo0_in>;
 							mediatek,port-id = <1>;
 						};
-/*
+
 						dl_in_relay1_2: endpoint@1 {
 							reg = <1>;
-							//remote-endpoint = <&dsc0_in>;
+							remote-endpoint = <&dsc0_in>;
 							mediatek,port-id = <2>;
 						};
-*/
+
 						dl_in_relay1_3: endpoint@2 {
 							reg = <2>;
 							remote-endpoint = <&dsc1_in>;
@@ -2774,11 +2813,11 @@
 						dl_out_relay1_1: endpoint@0 {
 							reg = <0>;
 						};
-/*
+
 						dl_out_relay1_2: endpoint@1 {
 							reg = <1>;
 						};
-*/
+
 					};
 				};
 			};
@@ -3000,12 +3039,12 @@
 					reg = <0>;
 					remote-endpoint = <&ovl0_resizer0_in>;
 				};
-/*
+
 				ovlsys0_ep_ext: endpoint@1 {
 					reg = <1>;
 					remote-endpoint = <&exdma0_6_in>;
 				};
-*/
+
 			};
 
 			direct-link@260 {
@@ -3230,7 +3269,7 @@
 
 						exdma0_6_in: endpoint@1 {
 							reg = <1>;
-							//remote-endpoint = <&ovlsys0_ep_ext>;
+							remote-endpoint = <&ovlsys0_ep_ext>;
 						};
 					};
 
