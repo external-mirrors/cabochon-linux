@@ -139,10 +139,17 @@ int mtk_dpi_set_display_mode(struct mtk_dpi *dpi, struct videomode *vm,
 
 	dpi_pol->ck_pol = MTK_DPI_POLARITY_FALLING;
 	dpi_pol->de_pol = MTK_DPI_POLARITY_RISING;
-	dpi_pol->hsync_pol = vm->flags & DISPLAY_FLAGS_HSYNC_HIGH ?
-			    MTK_DPI_POLARITY_FALLING : MTK_DPI_POLARITY_RISING;
-	dpi_pol->vsync_pol = vm->flags & DISPLAY_FLAGS_VSYNC_HIGH ?
-			    MTK_DPI_POLARITY_FALLING : MTK_DPI_POLARITY_RISING;
+
+	/* Some SoCs need to force the H/V Sync polarity to positive on DP DVO */
+	if (dpi->conf->quirk_force_pol_high) {
+		dpi_pol->hsync_pol = MTK_DPI_POLARITY_RISING;
+		dpi_pol->vsync_pol = MTK_DPI_POLARITY_RISING;
+	} else {
+		dpi_pol->hsync_pol = vm->flags & DISPLAY_FLAGS_HSYNC_HIGH ?
+				    MTK_DPI_POLARITY_FALLING : MTK_DPI_POLARITY_RISING;
+		dpi_pol->vsync_pol = vm->flags & DISPLAY_FLAGS_VSYNC_HIGH ?
+				    MTK_DPI_POLARITY_FALLING : MTK_DPI_POLARITY_RISING;
+	}
 
 	/*
 	 * Depending on the IP version, we may output a different amount of

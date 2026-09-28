@@ -165,6 +165,8 @@ struct mtk_dpi_factor {
  *                 round, the DPI hardware will internally transform it to 1T1P.
  * @quirk_hfp_bs_fix: Set back porch as back+front and use front porch as an adjustment
  *                    setting (usually zero) to fix DisplayPort BS generation.
+ * @quirk_force_pol_high: Force H/V Synchronization polarity to positive, ignoring the
+ *                        setting from struct videomode.
  */
 struct mtk_dpi_conf {
 	const struct mtk_dpi_factor *dpi_factor;
@@ -194,6 +196,7 @@ struct mtk_dpi_conf {
 	bool clocked_by_hdmi;
 	bool output_1pixel;
 	bool quirk_hfp_bs_fix;
+	bool quirk_force_pol_high;
 };
 
 static inline struct mtk_dpi *bridge_to_dpi(struct drm_bridge *b)
