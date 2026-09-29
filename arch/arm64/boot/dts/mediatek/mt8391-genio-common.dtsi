@@ -16,6 +16,7 @@
 
 / {
 	aliases {
+		dsi0 = &disp_dsi0;
 		ethernet0 = &eth;
 		i2c0 = &i2c0;
 		i2c1 = &i2c1;
@@ -29,6 +30,16 @@
 		mmc0 = &mmc0;
 		mmc1 = &mmc1;
 		serial0 = &uart0;
+	};
+
+	backlight_lcm1: backlight-lcm {
+		compatible = "pwm-backlight";
+		brightness-levels = <0 1023>;
+		default-brightness-level = <576>;
+		num-interpolated-steps = <1023>;
+		pwms = <&disp_pwm0 0 500000>;
+		power-supply = <&reg_vsys>;
+		status = "okay";
 	};
 
 	chosen: chosen {
@@ -45,6 +56,44 @@
 			reg = <0 0x54600000 0x0 0x200000>;
 			no-map;
 		};
+	};
+
+	lcm2_3v3_en: regulator-lcm2-3v3-en {
+		compatible = "regulator-fixed";
+		regulator-name = "lcm2_3v3_en";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		enable-active-high;
+		gpio = <&pio 24 GPIO_ACTIVE_HIGH>;
+		regulator-always-on;
+		pinctrl-names = "default";
+		pinctrl-0 = <&lcm2_3v3_en_pins>;
+		vin-supply = <&reg_vsys>;
+	};
+
+	lcm1_iovcc: regulator-vio18-lcm1 {
+		compatible = "regulator-fixed";
+		regulator-name = "vio18_lcm1";
+		regulator-min-microvolt = <1800000>;
+		regulator-max-microvolt = <1800000>;
+		enable-active-high;
+		gpio = <&pio 58 GPIO_ACTIVE_HIGH>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&lcm1_iovcc_pins>;
+		vin-supply = <&reg_vsys>;
+	};
+
+	lcm1_vddp: regulator-vsys-lcm {
+		compatible = "regulator-fixed";
+		regulator-name = "vsys_lcm1";
+		regulator-min-microvolt = <5000000>;
+		regulator-max-microvolt = <5000000>;
+		enable-active-high;
+		gpio = <&pio 87 GPIO_ACTIVE_HIGH>;
+		regulator-always-on;
+		pinctrl-names = "default";
+		pinctrl-0 = <&lcm1_vddp_pins>;
+		vin-supply = <&reg_vsys>;
 	};
 
 	/* system wide 4.2V power rail from charger */
@@ -130,6 +179,18 @@
 		vin-supply = <&reg_vsys>;
 	};
 
+	touch0_fixed_3v3: regulator-6 {
+		compatible = "regulator-fixed";
+		regulator-name = "touch_3v3";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		gpio = <&pio 12 GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+		pinctrl-names = "default";
+		pinctrl-0 = <&touch_vreg_pins>;
+		vin-supply = <&reg_vsys>;
+	};
+
 	can_clk: can-clk {
 		compatible = "fixed-clock";
 		#clock-cells = <0>;
@@ -164,6 +225,59 @@
 
 &cpu5 {
 	cpu-supply = <&mt6359_vmodem_buck_reg>;
+};
+
+&dispsys {
+	status = "okay";
+};
+
+&disp_pwm0 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&disp_pwm0_pins>;
+	status = "okay";
+};
+
+&disp_dsi0 {
+	#address-cells = <1>;
+	#size-cells = <0>;
+	status = "okay";
+
+	panel@0 {
+		compatible = "startek,kd070fhfid078", "himax,hx8279";
+		reg = <0>;
+		backlight = <&backlight_lcm1>;
+		enable-gpios = <&pio 13 GPIO_ACTIVE_HIGH>;
+		reset-gpios = <&pio 25 GPIO_ACTIVE_HIGH>;
+		iovcc-supply = <&lcm1_iovcc>;
+		vdd-supply = <&lcm1_vddp>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&panel_default_pins>;
+
+		port {
+			dsi_panel_in: endpoint {
+				remote-endpoint = <&dsi0_out>;
+			};
+		};
+	};
+
+	ports {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		port@0 {
+			reg = <0>;
+			dsi0_in: endpoint {
+				remote-endpoint = <&rdma0_out>;
+			};
+		};
+
+		port@1 {
+			reg = <1>;
+			dsi0_out: endpoint {
+				remote-endpoint = <&dsi_panel_in>;
+			};
+		};
+	};
 };
 
 &eth {
@@ -245,8 +359,6 @@
 };
 
 &i2c3 {
-	pinctrl-names = "default";
-	pinctrl-0 = <&i2c3_pins>;
 	status = "disabled";
 };
 
@@ -309,6 +421,19 @@
 	pinctrl-names = "default";
 	pinctrl-0 = <&i2c6_pins>;
 	status = "okay";
+
+	touchscreen@14 {
+		compatible = "goodix,gt9271";
+		reg = <0x14>;
+		interrupts-extended = <&pio 11 IRQ_TYPE_EDGE_RISING>;
+		irq-gpios = <&pio 11 GPIO_ACTIVE_HIGH>;
+		reset-gpios = <&pio 10 GPIO_ACTIVE_HIGH>;
+		AVDD28-supply = <&touch0_fixed_3v3>;
+		VDDIO-supply = <&mt6359_vio18_ldo_reg>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&touch_pins>;
+	};
+
 };
 
 &i2c7 {
@@ -331,6 +456,10 @@
 
 &mfg1 {
 	domain-supply = <&mt6359_vsram_proc1_ldo_reg>;
+};
+
+&mipi_tx_config0 {
+	status = "okay";
 };
 
 &mmc0 {
@@ -493,6 +622,12 @@
 		};
 	};
 
+	disp_pwm0_pins: disp-pwm0-pins {
+		pins-pwm {
+			pinmux = <PINMUX_GPIO29__FUNC_DISP_PWM0>;
+			output-high;
+		};
+	};
 
 	eth_default_pins: eth-default-pins {
 		pins-cc {
@@ -641,6 +776,13 @@
 		};
 	};
 
+	lcm2_3v3_en_pins: lcm2-3v3-en-pins {
+		pins-en {
+			pinmux = <PINMUX_GPIO24__FUNC_GPIO24>;
+			output-low;
+		};
+	};
+
 	mmc0_default_pins: mmc0-default-pins {
 		pins-clk {
 			pinmux = <PINMUX_GPIO162__FUNC_MSDC0_CLK>;
@@ -747,6 +889,32 @@
 		};
 	};
 
+	panel_default_pins: panel-default-pins {
+		pins-rst {
+			pinmux = <PINMUX_GPIO25__FUNC_GPIO25>;
+			output-high;
+		};
+
+		pins-en {
+			pinmux = <PINMUX_GPIO13__FUNC_GPIO13>;
+			output-high;
+		};
+	};
+
+	lcm1_iovcc_pins: lcm1-iovcc-pins {
+		pins-pwr-en {
+			pinmux = <PINMUX_GPIO58__FUNC_GPIO58>;
+			output-low;
+		};
+	};
+
+	lcm1_vddp_pins: lcm1-vddp-pins {
+		pins-pwr-en {
+			pinmux = <PINMUX_GPIO87__FUNC_GPIO87>;
+			output-high;
+		};
+	};
+
 	pcie_default_pins: pcie-default-pins {
 		pins-bus {
 			pinmux = <PINMUX_GPIO48__FUNC_WAKEN>,
@@ -786,6 +954,26 @@
 			pinmux = <PINMUX_GPIO8__FUNC_GPIO8>;
 			bias-pull-up;
 			input-enable;
+		};
+	};
+
+	touch_pins: touch-pins {
+		pins-irq {
+			pinmux = <PINMUX_GPIO11__FUNC_GPIO11>;
+			input-enable;
+			bias-disable;
+		};
+
+		pins-reset {
+			pinmux = <PINMUX_GPIO10__FUNC_GPIO10>;
+			output-high;
+		};
+	};
+
+	touch_vreg_pins: touch-avdd-pins {
+		pins-power {
+			pinmux = <PINMUX_GPIO12__FUNC_GPIO12>;
+			output-high;
 		};
 	};
 
@@ -886,6 +1074,10 @@
 			linux,keycodes = <KEY_HOME>;
 		};
 	};
+};
+
+&rdma0_out {
+	remote-endpoint = <&dsi0_in>;
 };
 
 &spi0 {
