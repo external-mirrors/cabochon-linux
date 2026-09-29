@@ -818,9 +818,9 @@ static const struct mtk_mux top_muxes[] = {
 			     dxcc_parents, 0x100, 0x104, 0x108,
 			     24, 2, 31, 0x0c, 1),
 	/* CLK_CFG_16 */
-	MUX_GATE_CLR_SET_UPD(CLK_TOP_MFG_REF_SEL, "mfg_ref_sel",
+	MUX_GATE_CLR_SET_UPD_FLAGS(CLK_TOP_MFG_REF_SEL, "mfg_ref_sel",
 			     mfg_ref_parents, 0x110, 0x114, 0x118,
-			     0, 2, 7, 0x0c, 2),
+			     0, 2, 7, 0x0c, 2, 0),
 	MUX_GATE_CLR_SET_UPD(CLK_TOP_MDP0_SEL, "mdp0_sel",
 			     mmsys_parents, 0x110, 0x114, 0x118,
 			     8, 4, 15, 0x0c, 3),
