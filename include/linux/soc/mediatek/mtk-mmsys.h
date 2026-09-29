@@ -114,6 +114,8 @@ enum mtk_ddp_comp_type {
 	MTK_DISP_UFOE,
 	MTK_DISP_WDMA,
 
+	MTK_DISP_COMP0_OUT_CB,
+
 	/* MDP Components */
 	MTK_DISP_MDP_RDMA,
 
