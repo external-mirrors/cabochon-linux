@@ -1,0 +1,15 @@
+// SPDX-License-Identifier: GPL-2.0 OR MIT
+/*
+ * Copyright (C) 2026 Collabora Ltd.
+ * Author: Arnaud Ferraris <arnaud.ferraris@collabora.com>
+ */
+
+/dts-v1/;
+
+#include "mt8894-genio-pro-5100-evk-sku1.dts"
+
+/ {
+	model = "MediaTek Genio Pro 5100 EVK";
+	compatible = "mediatek,mt8894-evk", "mediatek,mt8894",
+		     "mediatek,mt8196";
+};
