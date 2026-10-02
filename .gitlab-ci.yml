@@ -34,7 +34,8 @@ check-devicetrees:
                mt8391-genio-720-evk-ufs \
                mt8395-genio-1200-evk \
                mt8395-radxa-nio-12l \
-               mt8894-genio-pro-5100-evk"
+               mt8894-genio-pro-5100-evk-sku1 \
+               mt8894-genio-pro-5100-evk-sku2"
   before_script:
     - apt update
     - apt install -y devscripts
