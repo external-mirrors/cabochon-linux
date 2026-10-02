@@ -198,6 +198,7 @@ dtb-$(CONFIG_ARCH_MEDIATEK) += mt8395-radxa-nio-12l-8-hd-panel.dtb
 dtb-$(CONFIG_ARCH_MEDIATEK) += mt8516-pumpkin.dtb
 dtb-$(CONFIG_ARCH_MEDIATEK) += mt8894-genio-pro-5100-evk.dtb
 dtb-$(CONFIG_ARCH_MEDIATEK) += mt8894-genio-pro-5100-evk-sku1.dtb
+dtb-$(CONFIG_ARCH_MEDIATEK) += mt8894-genio-pro-5100-evk-sku2.dtb
 
 # Device tree overlays support
 DTC_FLAGS_mt7986a-bananapi-bpi-r3 := -@
