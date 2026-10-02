@@ -499,6 +499,8 @@ properties:
       - items:
           - enum:
               - mediatek,mt8894-evk
+              - mediatek,mt8894-evk-sku1
+              - mediatek,mt8894-evk-sku2
           - const: mediatek,mt8894
           - const: mediatek,mt8196
 
