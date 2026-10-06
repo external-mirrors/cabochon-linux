@@ -8,6 +8,7 @@
 /dts-v1/;
 
 #include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/input/linux-event-codes.h>
 #include <dt-bindings/leds/common.h>
 #include <dt-bindings/spmi/spmi.h>
 #include "mt8196.dtsi"
@@ -32,6 +33,20 @@
 
 	chosen {
 		stdout-path = "serial0:115200n8";
+	};
+
+	keys: gpio-keys {
+		compatible = "gpio-keys";
+		pinctrl-names = "default";
+		pinctrl-0 = <&gpio_key_pins>;
+
+		button-volume-up {
+			wakeup-source;
+			debounce-interval = <100>;
+			gpios = <&pio 60 GPIO_ACTIVE_LOW>;
+			label = "volume_up";
+			linux,code = <KEY_VOLUMEUP>;
+		};
 	};
 
 	memory@80000000 {
@@ -866,6 +881,14 @@
 				 <PINMUX_GPIO260__FUNC_GPIO260>,
 				 <PINMUX_GPIO267__FUNC_GPIO267>,
 				 <PINMUX_GPIO268__FUNC_GPIO268>;
+		};
+	};
+
+	gpio_key_pins: gpio-keys-pins {
+		pins-keys {
+			pinmux = <PINMUX_GPIO60__FUNC_GPIO60>;
+			bias-pull-up = <MTK_PUPD_SET_R1R0_01>;
+			input-enable;
 		};
 	};
 
