@@ -236,6 +236,8 @@ int vpu_dec_init(struct vdec_vpu_inst *vpu)
 	msg.msg_id = AP_IPIMSG_DEC_INIT;
 	msg.ap_inst_addr = (unsigned long)vpu;
 	msg.codec_type = vpu->codec_type;
+	if (mtk_vcodec_fw_get_type(vpu->ctx->dev->fw_handler) == VCP)
+		msg.shared_iova = vpu->ctx->dev->fw_handler->vcp->iova_addr;
 
 	mtk_vdec_debug(vpu->ctx, "vdec_inst=%p", vpu);
 
