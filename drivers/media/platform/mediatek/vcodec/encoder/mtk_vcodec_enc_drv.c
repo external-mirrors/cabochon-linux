@@ -259,16 +259,18 @@ static int mtk_vcodec_probe(struct platform_device *pdev)
 	if (!of_property_read_u32(pdev->dev.of_node, "mediatek,vpu",
 				  &rproc_phandle)) {
 		fw_type = VPU;
+		dev->fw_init = mtk_vcodec_fw_vpu_init;
 	} else if (!of_property_read_u32(pdev->dev.of_node, "mediatek,scp",
 					 &rproc_phandle)) {
 		fw_type = SCP;
+		dev->fw_init = mtk_vcodec_fw_scp_init;
 	} else {
 		dev_err(&pdev->dev, "[MTK VCODEC] Could not get venc IPI device");
 		return -ENODEV;
 	}
 	dma_set_max_seg_size(&pdev->dev, UINT_MAX);
 
-	dev->fw_handler = mtk_vcodec_fw_select(dev, fw_type, ENCODER);
+	dev->fw_handler = mtk_vcodec_fw_select(dev, ENCODER, dev->fw_init);
 	if (IS_ERR(dev->fw_handler))
 		return PTR_ERR(dev->fw_handler);
 

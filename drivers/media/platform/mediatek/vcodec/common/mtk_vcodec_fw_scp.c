@@ -90,3 +90,4 @@ struct mtk_vcodec_fw *mtk_vcodec_fw_scp_init(void *priv, enum mtk_vcodec_fw_use 
 
 	return fw;
 }
+EXPORT_SYMBOL_GPL(mtk_vcodec_fw_scp_init);

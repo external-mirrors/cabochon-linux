@@ -4,25 +4,18 @@
 #include "../encoder/mtk_vcodec_enc_drv.h"
 #include "mtk_vcodec_fw_priv.h"
 
-struct mtk_vcodec_fw *mtk_vcodec_fw_select(void *priv, enum mtk_vcodec_fw_type type,
-					   enum mtk_vcodec_fw_use fw_use)
+struct mtk_vcodec_fw *mtk_vcodec_fw_select(void *priv, enum mtk_vcodec_fw_use fw_use,
+					   mtk_vcodec_fw_init_func fw_init)
 {
-	struct platform_device *plat_dev;
+	if (!fw_init)
+		return ERR_PTR(-EINVAL);
 
-	if (fw_use == ENCODER)
-		plat_dev = ((struct mtk_vcodec_enc_dev *)priv)->plat_dev;
-	else
-		plat_dev = ((struct mtk_vcodec_dec_dev *)priv)->plat_dev;
-
-	switch (type) {
-	case VPU:
-		return mtk_vcodec_fw_vpu_init(priv, fw_use);
-	case SCP:
-		return mtk_vcodec_fw_scp_init(priv, fw_use);
-	default:
-		dev_err(&plat_dev->dev, "Invalid vcodec fw type");
+	if (fw_use != ENCODER && fw_use != DECODER) {
+		pr_err("Invalid firmware use %d\n", fw_use);
 		return ERR_PTR(-EINVAL);
 	}
+
+	return fw_init(priv, fw_use);
 }
 EXPORT_SYMBOL_GPL(mtk_vcodec_fw_select);
 
