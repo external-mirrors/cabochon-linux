@@ -5,11 +5,13 @@ mediatek-drm-y := mtk_crtc.o \
 		  mtk_disp_aal.o \
 		  mtk_disp_ccorr.o \
 		  mtk_disp_color.o \
+		  mtk_disp_dsc.o \
 		  mtk_disp_gamma.o \
 		  mtk_disp_merge.o \
 		  mtk_disp_ovl.o \
 		  mtk_disp_ovl_adaptor.o \
 		  mtk_disp_rdma.o \
+		  mtk_disp_wdma.o \
 		  mtk_drm_drv.o \
 		  mtk_dsi.o \
 		  mtk_dpi.o \

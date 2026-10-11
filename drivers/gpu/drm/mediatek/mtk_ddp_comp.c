@@ -40,12 +40,6 @@
 #define DITHER_LSB_ERR_SHIFT_G(x)		(((x) & 0x7) << 12)
 #define DITHER_ADD_LSHIFT_G(x)			(((x) & 0x7) << 4)
 
-#define DISP_REG_DSC_CON			0x0000
-#define DSC_EN					BIT(0)
-#define DSC_DUAL_INOUT				BIT(2)
-#define DSC_BYPASS				BIT(4)
-#define DSC_UFOE_SEL				BIT(16)
-
 #define DISP_REG_OD_EN				0x0000
 #define DISP_REG_OD_CFG				0x0020
 #define OD_RELAYMODE				BIT(0)
@@ -187,36 +181,6 @@ static void mtk_dither_set(struct device *dev, unsigned int bpc,
 			      DISP_DITHERING, cmdq_pkt);
 }
 
-static void mtk_dsc_config(struct device *dev, unsigned int w,
-			   unsigned int h, unsigned int vrefresh,
-			   unsigned int bpc, struct cmdq_pkt *cmdq_pkt)
-{
-	struct mtk_ddp_comp_dev *priv = dev_get_drvdata(dev);
-
-	/* dsc bypass mode */
-	mtk_ddp_write_mask(cmdq_pkt, DSC_BYPASS, &priv->cmdq_reg, priv->regs,
-			   DISP_REG_DSC_CON, DSC_BYPASS);
-	mtk_ddp_write_mask(cmdq_pkt, DSC_UFOE_SEL, &priv->cmdq_reg, priv->regs,
-			   DISP_REG_DSC_CON, DSC_UFOE_SEL);
-	mtk_ddp_write_mask(cmdq_pkt, DSC_DUAL_INOUT, &priv->cmdq_reg, priv->regs,
-			   DISP_REG_DSC_CON, DSC_DUAL_INOUT);
-}
-
-static void mtk_dsc_start(struct device *dev)
-{
-	struct mtk_ddp_comp_dev *priv = dev_get_drvdata(dev);
-
-	/* write with mask to reserve the value set in mtk_dsc_config */
-	mtk_ddp_write_mask(NULL, DSC_EN, &priv->cmdq_reg, priv->regs, DISP_REG_DSC_CON, DSC_EN);
-}
-
-static void mtk_dsc_stop(struct device *dev)
-{
-	struct mtk_ddp_comp_dev *priv = dev_get_drvdata(dev);
-
-	writel_relaxed(0x0, priv->regs + DISP_REG_DSC_CON);
-}
-
 static void mtk_od_config(struct device *dev, unsigned int w,
 			  unsigned int h, unsigned int vrefresh,
 			  unsigned int bpc, struct cmdq_pkt *cmdq_pkt)
@@ -309,9 +273,9 @@ static const struct mtk_ddp_comp_funcs ddp_dpi = {
 };
 
 static const struct mtk_ddp_comp_funcs ddp_dsc = {
-	.clk_enable = mtk_ddp_clk_enable,
-	.clk_disable = mtk_ddp_clk_disable,
-	.config = mtk_dsc_config,
+	.clk_enable = mtk_dsc_clk_enable,
+	.clk_disable = mtk_dsc_clk_disable,
+	.dsc_setup = mtk_dsc_setup,
 	.start = mtk_dsc_start,
 	.stop = mtk_dsc_stop,
 };
@@ -391,6 +355,22 @@ static const struct mtk_ddp_comp_funcs ddp_rdma = {
 	.layer_config = mtk_rdma_layer_config,
 	.get_formats = mtk_rdma_get_formats,
 	.get_num_formats = mtk_rdma_get_num_formats,
+};
+
+static const struct mtk_ddp_comp_funcs ddp_wdma = {
+	.clk_enable = mtk_wdma_clk_enable,
+	.clk_disable = mtk_wdma_clk_disable,
+	.config = mtk_wdma_config,
+	.start = mtk_wdma_start,
+	.stop = mtk_wdma_stop,
+	.register_vblank_cb = mtk_wdma_register_vblank_cb,
+	.unregister_vblank_cb = mtk_wdma_unregister_vblank_cb,
+	.enable_vblank = mtk_wdma_enable_vblank,
+	.disable_vblank = mtk_wdma_disable_vblank,
+	.layer_nr = mtk_wdma_layer_nr,
+	.layer_config = mtk_wdma_layer_config,
+	.get_formats = mtk_wdma_get_formats,
+	.get_num_formats = mtk_wdma_get_num_formats,
 };
 
 static const struct mtk_ddp_comp_funcs ddp_ufoe = {
@@ -496,8 +476,8 @@ static const struct mtk_ddp_comp_match mtk_ddp_matches[DDP_COMPONENT_DRM_ID_MAX]
 	[DDP_COMPONENT_RDMA2]		= { MTK_DISP_RDMA,		2, &ddp_rdma },
 	[DDP_COMPONENT_RDMA4]		= { MTK_DISP_RDMA,		4, &ddp_rdma },
 	[DDP_COMPONENT_UFOE]		= { MTK_DISP_UFOE,		0, &ddp_ufoe },
-	[DDP_COMPONENT_WDMA0]		= { MTK_DISP_WDMA,		0, NULL },
-	[DDP_COMPONENT_WDMA1]		= { MTK_DISP_WDMA,		1, NULL },
+	[DDP_COMPONENT_WDMA0]		= { MTK_DISP_WDMA,		0, &ddp_wdma },
+	[DDP_COMPONENT_WDMA1]		= { MTK_DISP_WDMA,		1, &ddp_wdma },
 };
 
 static bool mtk_ddp_comp_find(struct device *dev,
@@ -671,12 +651,14 @@ int mtk_ddp_comp_init(struct device *dev, struct device_node *node, struct mtk_d
 	    type == MTK_DISP_BLS ||
 	    type == MTK_DISP_CCORR ||
 	    type == MTK_DISP_COLOR ||
+	    type == MTK_DISP_DSC ||
 	    type == MTK_DISP_GAMMA ||
 	    type == MTK_DISP_MERGE ||
 	    type == MTK_DISP_OVL ||
 	    type == MTK_DISP_OVL_2L ||
 	    type == MTK_DISP_PWM ||
 	    type == MTK_DISP_RDMA ||
+	    type == MTK_DISP_WDMA ||
 	    type == MTK_DPI ||
 	    type == MTK_DP_INTF ||
 	    type == MTK_DSI)
