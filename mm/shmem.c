@@ -959,6 +959,7 @@ static void shmem_delete_from_page_cache(struct folio *folio, void *radswap)
 
 	xa_lock_irq(&mapping->i_pages);
 	error = shmem_replace_entry(mapping, folio->index, folio, radswap);
+	folio_mark_removed_from_cache(mapping, folio);
 	folio->mapping = NULL;
 	mapping->nrpages -= nr;
 	shmem_update_stats(folio, -nr);
@@ -1160,6 +1161,7 @@ static void shmem_undo_range(struct inode *inode, loff_t lstart, uoff_t lend,
 		folio_batch_remove_exceptionals(&fbatch);
 		folio_batch_release(&fbatch);
 		cond_resched();
+		rcu_free_cond_resched();
 	}
 
 	/*
@@ -1201,6 +1203,7 @@ whole_folios:
 	index = start;
 	while (index < end) {
 		cond_resched();
+		rcu_free_cond_resched();
 
 		if (!find_get_entries(mapping, &index, end - 1, &fbatch,
 				indices)) {

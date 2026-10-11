@@ -141,6 +141,7 @@ static void page_cache_delete(struct address_space *mapping,
 
 	xas_store(&xas, shadow);
 	xas_init_marks(&xas);
+	folio_mark_removed_from_cache(mapping, folio);
 
 	folio->mapping = NULL;
 	/* Leave folio->index set: truncation lookup relies upon it */
@@ -312,6 +313,7 @@ static void page_cache_delete_batch(struct address_space *mapping,
 
 		i++;
 		xas_store(&xas, NULL);
+		folio_mark_removed_from_cache(mapping, folio);
 		total_pages += folio_nr_pages(folio);
 	}
 	mapping->nrpages -= total_pages;
@@ -827,6 +829,7 @@ void replace_page_cache_folio(struct folio *old, struct folio *new)
 
 	xas_lock_irq(&xas);
 	xas_store(&xas, new);
+	folio_mark_removed_from_cache(mapping, old);
 
 	old->mapping = NULL;
 	/* hugetlb pages do not participate in page cache accounting. */
@@ -1876,12 +1879,18 @@ EXPORT_SYMBOL(page_cache_prev_miss);
  * B. Remove the page from i_pages
  * C. Return the page to the page allocator
  *
- * This means that any page may have its reference count temporarily
- * increased by a speculative page cache (or GUP-fast) lookup as it can
- * be allocated by another user before the RCU grace period expires.
- * Because the refcount temporarily acquired here may end up being the
- * last refcount on the page, any page allocation must be freeable by
- * folio_put().
+ * B marks the folio PG_rcu_free, so C happens only after an RCU grace
+ * period.  Steps 1 to 3 run under rcu_read_lock(), so a page cache lookup
+ * never increments the refcount of a page that has been reallocated.
+ * Excepted are hugetlb folios, for now, and folios of an inode being
+ * evicted, which are not marked: a lookup that relies on the mark must
+ * hold a reference to the inode.  A lookup can still find the refcount
+ * frozen by A, so step 2 stays conditional.
+ *
+ * A GUP-fast lookup can still increment the reference count of a page
+ * that has been allocated by another user.  Because the refcount
+ * temporarily acquired there may end up being the last refcount on the
+ * page, any page allocation must be freeable by folio_put().
  */
 
 /*
@@ -2771,6 +2780,139 @@ static void filemap_end_dropbehind_read(struct folio *folio)
 	}
 }
 
+/*
+ * Copy from the page cache under rcu_read_lock(), without taking folio
+ * references.  A folio removed from the page cache is freed only after an
+ * RCU grace period (PG_rcu_free), so a page found in i_pages here holds
+ * the file's data until rcu_read_unlock(), whatever happens to the folio
+ * meanwhile: reclaim, truncation, migration or a split.  That is what the
+ * slow path's reference gives it, from the lookup to the end of the copy.
+ * The folios that are not marked do not get here: the file holds the
+ * reference to the inode that folio_mark_removed_from_cache() asks for,
+ * and hugetlbfs has its own read.
+ *
+ * Copy page by page, each page looked up in i_pages.  Without a reference
+ * a split can change the folio's size under us, so only the page at the
+ * index xas_load() returned the folio for is known to be part of it.
+ * The folio's flags are checked once per folio: prev is the folio of the
+ * previous page.
+ *
+ * Copy at most FOLIO_BATCH_SIZE pages under one rcu_read_lock().  Return
+ * true if that many were copied and the read is not done.  prev is not
+ * kept across batches: after rcu_read_unlock() another folio can be at
+ * the same address.
+ */
+static bool filemap_read_rcu_batch(struct kiocb *iocb, struct iov_iter *iter,
+		loff_t last_pos, size_t *copied)
+{
+	struct address_space *mapping = iocb->ki_filp->f_mapping;
+	struct inode *inode = mapping->host;
+	XA_STATE(xas, &mapping->i_pages, 0);
+	struct folio *prev = NULL;
+	bool more = false;
+	int nr;
+
+	/*
+	 * No flush_dcache_folio() here: it has not been checked for a folio
+	 * without a reference (arm's writes folio->flags).  The slow path
+	 * reads such mappings.
+	 */
+	if (ARCH_IMPLEMENTS_FLUSH_DCACHE_PAGE &&
+	    mapping_writably_mapped(mapping))
+		return false;
+
+	/* A user fault cannot sleep in the RCU read section: it ends the copy */
+	rcu_read_lock();
+	pagefault_disable();
+	for (nr = 0; iov_iter_count(iter); nr++) {
+		loff_t pos = iocb->ki_pos;
+		pgoff_t index = pos >> PAGE_SHIFT;
+		size_t offset = offset_in_page(pos);
+		struct folio *folio;
+		size_t bytes, n;
+		loff_t isize;
+
+		if (nr == FOLIO_BATCH_SIZE) {
+			more = true;
+			break;
+		}
+
+		xas_set(&xas, index);
+		folio = xas_load(&xas);
+		if (xas_retry(&xas, folio) || !folio || xa_is_value(folio))
+			break;
+
+		if (folio != prev) {
+			if (!folio_test_uptodate(folio) ||
+			    folio_test_readahead(folio) ||
+			    folio_test_dropbehind(folio))
+				break;
+			/*
+			 * folio_mark_accessed() needs a reference, so stop
+			 * unless it would do nothing.  The slow path does not
+			 * call it for the folio the previous read ended in.
+			 * The folio's size cannot be read here, so this folio
+			 * is known to be that one only if the previous read
+			 * ended in a page from folio->index to index.
+			 */
+			if (!folio_mark_accessed_noop(folio) &&
+			    (prev || last_pos <= 0 ||
+			     (last_pos - 1) >> PAGE_SHIFT < folio->index ||
+			     (last_pos - 1) >> PAGE_SHIFT > index))
+				break;
+			prev = folio;
+		}
+
+		/* i_size must be checked after we know the folio is uptodate */
+		isize = i_size_read(inode);
+		if (pos >= isize)
+			break;
+		bytes = min_t(loff_t, isize - pos,
+			      min_t(size_t, iov_iter_count(iter),
+				    PAGE_SIZE - offset));
+
+		/*
+		 * Not copy_page_to_iter_nofault(): it runs the hardened
+		 * usercopy check, which loads the page's compound head and
+		 * then that head's order, and a split can run in between.
+		 * page_copy_sane() does not read the order for a copy within
+		 * one page.
+		 */
+		n = copy_page_to_iter(folio_page(folio, index - folio->index),
+				      offset, bytes, iter);
+		*copied += n;
+		iocb->ki_pos += n;
+		if (n < bytes)
+			break;
+	}
+	pagefault_enable();
+	rcu_read_unlock();
+
+	return more;
+}
+
+/*
+ * Copy from the page cache without folio references, in batches of
+ * FOLIO_BATCH_SIZE pages.  Stop at a user fault, at EOF, at a folio that
+ * is missing or not uptodate, at one that needs readahead, dropbehind or
+ * folio_mark_accessed(), and at a fatal signal.  The slow path continues
+ * from there.
+ */
+static size_t filemap_read_rcu(struct kiocb *iocb, struct iov_iter *iter,
+		loff_t last_pos)
+{
+	size_t copied = 0;
+
+	while (filemap_read_rcu_batch(iocb, iter, last_pos, &copied)) {
+		if (fatal_signal_pending(current))
+			break;
+		cond_resched();
+		/* Like the slow path, don't mark the folio we stopped in */
+		last_pos = iocb->ki_pos;
+	}
+	return copied;
+}
+
 /**
  * filemap_read - Read data from the page cache.
  * @iocb: The iocb to read.
@@ -2796,6 +2938,7 @@ ssize_t filemap_read(struct kiocb *iocb, struct iov_iter *iter,
 	bool writably_mapped;
 	loff_t isize, end_offset;
 	loff_t last_pos = ra->prev_pos;
+	size_t fast_read;
 
 	if (unlikely(iocb->ki_pos < 0))
 		return -EINVAL;
@@ -2806,6 +2949,14 @@ ssize_t filemap_read(struct kiocb *iocb, struct iov_iter *iter,
 
 	iov_iter_truncate(iter, inode->i_sb->s_maxbytes - iocb->ki_pos);
 	folio_batch_init(&fbatch);
+
+	fast_read = filemap_read_rcu(iocb, iter, last_pos);
+	if (fast_read) {
+		already_read += fast_read;
+		last_pos = iocb->ki_pos;
+		if (!iov_iter_count(iter))
+			goto out;
+	}
 
 	do {
 		cond_resched();
@@ -2893,6 +3044,7 @@ put_folios:
 		folio_batch_init(&fbatch);
 	} while (iov_iter_count(iter) && iocb->ki_pos < isize && !error);
 
+out:
 	file_accessed(filp);
 	ra->prev_pos = last_pos;
 	return already_read ? already_read : error;

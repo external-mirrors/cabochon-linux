@@ -4,6 +4,7 @@
 #define _MTK_VCODEC_FW_PRIV_H_
 
 #include "mtk_vcodec_fw.h"
+#include "mtk_vcodec_fw_vcp.h"
 
 struct mtk_vcodec_dec_dev;
 struct mtk_vcodec_enc_dev;
@@ -13,6 +14,7 @@ struct mtk_vcodec_fw {
 	const struct mtk_vcodec_fw_ops *ops;
 	struct platform_device *pdev;
 	struct mtk_scp *scp;
+	struct mtk_vcp *vcp;
 	enum mtk_vcodec_fw_use fw_use;
 };
 
@@ -48,5 +50,15 @@ mtk_vcodec_fw_scp_init(void *priv, enum mtk_vcodec_fw_use fw_use)
 	return ERR_PTR(-ENODEV);
 }
 #endif /* CONFIG_VIDEO_MEDIATEK_VCODEC_SCP */
+
+#if IS_ENABLED(CONFIG_VIDEO_MEDIATEK_VCODEC_VCP)
+struct mtk_vcodec_fw *mtk_vcodec_fw_vcp_init(void *priv, enum mtk_vcodec_fw_use fw_use);
+#else
+static inline struct mtk_vcodec_fw *
+mtk_vcodec_fw_vcp_init(void *priv, enum mtk_vcodec_fw_use fw_use)
+{
+	return ERR_PTR(-ENODEV);
+}
+#endif /* CONFIG_VIDEO_MEDIATEK_VCODEC_VCP */
 
 #endif /* _MTK_VCODEC_FW_PRIV_H_ */

@@ -2637,6 +2637,7 @@ immap_locked:
 			lruvec_stat_mod_folio(folio, NR_SHMEM,
 					      -folio_nr_pages(folio));
 		folio->mapping = NULL;
+		folio_mark_removed_from_cache(mapping, folio);
 		folio_clear_active(folio);
 		folio_clear_unevictable(folio);
 		folio_unlock(folio);
