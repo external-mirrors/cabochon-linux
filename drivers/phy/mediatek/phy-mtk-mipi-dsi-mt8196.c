@@ -7,6 +7,7 @@
  *                    AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
  */
 
+#include <linux/units.h>
 #include "phy-mtk-io.h"
 #include "phy-mtk-mipi-dsi.h"
 
@@ -39,8 +40,13 @@
 #define MIPITX_PLL_CON1		0x0030
 #define RG_DSI_PLL_EN			BIT(0)
 #define RG_DSI_PLL_POSDIV		GENMASK(10, 8)
+#define RG_DSI_PLL_FBSEL		BIT(13)
 #define MIPITX_PLL_CON2		0x0034
+#define RG_DSI_PLL_SDM_SSC_EN		BIT(1)
+#define RG_DSI_PLL_SDM_SSC_PRD		GENMASK(31, 16)
 #define MIPITX_PLL_CON3		0x0038
+#define RG_DSI_PLL_SDM_SSC_DELTA1	GENMASK(15, 0)
+#define RG_DSI_PLL_SDM_SSC_DELTA	GENMASK(31, 16)
 #define MIPITX_PLL_CON4		0x003c
 #define RG_DSI_PLL_IBIAS		GENMASK(11, 10)
 
@@ -52,6 +58,13 @@
 #define MIPITX_D1_SW_CTL_EN	0x045c
 #define MIPITX_D3_SW_CTL_EN	0x055c
 #define DSI_SW_CTL_EN			BIT(0)
+
+#define DSI_PHY_SSC_CLK_PRESCALER	64
+#define DSI_PHY_SSC_DEVIATION_TGT	5	/* 0.5% deviation */
+#define DSI_PHY_SSC_PERIOD_CYCLES	433
+#define DSI_PHY_SSC_AMPL_PRESCALER	(DSI_PHY_SSC_PERIOD_CYCLES *	\
+					 DSI_PHY_SSC_CLK_PRESCALER *	\
+					 HZ_PER_KHZ)
 
 #define DSI_PHY_XTAL_CLK_HZ		26000000
 #define DSI_PHY_PLL_MIN_RATE_HZ		125000000
@@ -65,7 +78,8 @@ static int mtk_mipi_tx_pll_enable(struct clk_hw *hw)
 	u32 pres = MIPITX_PRESERVED_MINI;
 	unsigned long long pcw_calc;
 	unsigned int txdiv, txdiv0;
-	u32 pcw;
+	u64 pcw_base, ssc_calc;
+	u32 ssc, pcw;
 
 	dev_dbg(mipi_tx->dev, "enable: %u bps\n", mipi_tx->data_rate);
 
@@ -91,7 +105,8 @@ static int mtk_mipi_tx_pll_enable(struct clk_hw *hw)
 		return -EINVAL;
 	}
 
-	pcw_calc = ((u64)(mipi_tx->data_rate / 2) * txdiv) << 24;
+	pcw_base = (u64)(mipi_tx->data_rate / 2) << 24;
+	pcw_calc = pcw_base * txdiv;
 	pcw_calc = div_u64(pcw_calc, DSI_PHY_XTAL_CLK_HZ);
 
 	if (pcw_calc > U32_MAX) {
@@ -116,6 +131,20 @@ static int mtk_mipi_tx_pll_enable(struct clk_hw *hw)
 	/* Enable the PLL and wait for the clock output to stabilize */
 	mtk_phy_set_bits(base + MIPITX_PLL_CON1, RG_DSI_PLL_EN);
 	udelay(30);
+
+	/* Calculate delta amplitude for the Spread Spectrum (SSC) */
+	ssc_calc = div_u64(pcw_base, txdiv) * DSI_PHY_SSC_DEVIATION_TGT;
+	ssc = div_u64(ssc_calc, DSI_PHY_SSC_AMPL_PRESCALER);
+
+	/* Set the same delta, this results in Center-Spread Spectrum */
+	mtk_phy_update_field(base + MIPITX_PLL_CON3, RG_DSI_PLL_SDM_SSC_DELTA1, ssc);
+	mtk_phy_update_field(base + MIPITX_PLL_CON3, RG_DSI_PLL_SDM_SSC_DELTA, ssc);
+
+	/* ...set the default oscillation period and enable SSC */
+	mtk_phy_update_field(base + MIPITX_PLL_CON2,
+			     RG_DSI_PLL_SDM_SSC_PRD, DSI_PHY_SSC_PERIOD_CYCLES);
+
+	mtk_phy_set_bits(base + MIPITX_PLL_CON2, RG_DSI_PLL_SDM_SSC_EN);
 
 	return 0;
 }
