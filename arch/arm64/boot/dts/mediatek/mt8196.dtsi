@@ -51,11 +51,11 @@
 		dither0 = &dither0;
 		dither1 = &dither1;
 		dither2 = &disp1_dither2;
-		dp-intf0 = &dp_intf0;
-		dp-intf1 = &dp_intf1;
 		dsc0 = &dsc0;
 		dsc1 = &dsc1;
 		dvo0 = &dvo0;
+		dvo1 = &dp_intf0;
+		dvo2 = &dp_intf1;
 		exdma2 = &ovl0_exdma2;
 		exdma3 = &ovl0_exdma3;
 		exdma4 = &ovl0_exdma4;
@@ -616,7 +616,7 @@
 
 		pio: pinctrl@1002d000 {
 			compatible = "mediatek,mt8196-pinctrl";
-			reg = <0 0x1002d000 0 0x1000>, <0 0x12000000 0 0x1000>,
+			reg = <0 0x1002d000 0 0x600>, <0 0x12000000 0 0x1000>,
 			      <0 0x12020000 0 0x1000>, <0 0x12040000 0 0x1000>,
 			      <0 0x12060000 0 0x1000>, <0 0x12820000 0 0x1000>,
 			      <0 0x12840000 0 0x1000>, <0 0x12860000 0 0x1000>,
@@ -640,6 +640,14 @@
 			mediatek,rsel-resistance-in-si-unit;
 		};
 
+		ipmux: mux-controller@1002d600 {
+			compatible = "reg-mux";
+			reg = <0 0x1002d600 0 0x4>;
+			#mux-control-cells = <1>;
+			mux-reg-masks = <0x0 0x80000>, /* 0: DP S-PHY External Lane Select */
+					<0x1 0x40000>; /* 1: DP S-PHY Lane Flip */
+		};
+
 		i2c5: i2c@120a0000 {
 			compatible = "mediatek,mt8196-i2c", "mediatek,mt8188-i2c";
 			reg = <0 0x120a0000 0 0x20000>, <0 0x16400000 0 0x10000>;
@@ -657,6 +665,16 @@
 			compatible = "mediatek,mt8196-imp-iic-wrap-e", "syscon";
 			reg = <0 0x120c0000 0 0x1000>;
 			#clock-cells = <1>;
+		};
+
+		dp_phy: phy@128b0000 {
+			compatible = "mediatek,mt8196-dp-phy";
+			reg = <0 0x128b0000 0 0x1500>;
+			#phy-cells = <0>;
+			mux-controls = <&ipmux 0>, <&ipmux 1>;
+			mux-control-names = "ext-lanes", "phy-flip";
+			power-domains = <&hpm_hwv MT8196_POWER_DOMAIN_DISP_DPTX_DORMANT>;
+			status = "disabled";
 		};
 
 		edp_phy: phy@130a0000 {
@@ -2280,6 +2298,8 @@
 
 				power-domain@MT8196_POWER_DOMAIN_DPTX {
 					reg = <MT8196_POWER_DOMAIN_DPTX>;
+					clocks = <&topckgen_gp2 CLK_TOP2_DP0>;
+					clock-names = "power";
 					#power-domain-cells = <0>;
 				};
 			};
@@ -2386,6 +2406,10 @@
 							mediatek,port-id = <1>;
 						};
 
+						dl_out_relay0_2: endpoint@1 {
+							reg = <1>;
+							mediatek,port-id = <2>;
+						};
 					};
 				};
 			};
@@ -2695,14 +2719,13 @@
 							remote-endpoint = <&dl_out_async0_1>;
 							mediatek,port-id = <1>;
 						};
-/*
+
 						dl_in_async1_2: endpoint@1 {
 							reg = <1>;
 							clocks = <&dispsys1 CLK_MM1_DISP_DLI_ASYNC22>;
-							//remote-endpoint = <&dsc0_in>;
 							mediatek,port-id = <2>;
 						};
-*/
+
 						dl_in_async1_3: endpoint@2 {
 							reg = <2>;
 							clocks = <&dispsys1 CLK_MM1_DISP_DLI_ASYNC23>;
@@ -2721,13 +2744,18 @@
 							clocks = <&dispsys1 CLK_MM1_DISPSYS1_CONFIG>;
 							mediatek,port-id = <1>;
 						};
-/*
+
 						dl_out_async1_1: endpoint@1 {
 							reg = <1>;
 							clocks = <&dispsys1 CLK_MM1_DISPSYS1_CONFIG>;
-							mediatek,port-id = <1>;
+							mediatek,port-id = <2>;
 						};
-*/
+
+						dl_out_async1_2: endpoint@2 {
+							reg = <1>;
+							clocks = <&dispsys1 CLK_MM1_DISPSYS1_CONFIG>;
+							mediatek,port-id = <3>;
+						};
 					};
 
 					port@2 {
@@ -2740,13 +2768,13 @@
 							remote-endpoint = <&dvo0_in>;
 							mediatek,port-id = <1>;
 						};
-/*
+
 						dl_in_relay1_2: endpoint@1 {
 							reg = <1>;
-							//remote-endpoint = <&dsc0_in>;
+							remote-endpoint = <&dsc0_in>;
 							mediatek,port-id = <2>;
 						};
-*/
+
 						dl_in_relay1_3: endpoint@2 {
 							reg = <2>;
 							remote-endpoint = <&dsc1_in>;
@@ -2762,11 +2790,14 @@
 						dl_out_relay1_1: endpoint@0 {
 							reg = <0>;
 						};
-/*
+
 						dl_out_relay1_2: endpoint@1 {
 							reg = <1>;
 						};
-*/
+
+						dl_out_relay1_3: endpoint@2 {
+							reg = <2>;
+						};
 					};
 				};
 			};
@@ -2779,7 +2810,7 @@
 			};
 
 			dp_intf0: displayport-interface@30000 {
-				compatible = "mediatek,mt8196-dp-intf";
+				compatible = "mediatek,mt8196-dp-dvo";
 				reg = <0 0x30000 0 0x1000>;
 				interrupts = <GIC_SPI 460 IRQ_TYPE_LEVEL_HIGH 0>;
 				clocks = <&topckgen_gp2 CLK_TOP2_DP0>,
@@ -2792,7 +2823,7 @@
 			};
 
 			dp_intf1: displayport-interface@40000 {
-				compatible = "mediatek,mt8196-dp-intf";
+				compatible = "mediatek,mt8196-dp-dvo";
 				reg = <0 0x40000 0 0x1000>;
 				interrupts = <GIC_SPI 464 IRQ_TYPE_LEVEL_HIGH 0>;
 				clocks = <&topckgen_gp2 CLK_TOP2_DP1>,
@@ -2894,7 +2925,7 @@
 
 			dsi1: dsi@a0000 {
 				compatible = "mediatek,mt8196-dsi";
-				reg = <0 0x90000 0 0x1000>;
+				reg = <0 0xa0000 0 0x1000>;
 				interrupts = <GIC_SPI 455 IRQ_TYPE_LEVEL_HIGH 0>;
 				clocks = <&dispsys1 CLK_MM1_DISP_DSI1>,
 					 <&dispsys1 CLK_MM1_MOD2>,
@@ -2909,8 +2940,8 @@
 
 			dsi2: dsi@b0000 {
 				compatible = "mediatek,mt8196-dsi";
-				reg = <0 0x90000 0 0x1000>;
-				interrupts = <GIC_SPI 455 IRQ_TYPE_LEVEL_HIGH 0>;
+				reg = <0 0xb0000 0 0x1000>;
+				interrupts = <GIC_SPI 456 IRQ_TYPE_LEVEL_HIGH 0>;
 				clocks = <&dispsys1 CLK_MM1_DISP_DSI2>,
 					 <&dispsys1 CLK_MM1_MOD3>,
 					 <&mipi_tx_config2>;
@@ -2988,12 +3019,11 @@
 					reg = <0>;
 					remote-endpoint = <&ovl0_resizer0_in>;
 				};
-/*
+
 				ovlsys0_ep_ext: endpoint@1 {
 					reg = <1>;
 					remote-endpoint = <&exdma0_6_in>;
 				};
-*/
 			};
 
 			direct-link@260 {
@@ -3218,7 +3248,7 @@
 
 						exdma0_6_in: endpoint@1 {
 							reg = <1>;
-							//remote-endpoint = <&ovlsys0_ep_ext>;
+							remote-endpoint = <&ovlsys0_ep_ext>;
 						};
 					};
 
@@ -3767,6 +3797,11 @@
 					reg = <2>;
 					remote-endpoint = <&ovl1_resizer0_in>;
 				};
+
+				ovlsys1_ep_fourth: endpoint@3 {
+					reg = <3>;
+					remote-endpoint = <&exdma1_6_in>;
+				};
 			};
 
 			direct-link@260 {
@@ -3822,6 +3857,13 @@
 							remote-endpoint = <&dl_in_async1_3>;
 							mediatek,port-id = <5>;
 						};
+
+						ovl_dl_out_async1_6: endpoint@3 {
+							reg = <3>;
+							clocks = <&ovlsys1 CLK_OVL1_DLO6>;
+							remote-endpoint = <&dl_in_async1_3>;
+							mediatek,port-id = <6>;
+						};
 					};
 
 					port@2 { /* IN relay */
@@ -3839,6 +3881,12 @@
 							reg = <2>;
 							remote-endpoint = <&outproc1_0_out>;
 							mediatek,port-id = <5>;
+						};
+
+						ovl_dl_out_relay1_6: endpoint@3 {
+							reg = <3>;
+							remote-endpoint = <&outproc1_1_out>;
+							mediatek,port-id = <6>;
 						};
 					};
 				};
@@ -4009,7 +4057,36 @@
 				power-domains = <&hpm_hwv MT8196_POWER_DOMAIN_OVL1_DORMANT>;
 				trigger-sources = <&ovl1_mutex 6>;
 				mediatek,larb = <&smi_larb35>;
+
+				ports {
+					#address-cells = <1>;
+					#size-cells = <0>;
+
+					port@0 {
+						#address-cells = <1>;
+						#size-cells = <0>;
+						reg = <0>;
+
+						exdma1_6_in: endpoint@3 {
+							reg = <3>;
+							remote-endpoint = <&ovlsys1_ep_fourth>;
+						};
+					};
+
+					port@1 {
+						#address-cells = <1>;
+						#size-cells = <0>;
+						reg = <1>;
+
+						exdma1_6_out: endpoint@3 {
+							reg = <3>;
+							remote-endpoint = <&blender1_5_in>;
+						};
+					};
+				};
 			};
+
+
 
 			ovl1_exdma7: dma-controller@a0000 {
 				compatible = "mediatek,mt8196-disp-exdma";
@@ -4019,6 +4096,33 @@
 				power-domains = <&hpm_hwv MT8196_POWER_DOMAIN_OVL1_DORMANT>;
 				trigger-sources = <&ovl1_mutex 7>;
 				mediatek,larb = <&smi_larb34>;
+
+				ports {
+					#address-cells = <1>;
+					#size-cells = <0>;
+
+					port@0 {
+						#address-cells = <1>;
+						#size-cells = <0>;
+						reg = <0>;
+
+						exdma1_7_in: endpoint@3 {
+							reg = <3>;
+							remote-endpoint = <&blender1_5_out>;
+						};
+					};
+
+					port@1 {
+						#address-cells = <1>;
+						#size-cells = <0>;
+						reg = <1>;
+
+						exdma1_7_out: endpoint@3 {
+							reg = <3>;
+							remote-endpoint = <&blender1_6_in>;
+						};
+					};
+				};
 			};
 
 			ovl1_exdma8: dma-controller@b0000 {
@@ -4029,7 +4133,35 @@
 				power-domains = <&hpm_hwv MT8196_POWER_DOMAIN_OVL1_DORMANT>;
 				trigger-sources = <&ovl1_mutex 8>;
 				mediatek,larb = <&smi_larb37>;
+
+				ports {
+					#address-cells = <1>;
+					#size-cells = <0>;
+
+					port@0 {
+						#address-cells = <1>;
+						#size-cells = <0>;
+						reg = <0>;
+
+						exdma1_8_in: endpoint@3 {
+							reg = <3>;
+							remote-endpoint = <&blender1_6_out>;
+						};
+					};
+
+					port@1 {
+						#address-cells = <1>;
+						#size-cells = <0>;
+						reg = <1>;
+
+						exdma1_8_out: endpoint@3 {
+							reg = <3>;
+							remote-endpoint = <&blender1_7_in>;
+						};
+					};
+				};
 			};
+
 
 			ovl1_exdma9: dma-controller@c0000 {
 				compatible = "mediatek,mt8196-disp-exdma";
@@ -4039,6 +4171,33 @@
 				power-domains = <&hpm_hwv MT8196_POWER_DOMAIN_OVL1_DORMANT>;
 				trigger-sources = <&ovl1_mutex 9>;
 				mediatek,larb = <&smi_larb36>;
+
+				ports {
+					#address-cells = <1>;
+					#size-cells = <0>;
+
+					port@0 {
+						#address-cells = <1>;
+						#size-cells = <0>;
+						reg = <0>;
+
+						exdma1_9_in: endpoint@3 {
+							reg = <3>;
+							remote-endpoint = <&blender1_7_out>;
+						};
+					};
+
+					port@1 {
+						#address-cells = <1>;
+						#size-cells = <0>;
+						reg = <1>;
+
+						exdma1_9_out: endpoint@3 {
+							reg = <3>;
+							remote-endpoint = <&blender1_8_in>;
+						};
+					};
+				};
 			};
 
 			ovl1_blender0: blender@d0000 {
@@ -4195,6 +4354,33 @@
 				clocks = <&ovlsys1 CLK_OVL1_OVL_BLENDER5>;
 				power-domains = <&hpm_hwv MT8196_POWER_DOMAIN_OVL1_DORMANT>;
 				trigger-sources = <&ovl1_mutex 15>;
+
+				ports {
+					#address-cells = <1>;
+					#size-cells = <0>;
+
+					port@0 {
+						#address-cells = <1>;
+						#size-cells = <0>;
+						reg = <0>;
+
+						blender1_5_in: endpoint@3 {
+							reg = <3>;
+							remote-endpoint = <&exdma1_6_out>;
+						};
+					};
+
+					port@1 {
+						#address-cells = <1>;
+						#size-cells = <0>;
+						reg = <1>;
+
+						blender1_5_out: endpoint@3 {
+							reg = <3>;
+							remote-endpoint = <&exdma1_7_in>;
+						};
+					};
+				};
 			};
 
 			ovl1_blender6: blender@130000 {
@@ -4203,6 +4389,33 @@
 				clocks = <&ovlsys1 CLK_OVL1_OVL_BLENDER6>;
 				power-domains = <&hpm_hwv MT8196_POWER_DOMAIN_OVL1_DORMANT>;
 				trigger-sources = <&ovl1_mutex 16>;
+
+				ports {
+					#address-cells = <1>;
+					#size-cells = <0>;
+
+					port@0 {
+						#address-cells = <1>;
+						#size-cells = <0>;
+						reg = <0>;
+
+						blender1_6_in: endpoint@3 {
+							reg = <3>;
+							remote-endpoint = <&exdma1_7_out>;
+						};
+					};
+
+					port@1 {
+						#address-cells = <1>;
+						#size-cells = <0>;
+						reg = <1>;
+
+						blender1_6_out: endpoint@3 {
+							reg = <3>;
+							remote-endpoint = <&exdma1_8_in>;
+						};
+					};
+				};
 			};
 
 			ovl1_blender7: blender@140000 {
@@ -4211,6 +4424,33 @@
 				clocks = <&ovlsys1 CLK_OVL1_OVL_BLENDER7>;
 				power-domains = <&hpm_hwv MT8196_POWER_DOMAIN_OVL1_DORMANT>;
 				trigger-sources = <&ovl1_mutex 17>;
+
+				ports {
+					#address-cells = <1>;
+					#size-cells = <0>;
+
+					port@0 {
+						#address-cells = <1>;
+						#size-cells = <0>;
+						reg = <0>;
+
+						blender1_7_in: endpoint@3 {
+							reg = <3>;
+							remote-endpoint = <&exdma1_8_out>;
+						};
+					};
+
+					port@1 {
+						#address-cells = <1>;
+						#size-cells = <0>;
+						reg = <1>;
+
+						blender1_7_out: endpoint@3 {
+							reg = <3>;
+							remote-endpoint = <&exdma1_9_in>;
+						};
+					};
+				};
 			};
 
 			ovl1_blender8: blender@150000 {
@@ -4219,6 +4459,33 @@
 				clocks = <&ovlsys1 CLK_OVL1_OVL_BLENDER8>;
 				power-domains = <&hpm_hwv MT8196_POWER_DOMAIN_OVL1_DORMANT>;
 				trigger-sources = <&ovl1_mutex 18>;
+
+				ports {
+					#address-cells = <1>;
+					#size-cells = <0>;
+
+					port@0 {
+						#address-cells = <1>;
+						#size-cells = <0>;
+						reg = <0>;
+
+						blender1_8_in: endpoint@3 {
+							reg = <3>;
+							remote-endpoint = <&exdma1_9_out>;
+						};
+					};
+
+					port@1 {
+						#address-cells = <1>;
+						#size-cells = <0>;
+						reg = <1>;
+
+						blender1_8_out: endpoint@3 {
+							reg = <3>;
+							remote-endpoint = <&outproc1_1_in>;
+						};
+					};
+				};
 			};
 
 			ovl1_blender9: blender@160000 {
@@ -4269,7 +4536,35 @@
 				reg = <0 0x180000 0 0x1000>;
 				clocks = <&ovlsys1 CLK_OVL1_OVL_OUTPROC0>;
 				trigger-sources = <&ovl1_mutex 21>;
+
+				ports {
+					#address-cells = <1>;
+					#size-cells = <0>;
+
+					port@0 {
+						#address-cells = <1>;
+						#size-cells = <0>;
+						reg = <0>;
+
+						outproc1_1_in: endpoint@3 {
+							reg = <3>;
+							remote-endpoint = <&blender1_8_out>;
+						};
+					};
+
+					port@1 {
+						#address-cells = <1>;
+						#size-cells = <0>;
+						reg = <1>;
+
+						outproc1_1_out: endpoint@3 {
+							reg = <3>;
+							remote-endpoint = <&ovl_dl_out_relay1_6>;
+						};
+					};
+				};
 			};
+
 
 			ovl1_outproc2: outproc@190000 {
 				compatible = "mediatek,mt8196-disp-outproc";
@@ -4403,6 +4698,16 @@
 			reg = <0 0x3e800000 0 0x1000>;
 			mediatek,hardware-voter = <&hfrpsys_hwv>;
 			#clock-cells = <1>;
+		};
+
+		dp_tx: displayport-controller@3ec02000 {
+			compatible = "mediatek,mt8196-dp-tx";
+			reg = <0 0x3ec02000 0 0x3000>,  <0 0x3ec00000 0 0x1000>;
+			phys = <&dp_phy>;
+			power-domains = <&hpm MT8196_POWER_DOMAIN_DPTX>;
+			max-linkrate-mhz = <8100>;
+			interrupts = <GIC_SPI 447 IRQ_TYPE_LEVEL_HIGH 0>;
+			status = "disabled";
 		};
 
 		edp_tx: displayport-controller@3ec42000 {
