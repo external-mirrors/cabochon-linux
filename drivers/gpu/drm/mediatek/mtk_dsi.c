@@ -271,6 +271,7 @@ struct mtk_phy_timing {
 };
 
 struct phy;
+struct mtk_dsi;
 
 struct mtk_dsi_driver_data {
 	const u16 *reg_main;
@@ -285,6 +286,8 @@ struct mtk_dsi_driver_data {
 	bool has_size_ctl;
 	bool cmdq_long_packet_ctl;
 	bool support_per_frame_lp;
+
+	void (*dphy_timing_config)(struct mtk_dsi *dsi);
 };
 
 struct mtk_dsi {
@@ -1150,7 +1153,7 @@ static int mtk_dsi_poweron(struct mtk_dsi *dsi)
 		       dsi->regs + data->reg_adv[DSI_SHADOW_DEBUG]);
 
 	mtk_dsi_reset_engine(dsi);
-	mtk_dsi_phy_timconfig(dsi);
+	data->dphy_timing_config(dsi);
 
 	/* Setup HW FIFO if DSI supports QoS Anti-Latency buffers */
 	if (data->dsi_sram_bytes && data->reg_qos)
@@ -1801,18 +1804,21 @@ static void mtk_dsi_remove(struct platform_device *pdev)
 static const struct mtk_dsi_driver_data mt8173_dsi_driver_data = {
 	.reg_main = mtk_dsi_regs_main_v1,
 	.reg_adv = mtk_dsi_regs_mt8173,
+	.dphy_timing_config = mtk_dsi_phy_timconfig,
 	.max_link_rate_mbps = 1500,
 };
 
 static const struct mtk_dsi_driver_data mt2701_dsi_driver_data = {
 	.reg_main = mtk_dsi_regs_main_v1,
 	.reg_adv = mtk_dsi_regs_mt2701,
+	.dphy_timing_config = mtk_dsi_phy_timconfig,
 	.max_link_rate_mbps = 1500,
 };
 
 static const struct mtk_dsi_driver_data mt8183_dsi_driver_data = {
 	.reg_main = mtk_dsi_regs_main_v1,
 	.reg_adv = mtk_dsi_regs_mt8183,
+	.dphy_timing_config = mtk_dsi_phy_timconfig,
 	.max_link_rate_mbps = 1500,
 	.has_size_ctl = true,
 };
@@ -1820,6 +1826,7 @@ static const struct mtk_dsi_driver_data mt8183_dsi_driver_data = {
 static const struct mtk_dsi_driver_data mt8186_dsi_driver_data = {
 	.reg_main = mtk_dsi_regs_main_v1,
 	.reg_adv = mtk_dsi_regs_mt8186,
+	.dphy_timing_config = mtk_dsi_phy_timconfig,
 	.max_link_rate_mbps = 1500,
 	.has_size_ctl = true,
 };
@@ -1827,6 +1834,7 @@ static const struct mtk_dsi_driver_data mt8186_dsi_driver_data = {
 static const struct mtk_dsi_driver_data mt8188_dsi_driver_data = {
 	.reg_main = mtk_dsi_regs_main_v1,
 	.reg_adv = mtk_dsi_regs_mt8186,
+	.dphy_timing_config = mtk_dsi_phy_timconfig,
 	.max_link_rate_mbps = 1500,
 	.has_size_ctl = true,
 	.cmdq_long_packet_ctl = true,
@@ -1836,6 +1844,7 @@ static const struct mtk_dsi_driver_data mt8188_dsi_driver_data = {
 static const struct mtk_dsi_driver_data mt8189_dsi_driver_data = {
 	.reg_main = mtk_dsi_regs_main_v1,
 	.reg_adv = mtk_dsi_regs_mt8186,
+	.dphy_timing_config = mtk_dsi_phy_timconfig,
 	.max_link_rate_mbps = 2500,
 	.has_size_ctl = true,
 	.cmdq_long_packet_ctl = true,
@@ -1846,6 +1855,7 @@ static const struct mtk_dsi_driver_data mt8196_dsi_driver_data = {
 	.reg_main = mtk_dsi_regs_main_v2,
 	.reg_qos = mtk_dsi_regs_qos_v2,
 	.reg_adv = mtk_dsi_regs_mt8196,
+	.dphy_timing_config = mtk_dsi_phy_timconfig,
 	.max_link_rate_mbps = 2000,
 	.dsi_sram_bytes = 32,
 	.pixels_per_iter = 2,
