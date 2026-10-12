@@ -14,6 +14,7 @@
 #include <linux/delay.h>
 #include <linux/io.h>
 #include <linux/mfd/syscon.h>
+#include <linux/mux/consumer.h>
 #include <linux/nvmem-consumer.h>
 #include <linux/of.h>
 #include <linux/phy/phy.h>
@@ -32,12 +33,28 @@
 /* DP_PHYA_GLB_DPAUX_TX */
 #define CKM_PT0_CKTX_IMPSEL		GENMASK(23, 20)
 
+/* DP_PHY_LANE_TOP */
+#define XTP_LN_TX_READ_SEL		GENMASK(13, 12)
+#  define ANA_LN_TFIFO_LOCAL_1LANE	0
+#  define ANA_LN_TFIFO_TXD_AB_2LANE	1
+#  define ANA_LN_TFIFO_TXD_C_4LANE	2
+#  define ANA_LN_TFIFO_TXD_C_EXT_8LANE	3
+
 /* DP_PHYA_LAN_LANE_TX_0 */
 #define XTP_LN_TX_IMPSEL_PMOS		GENMASK(15, 12)
 #define XTP_LN_TX_IMPSEL_NMOS		GENMASK(19, 16)
 
-/* DP_PHYA_GLB_FORCE_CTRL_1 */
-#define CKM_CKTX0_EN_FORCE_MODE		BIT(10)
+/* DP_PHYA_LAN_LANE_TX_3 */
+#define XTP_LN_DATA_EN_EXT_SEL		BIT(0)
+#define XTP_LN_LANE_ACTIVATE		BIT(6)
+
+/* DP_PHYD_PLL_CTL_0 */
+#define PHYD_DIG_FORCE_PWR_STATE_EN	BIT(0)
+#define PHYD_DIG_FORCE_PWR_STATE_VAL	GENMASK(2, 1)
+#  define PHYD_PWR_OFF			0
+#  define PHYD_PWR_CKM_EN		1
+#  define PHYD_PWR_CKM_SPLL_EN		2
+#  define PHYD_PWR_CKM_TXPLL_EN		3
 
 /* DP_PHYD_PLL_CTL_1 */
 #define TPLL_SSC_EN			BIT(3)
@@ -65,6 +82,10 @@
 /* DP_PHYD_TX_CTL_0 */
 #define PHYD_TX_LN_EN			GENMASK(7, 4)
 #define PHYD_TX_LN_EN_V2		GENMASK(3, 0)
+
+/* DP_PHYD_GLB_STATUS_2 */
+#define PHYD_STATUS_BIAS_READY		BIT(0)
+#define PHYD_STATUS_SPLL_READY		BIT(1)
 
 /* DP_PHYD_DRIVING_FORCE */
 #define PHYD_DP_TX_FORCE_VOLT_SWING_EN	BIT(0)
@@ -151,7 +172,9 @@ enum mtk_dp_phya_ana_glb_regidx {
 };
 
 enum mtk_dp_phya_ana_lane_regidx {
+	DP_PHYA_LAN_LANE_TOP,
 	DP_PHYA_LAN_LANE_TX_0,
+	DP_PHYA_LAN_LANE_TX_3,
 	DP_PHYA_LAN_MAX
 };
 
@@ -168,6 +191,7 @@ enum mtk_dp_phyd_dig_glb_regidx {
 	DP_PHYD_BIT_RATE,
 	DP_PHYD_AUX_RX_CTL,
 	DP_PHYD_TX_CTL_0,
+	DP_PHYD_GLB_STATUS_2,
 	DP_PHYD_GLOBAL_MAX
 };
 
@@ -188,6 +212,7 @@ static const u8 mt8195_phy_ana_glb_regs[DP_PHYA_GLOBAL_MAX] = {
 };
 
 static const u8 mt8195_phy_ana_lane_regs[DP_PHYA_LAN_MAX] = {
+	[DP_PHYA_LAN_LANE_TOP] = 0x0,
 	[DP_PHYA_LAN_LANE_TX_0] = 0x4,
 };
 
@@ -208,6 +233,7 @@ static const u8 mt8195_phy_dig_glb_regs[DP_PHYD_GLOBAL_MAX] = {
 	[DP_PHYD_BIT_RATE] = 0x3c,
 	[DP_PHYD_AUX_RX_CTL] = 0x40,
 	[DP_PHYD_TX_CTL_0] = 0x44,
+	[DP_PHYD_GLB_STATUS_2] = 0x88,
 };
 
 static const u8 mt8196_phy_dig_glb_regs[DP_PHYD_GLOBAL_MAX] = {
@@ -258,6 +284,12 @@ struct mtk_dp_phya_imp_sel {
  * @ana_bias_r:     Internal resistance "R" Selection Settings (global)
  * @ana_cktx_imp:   TX Clock Impedance Selection Settings (global)
  * @ana_lanes_imp:  TX Impedance Selection Settings (for all lanes)
+ * @sel_ext_lanes:  Connects external lanes to this PHY's TX FIFO
+ * @flip_lanes:     PHY Lane Flipping - flips lanes order from 0123 to 3210
+ * @force_power:    Force PHY internal power states
+ * @ana_lanes_conf: Configuration for local/master GLB, lane activation, etc.
+ * @num_ana_lanes_conf: Number of configuration overrides for analog PHY lanes
+ * @ana_lanes_conf_mask: Register mask for analog PHY lanes configuration
  * @driving_params: Voltage Swing and Pre-Emphasis settings (for all lanes)
  */
 struct mtk_dp_phy_pdata {
@@ -283,12 +315,20 @@ struct mtk_dp_phy_pdata {
 	u8 ana_bias_r;
 	u8 ana_cktx_imp;
 	struct mtk_dp_phya_imp_sel ana_lanes_imp;
+	bool sel_ext_lanes;
+	bool flip_lanes;
+	bool force_power;
+	u8 ana_lanes_conf[MTK_DP_PHY_MAX_LANES];
+	u8 num_ana_lanes_conf;
+	u8 ana_lanes_conf_mask;
 	u32 driving_params[PHYD_DIG_NUM_DRV_PARA_REGS];
 };
 
 struct mtk_dp_phy {
 	struct device *dev;
 	struct regmap *regmap;
+	struct mux_control *lane_mux;
+	struct mux_control *flip_mux;
 	const struct mtk_dp_phy_pdata *pdata;
 
 	u8 ana_bias_r;
@@ -296,22 +336,26 @@ struct mtk_dp_phy {
 	struct mtk_dp_phya_imp_sel ana_impsel[MTK_DP_PHY_MAX_LANES];
 };
 
-static void mtk_dp_phy_set_analog_calibration_params(struct mtk_dp_phy *dp_phy)
+static int mtk_dp_phy_set_analog_calibration_params(struct mtk_dp_phy *dp_phy)
 {
 	const struct mtk_dp_phy_pdata *pdata = dp_phy->pdata;
 	const u8 *regs_ana_glb = pdata->regs_ana_glb;
 	const u8 *regs_ana_lane = pdata->regs_ana_lane;
-	int i;
+	int i, ret;
 
-	regmap_update_bits(dp_phy->regmap,
-			   pdata->off_ana_glb + regs_ana_glb[DP_PHYA_GLB_BIAS_GEN_0],
-			   XTP_GLB_BIAS_INT_R_CTRL,
-			   FIELD_PREP(XTP_GLB_BIAS_INT_R_CTRL, dp_phy->ana_bias_r));
+	ret = regmap_update_bits(dp_phy->regmap,
+				 pdata->off_ana_glb + regs_ana_glb[DP_PHYA_GLB_BIAS_GEN_0],
+				 XTP_GLB_BIAS_INT_R_CTRL,
+				 FIELD_PREP(XTP_GLB_BIAS_INT_R_CTRL, dp_phy->ana_bias_r));
+	if (ret)
+		return ret;
 
-	regmap_update_bits(dp_phy->regmap,
-			   pdata->off_ana_glb + regs_ana_glb[DP_PHYA_GLB_DPAUX_TX],
-			   CKM_PT0_CKTX_IMPSEL,
-			   FIELD_PREP(CKM_PT0_CKTX_IMPSEL, dp_phy->ana_cktx_imp));
+	ret = regmap_update_bits(dp_phy->regmap,
+				 pdata->off_ana_glb + regs_ana_glb[DP_PHYA_GLB_DPAUX_TX],
+				 CKM_PT0_CKTX_IMPSEL,
+				 FIELD_PREP(CKM_PT0_CKTX_IMPSEL, dp_phy->ana_cktx_imp));
+	if (ret)
+		return ret;
 
 	for (i = 0; i < MTK_DP_PHY_MAX_LANES; i++) {
 		struct mtk_dp_phya_imp_sel *ana_imp = &dp_phy->ana_impsel[i];
@@ -319,35 +363,117 @@ static void mtk_dp_phy_set_analog_calibration_params(struct mtk_dp_phy *dp_phy)
 			  FIELD_PREP(XTP_LN_TX_IMPSEL_NMOS, ana_imp->nmos);
 		u32 off_ana_lane = pdata->off_ana_lane[i];
 
-		regmap_update_bits(dp_phy->regmap,
-				   off_ana_lane + regs_ana_lane[DP_PHYA_LAN_LANE_TX_0],
-				   XTP_LN_TX_IMPSEL_PMOS | XTP_LN_TX_IMPSEL_NMOS, val);
+		ret = regmap_update_bits(dp_phy->regmap,
+					 off_ana_lane + regs_ana_lane[DP_PHYA_LAN_LANE_TX_0],
+					 XTP_LN_TX_IMPSEL_PMOS | XTP_LN_TX_IMPSEL_NMOS, val);
+		if (ret)
+			return ret;
 	}
+	return 0;
 }
 
-static void mtk_dp_phy_set_digital_drv_params(struct mtk_dp_phy *dp_phy)
+static int mtk_dp_phy_set_digital_drv_params(struct mtk_dp_phy *dp_phy)
 {
 	const struct mtk_dp_phy_pdata *pdata = dp_phy->pdata;
 	const u32 reg = pdata->regs_dig_lane[DP_PHYD_LAN_DRIVING_PARAM_0];
-	int i;
+	int i, ret;
 
 	/*
 	 * Assume that all lanes need the same driving parameters: this
 	 * will bulk write from DRIVING_PARAM_0 to DRIVING_PARAM_8 on
 	 * all lanes (a grand total of [9 * num_lanes] 32-bit writes)
 	 */
-	for (i = 0; i < MTK_DP_PHY_MAX_LANES; i++)
-		regmap_bulk_write(dp_phy->regmap, pdata->off_dig_lane[i] + reg,
-				  pdata->driving_params,
-				  ARRAY_SIZE(pdata->driving_params));
+	for (i = 0; i < MTK_DP_PHY_MAX_LANES; i++) {
+		ret = regmap_bulk_write(dp_phy->regmap,
+					pdata->off_dig_lane[i] + reg,
+					pdata->driving_params,
+					ARRAY_SIZE(pdata->driving_params));
+		if (ret)
+			return ret;
+	};
+	return 0;
 }
 
 static int mtk_dp_phy_init(struct phy *phy)
 {
 	struct mtk_dp_phy *dp_phy = phy_get_drvdata(phy);
+	struct device *dev = &phy->dev;
+	int ret;
 
-	mtk_dp_phy_set_digital_drv_params(dp_phy);
-	mtk_dp_phy_set_analog_calibration_params(dp_phy);
+	ret = mtk_dp_phy_set_digital_drv_params(dp_phy);
+	if (ret) {
+		dev_err(dev, "Cannot set driving params\n");
+		return ret;
+	}
+
+	ret = mtk_dp_phy_set_analog_calibration_params(dp_phy);
+	if (ret) {
+		dev_err(dev, "Cannot set analog calibration\n");
+		return ret;
+	}
+
+	return 0;
+}
+
+static int mtk_dp_phy_ana_lanes_configure(struct mtk_dp_phy *dp_phy, unsigned int lanes)
+{
+	const struct mtk_dp_phy_pdata *pdata = dp_phy->pdata;
+	const u32 reg_ana_tx_ctl = pdata->regs_ana_lane[DP_PHYA_LAN_LANE_TX_3];
+	const u16 *off_ana_lane = pdata->off_ana_lane;
+	unsigned int num_lane_configs;
+	int i, ret;
+
+	/* This PHY may need to connect external lanes to itself */
+	if (pdata->sel_ext_lanes && lanes > 2) {
+		const u32 reg_ana_top = pdata->regs_ana_lane[DP_PHYA_LAN_LANE_TOP];
+
+		if (dp_phy->lane_mux) {
+			ret = mux_control_select(dp_phy->lane_mux, 1);
+			if (ret)
+				return ret;
+		}
+
+		for (i = 0; i < lanes; i++) {
+			ret = regmap_update_bits(dp_phy->regmap, off_ana_lane[i] + reg_ana_top,
+						 XTP_LN_TX_READ_SEL, ANA_LN_TFIFO_TXD_C_EXT_8LANE);
+			/* On failure, reverting settings is not necessary */
+			if (ret)
+				return ret;
+		}
+	}
+
+	num_lane_configs = min(lanes, pdata->num_ana_lanes_conf);
+
+	/* Set the configuration overrides for S-PHY v3 Analog part */
+	for (i = 0; i < num_lane_configs; i++) {
+		ret = regmap_update_bits(dp_phy->regmap, off_ana_lane[i] + reg_ana_tx_ctl,
+					 pdata->ana_lanes_conf_mask, pdata->ana_lanes_conf[i]);
+		if (ret)
+			return ret;
+	}
+
+	/* Make sure that all of the used lanes are activated */
+	for (i = 0; i < lanes; i++) {
+		ret = regmap_set_bits(dp_phy->regmap, off_ana_lane[i] + reg_ana_tx_ctl,
+				      XTP_LN_LANE_ACTIVATE);
+		if (ret)
+			return ret;
+	}
+
+	/* If required, flip lanes order after configuring and activating */
+	if (pdata->flip_lanes) {
+		ret = mux_control_select(dp_phy->flip_mux, 1);
+		if (ret)
+			return ret;
+	}
+
+	/* ...and deactivate the unused ones to improve power efficiency */
+	for (; i < MTK_DP_PHY_MAX_LANES; i++) {
+		ret = regmap_clear_bits(dp_phy->regmap, off_ana_lane[i] + reg_ana_tx_ctl,
+					XTP_LN_LANE_ACTIVATE);
+		if (ret)
+			return ret;
+	}
 
 	return 0;
 }
@@ -357,6 +483,7 @@ static int mtk_dp_phy_configure(struct phy *phy, union phy_configure_opts *opts)
 	struct mtk_dp_phy *dp_phy = phy_get_drvdata(phy);
 	const struct mtk_dp_phy_pdata *pdata = dp_phy->pdata;
 	u32 val;
+	int ret;
 	int i;
 
 	if (opts->dp.set_rate) {
@@ -388,6 +515,13 @@ static int mtk_dp_phy_configure(struct phy *phy, union phy_configure_opts *opts)
 
 	if (opts->dp.set_lanes) {
 		const u32 reg_dig_tx_ctl = pdata->regs_dig_glb[DP_PHYD_TX_CTL_0];
+
+		/* Override default S-PHY v3 Analog lanes configuration if present */
+		if (pdata->num_ana_lanes_conf) {
+			ret = mtk_dp_phy_ana_lanes_configure(dp_phy, opts->dp.lanes);
+			if (ret)
+				return ret;
+		}
 
 		val = 0;
 		for (i = 0; i < opts->dp.lanes; i++)
@@ -428,23 +562,69 @@ static int mtk_dp_phy_configure(struct phy *phy, union phy_configure_opts *opts)
 	return 0;
 }
 
+static int mtk_dp_phy_poll_pwr_bias(struct mtk_dp_phy *dp_phy)
+{
+	const struct mtk_dp_phy_pdata *pdata = dp_phy->pdata;
+	const u8 *regs_dig = pdata->regs_dig_glb;
+	u32 status;
+	int ret;
+
+	ret = regmap_read_poll_timeout(dp_phy->regmap,
+				       pdata->off_dig_glb + regs_dig[DP_PHYD_GLB_STATUS_2],
+				       status, status & PHYD_STATUS_BIAS_READY,
+				       0, 1000);
+	if (ret)
+		dev_err(dp_phy->dev, "PHY Digital: BIAS cannot start!\n");
+
+	return ret;
+}
+
 static int mtk_dp_phy_power_on(struct phy *phy)
 {
 	struct mtk_dp_phy *dp_phy = phy_get_drvdata(phy);
 	const struct mtk_dp_phy_pdata *pdata = dp_phy->pdata;
 	const u8 *regs_dig = pdata->regs_dig_glb;
 	const u8 *regs_ana = pdata->regs_ana_glb;
+	int ret;
+
+	if (pdata->force_power) {
+		/* Enable forced power states */
+		ret = regmap_set_bits(dp_phy->regmap,
+				      pdata->off_dig_glb + regs_dig[DP_PHYD_PLL_CTL_0],
+				      PHYD_DIG_FORCE_PWR_STATE_EN);
+		if (ret)
+			return ret;
+
+		/* Enable Global CKM and TXPLL */
+		ret = regmap_update_bits(dp_phy->regmap,
+					 pdata->off_dig_glb + regs_dig[DP_PHYD_PLL_CTL_0],
+					 PHYD_DIG_FORCE_PWR_STATE_VAL,
+					 PHYD_PWR_CKM_TXPLL_EN);
+		if (ret)
+			return ret;
+
+		/* Wait until BIAS is ready */
+		mtk_dp_phy_poll_pwr_bias(dp_phy);
+	}
 
 	/* Enable AUX Channel with RX De-Glitch and input clock detection */
-	regmap_write(dp_phy->regmap,
-		     pdata->off_dig_glb + regs_dig[DP_PHYD_AUX_RX_CTL],
-		     PHYD_DIG_DPAUX_RX_EN |
-		     PHYD_DIG_XTP_GLB_CKDET_EN |
-		     PHYD_DIG_DPAUX_RX_DEGLITCH_EN);
+	ret = regmap_write(dp_phy->regmap,
+			   pdata->off_dig_glb + regs_dig[DP_PHYD_AUX_RX_CTL],
+			   PHYD_DIG_DPAUX_RX_EN |
+			   PHYD_DIG_XTP_GLB_CKDET_EN |
+			   PHYD_DIG_DPAUX_RX_DEGLITCH_EN);
+	if (ret)
+		return ret;
 
-	regmap_clear_bits(dp_phy->regmap,
-			  pdata->off_ana_glb + regs_ana[DP_PHYA_GLB_FORCE_CTRL_1],
-			  CKM_CKTX0_EN_FORCE_MODE);
+	ret = regmap_clear_bits(dp_phy->regmap,
+				pdata->off_ana_glb + regs_ana[DP_PHYA_GLB_FORCE_CTRL_1],
+				CKM_CKTX0_EN_FORCE_MODE);
+	if (ret) {
+		/* Shut down AUX channel */
+		regmap_write(dp_phy->regmap,
+			     pdata->off_dig_glb + regs_dig[DP_PHYD_AUX_RX_CTL], 0);
+		return ret;
+	}
 
 	return 0;
 }
@@ -453,10 +633,14 @@ static int mtk_dp_phy_disable_all_lanes(struct mtk_dp_phy *dp_phy)
 {
 	const struct mtk_dp_phy_pdata *pdata = dp_phy->pdata;
 	const u8 *regs = pdata->regs_dig_glb;
+	int ret;
 	u32 val;
 
+	ret = regmap_read(dp_phy->regmap, pdata->off_dig_glb + regs[DP_PHYD_TX_CTL_0], &val);
+	if (ret)
+		return ret;
+
 	/* Get mask of currently enabled lane */
-	regmap_read(dp_phy->regmap, pdata->off_dig_glb + regs[DP_PHYD_TX_CTL_0], &val);
 	val = field_get(pdata->mask_dig_tx_ln, val);
 	if (val == 0)
 		return 0;
@@ -466,10 +650,22 @@ static int mtk_dp_phy_disable_all_lanes(struct mtk_dp_phy *dp_phy)
 		u32 lane_num = fls(val) - 1;
 		val &= ~BIT(lane_num);
 
-		regmap_clear_bits(dp_phy->regmap,
-				  pdata->off_dig_glb + regs[DP_PHYD_TX_CTL_0],
-				  field_prep(pdata->mask_dig_tx_ln, BIT(lane_num)));
+		ret = regmap_clear_bits(dp_phy->regmap,
+					pdata->off_dig_glb + regs[DP_PHYD_TX_CTL_0],
+					field_prep(pdata->mask_dig_tx_ln, BIT(lane_num)));
+		if (ret)
+			return ret;
 	} while (val);
+
+	if (pdata->force_power) {
+		/* Power off SPLL and TxPLL, but leave CKM on */
+		ret = regmap_update_bits(dp_phy->regmap,
+					 pdata->off_dig_glb + regs[DP_PHYD_PLL_CTL_0],
+					 PHYD_DIG_FORCE_PWR_STATE_VAL,
+					 PHYD_PWR_CKM_EN);
+		if (ret)
+			return ret;
+	}
 
 	return 0;
 }
@@ -480,21 +676,31 @@ static int mtk_dp_phy_power_off(struct phy *phy)
 	const struct mtk_dp_phy_pdata *pdata = dp_phy->pdata;
 	const u8 *regs_dig = pdata->regs_dig_glb;
 	const u8 *regs_ana = pdata->regs_ana_glb;
-	int ret;
+	int ret_cktx, ret_aux, ret;
 
-	regmap_set_bits(dp_phy->regmap,
-			pdata->off_ana_glb + regs_ana[DP_PHYA_GLB_FORCE_CTRL_1],
-			CKM_CKTX0_EN_FORCE_MODE);
+	ret_cktx = regmap_set_bits(dp_phy->regmap,
+				   pdata->off_ana_glb + regs_ana[DP_PHYA_GLB_FORCE_CTRL_1],
+				   CKM_CKTX0_EN_FORCE_MODE);
+	if (ret_cktx)
+		dev_err(&phy->dev, "Could not disable CKTX0: %d\n", ret_cktx);
 
 	/* Disable RX unconditionally */
-	regmap_write(dp_phy->regmap,
-		     pdata->off_dig_glb + regs_dig[DP_PHYD_AUX_RX_CTL], 0);
+	ret_aux = regmap_write(dp_phy->regmap,
+			       pdata->off_dig_glb + regs_dig[DP_PHYD_AUX_RX_CTL], 0);
+	if (ret_aux)
+		dev_err(&phy->dev, "Could not disable AUX RX: %d\n", ret_aux);
 
 	ret = mtk_dp_phy_disable_all_lanes(dp_phy);
 	if (ret) {
 		dev_err(dp_phy->dev, "Could not disable lanes for poweroff!\n");
 		return ret;
 	}
+
+	/* Still return a failure if any of CKTX or AUX could not disable */
+	if (ret_cktx)
+		return ret_cktx;
+	if (ret_aux)
+		return ret_aux;
 
 	return 0;
 }
@@ -576,16 +782,20 @@ static int mtk_dp_phy_get_one_cal_para(struct device *dev, const char *name, u8 
 	else
 		buf = buf_byte;
 
-	if (ret)
-		return dev_err_probe(dev, ret, "Cannot get calibration data for %s\n", name);
+	if (ret) {
+		dev_err(dev, "Cannot get calibration data for %s: %d\n", name, ret);
+		return ret;
+	};
 
 	if (buf == 0) {
 		dev_warn(dev, "No calibration for %s. Using defaults\n", name);
 		return -ENOENT;
 	}
 
-	if (buf > max_val)
-		return dev_err_probe(dev, -ERANGE, "Bad value %u retrieved for %s\n", buf, name);
+	if (buf > max_val) {
+		dev_err(dev, "Bad value %u retrieved for %s. Returning.\n", buf, name);
+		return -ERANGE;
+	};
 
 	return buf;
 }
@@ -727,11 +937,24 @@ static int mtk_dp_phy_probe(struct platform_device *pdev)
 	if (IS_ERR(dp_phy->regmap))
 		return PTR_ERR(dp_phy->regmap);
 
+	dp_phy->lane_mux = mux_control_get_optional(dev, "ext-lanes");
+	if (IS_ERR(dp_phy->lane_mux))
+		return PTR_ERR(dp_phy->lane_mux);
+
 	ret = devm_pm_runtime_enable(dev);
 	if (ret)
 		return ret;
 
 	dp_phy->pdata = device_get_match_data(dev);
+
+	/* PHY Lane Flipping is done via a MMIO MUX external to the PHY itself */
+	if (dp_phy->pdata->flip_lanes) {
+		dp_phy->flip_mux = mux_control_get(dev, "phy-flip");
+		if (IS_ERR(dp_phy->flip_mux)) {
+			return dev_err_probe(dev, PTR_ERR(dp_phy->flip_mux),
+					     "Cannot get phy-flip mux control\n");
+		}
+	}
 
 	if (IS_REACHABLE(CONFIG_NVMEM)) {
 		ret = mtk_dp_phy_get_calibration_data(dp_phy);
@@ -758,9 +981,9 @@ static int mtk_dp_phy_probe(struct platform_device *pdev)
 
 static const struct mtk_dp_phy_pdata mt8195_dp_phy_data = {
 	.off_ana_glb = 0,
-	.off_ana_lane = { 0x100, 0x200, 0x300, 0x400 },
+	.off_ana_lane = (const u16[]) { 0x100, 0x200, 0x300, 0x400 },
 	.off_dig_glb = 0x1000,
-	.off_dig_lane = { 0x1100, 0x1200, 0x1300, 0x1400 },
+	.off_dig_lane = (const u16[]) { 0x1100, 0x1200, 0x1300, 0x1400 },
 	.regs_ana_glb = mt8195_phy_ana_glb_regs,
 	.regs_ana_lane = mt8195_phy_ana_lane_regs,
 	.regs_dig_glb = mt8195_phy_dig_glb_regs,
@@ -773,7 +996,7 @@ static const struct mtk_dp_phy_pdata mt8195_dp_phy_data = {
 		.pmos = 8,
 		.nmos = 8,
 	},
-	.driving_params = {
+	.driving_params = (const u32[]) {
 		[0] = 0,
 		[1] = 0,
 		[2] = 0,
@@ -786,11 +1009,50 @@ static const struct mtk_dp_phy_pdata mt8195_dp_phy_data = {
 	},
 };
 
+static const struct mtk_dp_phy_pdata mt8196_dp_phy_data = {
+	.off_ana_glb = 0,
+	.off_ana_lane = (const u16[]) { 0x100, 0x200, 0x300, 0x400 },
+	.off_dig_glb = 0x1000,
+	.off_dig_lane = (const u16[]) { 0x1100, 0x1200, 0x1300, 0x1400 },
+	.regs_ana_glb = mt8195_phy_ana_glb_regs,
+	.regs_ana_lane = mt8195_phy_ana_lane_regs,
+	.regs_dig_glb = mt8195_phy_dig_glb_regs,
+	.regs_dig_lane = mt8195_phy_dig_lane_regs,
+	.mask_dig_tx_ln = PHYD_TX_LN_EN,
+	.val_dig_bitrate = mt8195_phy_dig_bitrate_val,
+	.ana_bias_r = 15,
+	.ana_cktx_imp = 8,
+	.ana_lanes_imp = {
+		.pmos = 8,
+		.nmos = 8,
+	},
+	.sel_ext_lanes = false,
+	.flip_lanes = false,
+	.force_power = true,
+	.ana_lanes_conf = {
+		[0] = XTP_LN_DATA_EN_EXT_SEL,
+		[1] = XTP_LN_DATA_EN_EXT_SEL,
+	},
+	.ana_lanes_conf_mask = XTP_LN_DATA_EN_EXT_SEL,
+	.num_ana_lanes_conf = 2,
+	.driving_params = (const u32[]) {
+		[0] = 0,
+		[1] = 0,
+		[2] = 0,
+		[3] = MT8196_DRIVING_PARAM_3_DEFAULT,
+		[4] = MT8196_DRIVING_PARAM_4_DEFAULT,
+		[5] = MT8196_DRIVING_PARAM_5_DEFAULT,
+		[6] = MT8196_DRIVING_PARAM_6_DEFAULT,
+		[7] = MT8196_DRIVING_PARAM_7_DEFAULT,
+		[8] = MT8196_DRIVING_PARAM_8_DEFAULT
+	},
+};
+
 static const struct mtk_dp_phy_pdata mt8196_edp_phy_data = {
 	.off_ana_glb = 0x400,
-	.off_ana_lane = { 0x0, 0x100, 0x200, 0x300 },
+	.off_ana_lane = (const u16[]) { 0x0, 0x100, 0x200, 0x300 },
 	.off_dig_glb = 0x1400,
-	.off_dig_lane = { 0x1000, 0x1100, 0x1200, 0x1300 },
+	.off_dig_lane = (const u16[]) { 0x1000, 0x1100, 0x1200, 0x1300 },
 	.regs_ana_glb = mt8195_phy_ana_glb_regs,
 	.regs_ana_lane = mt8195_phy_ana_lane_regs,
 	.regs_dig_glb = mt8196_phy_dig_glb_regs,
@@ -803,7 +1065,7 @@ static const struct mtk_dp_phy_pdata mt8196_edp_phy_data = {
 		.pmos = 8,
 		.nmos = 8,
 	},
-	.driving_params = {
+	.driving_params = (const u32[]) {
 		[0] = 0,
 		[1] = 0,
 		[2] = 0,
@@ -818,6 +1080,7 @@ static const struct mtk_dp_phy_pdata mt8196_edp_phy_data = {
 
 static const struct of_device_id mtk_dp_phy_of_match[] = {
 	{ .compatible = "mediatek,mt8195-dp-phy", .data = &mt8195_dp_phy_data },
+	{ .compatible = "mediatek,mt8196-dp-phy", .data = &mt8196_dp_phy_data },
 	{ .compatible = "mediatek,mt8196-edp-phy", .data = &mt8196_edp_phy_data },
 	{ /* sentinel */ }
 };
