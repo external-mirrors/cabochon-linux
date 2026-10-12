@@ -15,6 +15,7 @@
 #include <linux/phy/phy.h>
 #include <linux/platform_device.h>
 #include <linux/reset.h>
+#include <linux/unaligned.h>
 #include <linux/units.h>
 
 #include <video/mipi_display.h>
@@ -1552,12 +1553,13 @@ static u32 mtk_dsi_recv_cnt(u8 type, u8 *read_data)
 static void mtk_dsi_cmdq(struct mtk_dsi *dsi, const struct mipi_dsi_msg *msg)
 {
 	const struct mtk_dsi_driver_data *data = dsi->driver_data;
-	const char *tx_buf = msg->tx_buf;
-	u32 reg_val, cmdq_mask, i;
-	u8 cmdq_size, cmdq_off;
-	u8 type = msg->type;
-	u8 config;
+	const u8 *tx_buf = msg->tx_buf;
+	const u8 type = msg->type;
+	u32 header_val, header_mask, i;
+	u8 cmdq_size, config;
+	int full_words, remainder;
 
+	/* Build and send the header data */
 	if (MTK_DSI_HOST_IS_READ(type))
 		config = BTA;
 	else
@@ -1566,29 +1568,68 @@ static void mtk_dsi_cmdq(struct mtk_dsi *dsi, const struct mipi_dsi_msg *msg)
 	if (!(msg->flags & MIPI_DSI_MSG_USE_LPM))
 		config |= HSTX;
 
-	if (msg->tx_len > 2) {
-		cmdq_size = 1 + (msg->tx_len + 3) / 4;
-		cmdq_off = 4;
-		cmdq_mask = CONFIG | DATA_ID | DATA_0 | DATA_1;
-		reg_val = (msg->tx_len << 16) | (type << 8) | config;
+	cmdq_size = 1;
+	header_mask = CONFIG | DATA_ID;
+	header_val = FIELD_PREP(DATA_ID, type) | config;
+
+	if (config & LONG_PACKET) {
+		cmdq_size += (msg->tx_len + 3) / 4;
+
+		header_mask |= DATA_0 | DATA_1;
+		header_val |= FIELD_PREP(DATA_0 | DATA_1, msg->tx_len);
 	} else {
-		cmdq_size = 1;
-		cmdq_off = 2;
-		cmdq_mask = CONFIG | DATA_ID;
-		reg_val = (type << 8) | config;
+		if (msg->tx_len > 0) {
+			header_val |= FIELD_PREP(DATA_0, tx_buf[0]);
+			header_mask |= DATA_0;
+		}
+
+		if (msg->tx_len > 1) {
+			header_val |= FIELD_PREP(DATA_1, tx_buf[1]);
+			header_mask |= DATA_1;
+		}
+	}
+	mtk_dsi_mask(dsi, data->reg_adv[DSI_CMDQ], header_mask, header_val);
+
+	/* Send the rest of the data if this is a long packet */
+	if (config & LONG_PACKET) {
+		full_words = msg->tx_len / 4;
+		remainder = msg->tx_len % 4;
+
+		/* Write Full 32-bit words first... */
+		for (i = 0; i < full_words; i++) {
+			u32 val = get_unaligned((const u32 *)(tx_buf + (i * 4)));
+
+			writel_relaxed(val, dsi->regs + data->reg_adv[DSI_CMDQ] + 4 + (i * 4));
+		}
+
+		/* ...and then write everything else */
+		if (remainder > 0) {
+			const u8 *rem_buf = tx_buf + (full_words * 4);
+			u32 mask = GENMASK(7, 0);
+			u32 val = 0;
+
+			switch (remainder) {
+			default:
+			case 3:
+				mask |= GENMASK(23, 16);
+				val |= ((u32)rem_buf[2]) << 16;
+				fallthrough;
+			case 2:
+				mask |= GENMASK(15, 8);
+				val |= get_unaligned((const u16 *)rem_buf);
+				break;
+			case 1:
+				val = *rem_buf;
+				break;
+			}
+
+			mtk_dsi_mask(dsi, data->reg_adv[DSI_CMDQ] + 4 + (full_words * 4), mask, val);
+		}
 	}
 
-	for (i = 0; i < msg->tx_len; i++)
-		mtk_dsi_mask(dsi, (data->reg_adv[DSI_CMDQ] + cmdq_off + i) & (~0x3U),
-			     (0xffUL << (((i + cmdq_off) & 3U) * 8U)),
-			     tx_buf[i] << (((i + cmdq_off) & 3U) * 8U));
-
-	mtk_dsi_mask(dsi, data->reg_adv[DSI_CMDQ], cmdq_mask, reg_val);
 	mtk_dsi_mask(dsi, data->reg_main[DSI_CMDQ_SIZE], CMDQ_SIZE, cmdq_size);
-	if (data->cmdq_long_packet_ctl) {
-		/* Disable setting cmdq_size automatically for long packets */
+	if (data->cmdq_long_packet_ctl)
 		mtk_dsi_mask(dsi, data->reg_main[DSI_CMDQ_SIZE], CMDQ_SIZE_SEL, CMDQ_SIZE_SEL);
-	}
 }
 
 static ssize_t mtk_dsi_host_send_cmd(struct mtk_dsi *dsi,
