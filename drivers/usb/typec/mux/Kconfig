@@ -76,6 +76,18 @@ config TYPEC_MUX_PTN36502
 	  Say Y or M if your system has a NXP PTN36502 Type-C redriver chip
 	  found on some devices with a Type-C port.
 
+config TYPEC_MUX_TS3USBCA4
+	tristate "Texas Instruments TS3USBCA4 Type-C SBU MUX driver"
+	depends on I2C
+	select REGMAP_I2C
+	help
+	  Say Y or M to enable support for the Texas Instruments TS3USBCA4
+	  USB Type-C SBU Multiplexer. The chip routes the SBU1/SBU2 signals
+	  of a USB Type-C connector to DisplayPort AUX, analog audio, or
+	  other interfaces, and handles cable orientation (flip).
+
+	  If compiled as a module, the module will be named ts3usbca4.
+
 config TYPEC_MUX_TUSB1046
 	tristate "TI TUSB1046 Type-C crosspoint switch driver"
 	depends on I2C
