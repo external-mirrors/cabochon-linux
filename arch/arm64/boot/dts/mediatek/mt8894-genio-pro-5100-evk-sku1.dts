@@ -7,6 +7,7 @@
 /dts-v1/;
 
 #include "mt8894-genio-pro-5100-evk-common.dtsi"
+#include <dt-bindings/usb/pd.h>
 
 / {
 	model = "MediaTek Genio Pro 5100 EVK SKU1";
@@ -27,6 +28,10 @@
 	};
 };
 
+&connector_hdmi0_in {
+	remote-endpoint = <&it6162_out>;
+};
+
 &eth_phy0 {
 	/*
 	 * Board-specific hack, needed due to a schematics error
@@ -34,6 +39,39 @@
 	 * even though they shouldn't)
 	 */
 	phy-supply = <&veth_3v3>;
+};
+
+&hdmi_bridge_it6162 {
+	ports {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		port@1 {
+			reg = <1>;
+			it6162_in: endpoint {
+				/* remote-endpoint = <&dsi0_out>; */
+			};
+		};
+
+		port@2 {
+			reg = <2>;
+			it6162_out: endpoint {
+				remote-endpoint = <&connector_hdmi0_in>;
+			};
+		};
+	};
+};
+
+&hdmi_bridge_pins {
+	/*
+	 * GPIO136 has no EINT so, unfortunately, this cannot be used as the
+	 * HPD interrupt... Park it in GPIO mode to reduce power leakage.
+	 */
+	pins-int {
+		pinmux = <PINMUX_GPIO136__FUNC_GPIO136>;
+		input-enable;
+		bias-disable;
+	};
 };
 
 &i2c6 {
@@ -55,6 +93,70 @@
 	pinctrl-0 = <&i2c9_pins>;
 	status = "okay";
 
+	/* Richtek RT1715 USB Type-C PD controller */
+	rt1715: typec@4e {
+		compatible = "richtek,rt1715";
+		reg = <0x4e>;
+		interrupts-extended = <&pio 141 IRQ_TYPE_LEVEL_LOW>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&rt1715_pins>;
+		vbus-supply = <&vbus_usb0>;
+		wakeup-source;
+
+		connector {
+			compatible = "usb-c-connector";
+			label = "USB-C";
+			data-role = "dual";
+			power-role = "dual";
+			try-power-role = "sink";
+
+			source-pdos = <PDO_FIXED(5000, 2400,
+					     PDO_FIXED_DUAL_ROLE |
+					     PDO_FIXED_USB_COMM |
+					     PDO_FIXED_DATA_SWAP)>;
+			sink-pdos = <PDO_FIXED(5000, 3000,
+					   PDO_FIXED_DUAL_ROLE |
+					   PDO_FIXED_USB_COMM |
+					   PDO_FIXED_DATA_SWAP)
+				     PDO_VAR(5000, 20000, 3000)>;
+			pd-revision = /bits/ 8 <0x03 0x00 0x01 0x08>;
+			op-sink-microwatt = <10000000>;
+
+			altmodes {
+				displayport {
+					svid = /bits/ 16 <0xff01>;
+					vdo = <0x001c1c47>;
+				};
+			};
+
+			ports {
+				#address-cells = <1>;
+				#size-cells = <0>;
+
+				port@0 {
+					reg = <0>;
+					typec_con_hs: endpoint {
+						remote-endpoint = <&ssusb0_role_sw>;
+					};
+				};
+
+				port@1 {
+					reg = <1>;
+					typec_con_ss: endpoint {
+						remote-endpoint = <&xhci_ss_ep>;
+					};
+				};
+
+				port@2 {
+					reg = <2>;
+					typec_con_out: endpoint {
+						remote-endpoint = <&typec_mux_in>;
+					};
+				};
+			};
+		};
+	};
+
 	usb0_repeater: repeater@4f {
 		compatible = "nxp,ptn3222";
 		reg = <0x4f>;
@@ -64,6 +166,30 @@
 		pinctrl-0 = <&usb0_repeater_pins>;
 		vdd3v3-supply = <&vusb33>;
 		vdd1v8-supply = <&mt6363_vio18>;
+	};
+
+	/*
+	 * U5703: TI TS3USBCA410IRSVT USB 3.0/DP SBU orientation switch.
+	 * Controls SBU1/SBU2 and DP_AUX lane routing based on plug orientation.
+	 * LnA is connected to DP_AUXP/DP_AUXN from the SoC.
+	 */
+	typec-mux@5d {
+		compatible = "ti,ts3usbca4";
+		reg = <0x5d>;
+
+		mode-switch;
+		orientation-switch;
+
+		enable-gpios = <&pio 142 GPIO_ACTIVE_HIGH>;
+		vcc-supply = <&vsys_3v3>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&typec_mux_pins>;
+
+		port {
+			typec_mux_in: endpoint {
+				remote-endpoint = <&typec_con_out>;
+			};
+		};
 	};
 };
 
@@ -77,6 +203,14 @@
 		};
 	};
 
+	fan_tach_pins: fan-tach-pins {
+		tach-pins {
+			pinmux = <PINMUX_GPIO35__FUNC_GPIO35>;
+			bias-pull-up;
+			input-enable;
+		};
+	};
+
 	usb_vusb33_pins: usb-vusb33-default {
 		pins-regulator {
 			pinmux = <PINMUX_GPIO251__FUNC_GPIO251>;
@@ -85,10 +219,28 @@
 	};
 };
 
+&soc_fan {
+	pinctrl-names = "default";
+	pinctrl-0 = <&fan_tach_pins>;
+	interrupts-extended = <&pio 35 IRQ_TYPE_EDGE_RISING>;
+};
+
+
 &usb1_repeater {
 	vdd3v3-supply = <&vusb33>;
 };
 
 &usb2_repeater {
 	vdd3v3-supply = <&vusb33>;
+};
+
+&vvideo_5v_pins {
+	pins-regulator {
+		pinmux = <PINMUX_GPIO36__FUNC_GPIO36>;
+		bias-pull-up;
+	};
+};
+
+&vvideo_5v {
+	gpio = <&pio 36 GPIO_ACTIVE_HIGH>;
 };

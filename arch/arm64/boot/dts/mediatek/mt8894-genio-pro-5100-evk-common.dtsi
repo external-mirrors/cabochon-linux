@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0 OR MIT
 /*
  * Copyright (C) 2026 Collabora Ltd.
- * Author: Arnaud Ferraris <arnaud.ferraris@collabora.com>
+ * Authors: Arnaud Ferraris <arnaud.ferraris@collabora.com>
+ *          AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
  */
 
 /dts-v1/;
@@ -63,28 +64,21 @@
 		};
 	};
 
-	/* system wide 12.0V power rail */
-	vsys_12v: regulator-vsys-12v {
-		compatible = "regulator-fixed";
-		regulator-name = "vsys_12v";
-		regulator-always-on;
-		regulator-boot-on;
-		regulator-min-microvolt = <12000000>;
-		regulator-max-microvolt = <12000000>;
+	can_clk: can-clk {
+		compatible = "fixed-clock";
+		#clock-cells = <0>;
+		clock-frequency = <20000000>;
 	};
 
-	/* system wide 5.0V power rail */
-	vsys_5v: regulator-vsys-5v {
-		compatible = "regulator-fixed";
-		regulator-name = "vsys_5v";
-		regulator-min-microvolt = <5000000>;
-		regulator-max-microvolt = <5000000>;
-		enable-active-high;
-		gpio = <&pio 26 GPIO_ACTIVE_HIGH>;
-		pinctrl-names = "default";
-		pinctrl-0 = <&vsys5_pins>;
-		vin-supply = <&vsys_12v>;
-		regulator-always-on;
+	connector-hdmi0 {
+		compatible = "hdmi-connector";
+		type = "a";
+		label = "HDMI0-OUT";
+		hdmi-pwr-supply = <&vhdmi_port_5v>;
+
+		port {
+			connector_hdmi0_in: endpoint { };
+		};
 	};
 
 	/* system wide 5.0V power rail */
@@ -101,15 +95,134 @@
 		regulator-always-on;
 	};
 
-	vraspi: regulator-raspi {
+	/* separately switched 5.0V power rail */
+	vbus_usb0: regulator-vbus-usb0 {
 		compatible = "regulator-fixed";
-		regulator-name = "vraspi";
+		regulator-name = "vbus_usb0_p0";
+		regulator-min-microvolt = <5000000>;
+		regulator-max-microvolt = <5000000>;
 		enable-active-high;
-		gpio = <&pio 139 GPIO_ACTIVE_HIGH>;
+		gpio = <&pio 140 GPIO_ACTIVE_HIGH>;
 		pinctrl-names = "default";
-		pinctrl-0 = <&vraspi_pins>;
-		vin-supply = <&vvideo_5v>;
+		pinctrl-0 = <&usb0_vbus_pins>;
+		vin-supply = <&vsys_5v>;
+	};
+
+	/* separately switched 5.0V power rail */
+	vbus_usb1: regulator-vbus-usb1 {
+		compatible = "regulator-fixed";
+		regulator-name = "vbus_usb0_p1";
+		regulator-min-microvolt = <5000000>;
+		regulator-max-microvolt = <5000000>;
+		enable-active-high;
+		gpio = <&pio 252 GPIO_ACTIVE_HIGH>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&usb1_vbus_pins>;
+		vin-supply = <&vsys_5v>;
+	};
+
+	/* separately switched 5.0V power rail */
+	vbus_usb2: regulator-vbus-usb2 {
+		compatible = "regulator-fixed";
+		regulator-name = "vbus_usb0_p2";
+		regulator-min-microvolt = <5000000>;
+		regulator-max-microvolt = <5000000>;
+		enable-active-high;
+		gpio = <&pio 255 GPIO_ACTIVE_HIGH>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&usb2_vbus_pins>;
+		vin-supply = <&vsys_5v>;
+	};
+
+	vcan_5v: regulator-can-5v {
+		compatible = "regulator-fixed";
+		regulator-name = "can_5v";
+		regulator-min-microvolt = <5000000>;
+		regulator-max-microvolt = <5000000>;
 		regulator-always-on;
+		enable-active-high;
+		gpio = <&pio 17 GPIO_ACTIVE_HIGH>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&can_vdd_en_pins>;
+		vin-supply = <&vaudio_5v>;
+	};
+
+	/* system wide 3.3V power rail */
+	veth_3v3: regulator-veth-3v3 {
+		compatible = "regulator-fixed";
+		regulator-name = "veth_3v3";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		enable-active-high;
+		gpio = <&pio 159 GPIO_ACTIVE_HIGH>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&veth33_pins>;
+		vin-supply = <&vaudio_5v>;
+		regulator-always-on;
+	};
+
+	/* HDMI Bridge power supplies */
+	vhdmi_port_5v: regulator-hdmi-5v {
+		compatible = "regulator-fixed";
+		regulator-name = "hdmi-5v";
+		regulator-min-microvolt = <5000000>;
+		regulator-max-microvolt = <5000000>;
+		gpio = <&pio 256 GPIO_ACTIVE_HIGH>;
+		vin-supply = <&vvideo_5v>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&vhdmi_port_5v_pins>;
+		enable-active-high;
+		regulator-boot-on;
+		regulator-always-on;
+	};
+
+	vhdmi_bridge_1v0: regulator-hdmi-bridge-1v0 {
+		compatible = "regulator-fixed";
+		regulator-name = "it6162_1v0";
+		regulator-min-microvolt = <1000000>;
+		regulator-max-microvolt = <1000000>;
+		gpio = <&pio 258 GPIO_ACTIVE_HIGH>;
+		vin-supply = <&vvideo_5v>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&vhdmi_bridge_1v0_pins>;
+		enable-active-high;
+		regulator-boot-on;
+		regulator-always-on;
+	};
+
+	vhdmi_bridge_1v8: regulator-hdmi-bridge-1v8 {
+		compatible = "regulator-fixed";
+		regulator-name = "it6162_vio_1v8";
+		regulator-min-microvolt = <1800000>;
+		regulator-max-microvolt = <1800000>;
+		vin-supply = <&mt6363_vio18>;
+	};
+
+	vhdmi_bridge_3v3: regulator-hdmi-bridge-3v3 {
+		compatible = "regulator-fixed";
+		regulator-name = "it6162_3v3";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		gpio = <&pio 257 GPIO_ACTIVE_HIGH>;
+		vin-supply = <&vvideo_5v>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&vhdmi_bridge_3v3_pins>;
+		enable-active-high;
+		regulator-boot-on;
+		regulator-always-on;
+	};
+
+	vmeas_3v3: regulator-vmeas-3v3 {
+		compatible = "regulator-fixed";
+		regulator-name = "vmeas_3v3";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		enable-active-high;
+		gpio = <&pio 181 GPIO_ACTIVE_HIGH>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&vmeas_en_pins>;
+		regulator-always-on;
+		regulator-boot-on;
 	};
 
 	/* Used by all the 3v3 IOs in the Raspberry Pi connector */
@@ -134,16 +247,37 @@
 		regulator-boot-on;
 	};
 
-	/* system wide 5.0V power rail */
-	vvideo_5v: regulator-video-5v {
+	vraspi: regulator-raspi {
 		compatible = "regulator-fixed";
-		regulator-name = "vvideo_5v";
+		regulator-name = "vraspi";
+		enable-active-high;
+		gpio = <&pio 139 GPIO_ACTIVE_HIGH>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&vraspi_pins>;
+		vin-supply = <&vvideo_5v>;
+		regulator-always-on;
+	};
+
+	/* system wide 12.0V power rail */
+	vsys_12v: regulator-vsys-12v {
+		compatible = "regulator-fixed";
+		regulator-name = "vsys_12v";
+		regulator-always-on;
+		regulator-boot-on;
+		regulator-min-microvolt = <12000000>;
+		regulator-max-microvolt = <12000000>;
+	};
+
+	/* system wide 5.0V power rail */
+	vsys_5v: regulator-vsys-5v {
+		compatible = "regulator-fixed";
+		regulator-name = "vsys_5v";
 		regulator-min-microvolt = <5000000>;
 		regulator-max-microvolt = <5000000>;
 		enable-active-high;
-		gpio = <&pio 36 GPIO_ACTIVE_HIGH>;
+		gpio = <&pio 26 GPIO_ACTIVE_HIGH>;
 		pinctrl-names = "default";
-		pinctrl-0 = <&video5_pins>;
+		pinctrl-0 = <&vsys5_pins>;
 		vin-supply = <&vsys_12v>;
 		regulator-always-on;
 	};
@@ -162,83 +296,21 @@
 		regulator-always-on;
 	};
 
-	/* system wide 3.3V power rail */
-	veth_3v3: regulator-veth-3v3 {
+	/* The 1p05 and 3v3_a are switched by the main vusb_hub regulator */
+	vusb_hub_1p05: regulator-usb-bridge-1p05 {
 		compatible = "regulator-fixed";
-		regulator-name = "veth_3v3";
+		regulator-name = "vusb_bridge_1p05";
+		regulator-min-microvolt = <1050000>;
+		regulator-max-microvolt = <1050000>;
+		vin-supply = <&vusb_hub>;
+	};
+
+	vusb_hub_3v3_a: regulator-usb-hub-3v3-a {
+		compatible = "regulator-fixed";
+		regulator-name = "vusb_host_3v3_a";
 		regulator-min-microvolt = <3300000>;
 		regulator-max-microvolt = <3300000>;
-		enable-active-high;
-		gpio = <&pio 159 GPIO_ACTIVE_HIGH>;
-		pinctrl-names = "default";
-		pinctrl-0 = <&veth33_pins>;
-		vin-supply = <&vaudio_5v>;
-		regulator-always-on;
-	};
-
-	/* separately switched 5.0V power rail */
-	vbus_usb0: regulator-vbus-usb0 {
-		compatible = "regulator-fixed";
-		regulator-name = "vbus_usb0";
-		enable-active-high;
-		gpio = <&pio 140 GPIO_ACTIVE_HIGH>;
-		pinctrl-names = "default";
-		pinctrl-0 = <&usb0_vbus_pins>;
-		vin-supply = <&vsys_5v>;
-	};
-
-	/* separately switched 5.0V power rail */
-	vbus_usb1: regulator-vbus-usb1 {
-		compatible = "regulator-fixed";
-		regulator-name = "vbus_usb1";
-		enable-active-high;
-		gpio = <&pio 252 GPIO_ACTIVE_HIGH>;
-		pinctrl-names = "default";
-		pinctrl-0 = <&usb1_vbus_pins>;
-		vin-supply = <&vsys_5v>;
-	};
-
-	/* separately switched 5.0V power rail */
-	vbus_usb2: regulator-vbus-usb2 {
-		compatible = "regulator-fixed";
-		regulator-name = "vbus_usb2";
-		enable-active-high;
-		gpio = <&pio 255 GPIO_ACTIVE_HIGH>;
-		pinctrl-names = "default";
-		pinctrl-0 = <&usb2_vbus_pins>;
-		vin-supply = <&vsys_5v>;
-	};
-
-	can_clk: can-clk {
-		compatible = "fixed-clock";
-		#clock-cells = <0>;
-		clock-frequency = <20000000>;
-	};
-
-	vcan_5v: regulator-can-5v {
-		compatible = "regulator-fixed";
-		regulator-name = "can_5v";
-		regulator-min-microvolt = <5000000>;
-		regulator-max-microvolt = <5000000>;
-		regulator-always-on;
-		enable-active-high;
-		gpio = <&pio 17 GPIO_ACTIVE_HIGH>;
-		pinctrl-names = "default";
-		pinctrl-0 = <&can_vdd_en_pins>;
-		vin-supply = <&vaudio_5v>;
-	};
-
-	vwifi33: regulator-wifi33 {
-		compatible = "regulator-fixed";
-		regulator-name = "vwifi33";
-		regulator-min-microvolt = <3300000>;
-		regulator-max-microvolt = <3300000>;
-		enable-active-high;
-		gpio = <&pio 113 GPIO_ACTIVE_HIGH>;
-		pinctrl-names = "default";
-		pinctrl-0 = <&vwifi33_pins>;
-		vin-supply = <&vvideo_5v>;
-		regulator-always-on;
+		vin-supply = <&vusb_hub>;
 	};
 
 	vusb_hub: regulator-usb-hub {
@@ -254,18 +326,56 @@
 		regulator-always-on;
 	};
 
-	fan0: pwm-fan {
+	/* system wide 5.0V power rail */
+	vvideo_5v: regulator-video-5v {
+		/* Enable GPIO defined in specific board SKU */
+		compatible = "regulator-fixed";
+		regulator-name = "vvideo_5v";
+		regulator-min-microvolt = <5000000>;
+		regulator-max-microvolt = <5000000>;
+		enable-active-high;
+		pinctrl-names = "default";
+		pinctrl-0 = <&vvideo_5v_pins>;
+		vin-supply = <&vsys_12v>;
+		regulator-always-on;
+	};
+
+	vwifi33: regulator-wifi33 {
+		compatible = "regulator-fixed";
+		regulator-name = "vwifi33";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		enable-active-high;
+		gpio = <&pio 113 GPIO_ACTIVE_HIGH>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&vwifi33_pins>;
+		vin-supply = <&vvideo_5v>;
+		regulator-always-on;
+	};
+
+	soc_fan: pwm-fan {
 		compatible = "pwm-fan";
 		pwms = <&pwm 0 40000>;
 		fan-supply = <&vsys_12v>;
 		#cooling-cells = <2>;
 		cooling-levels = <0 64 128 192 255>;
 		fan-no-pwm-release;
-		pinctrl-names = "default";
-		pinctrl-0 = <&fan_tach_pins>;
-		interrupts-extended = <&pio 35 IRQ_TYPE_EDGE_RISING>;
 		pulses-per-revolution = <2>;
 	};
+};
+
+&i2c0 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&i2c0_pins>;
+	clock-frequency = <400000>;
+	status = "okay";
+};
+
+&i2c1 {
+	clock-frequency = <400000>;
+	pinctrl-names = "default";
+	pinctrl-0 = <&i2c1_pins>;
+	status = "okay";
 };
 
 &i2c2 {
@@ -273,6 +383,27 @@
 	pinctrl-names = "default";
 	pinctrl-0 = <&i2c2_pins>;
 	status = "okay";
+};
+
+&i2c3 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&i2c3_pins>;
+	status = "okay";
+
+	hdmi_bridge_it6162: hdmi-bridge@58 {
+		compatible = "ite,it6162";
+		reg = <0x58>;
+		reset-gpios = <&pio 135 GPIO_ACTIVE_LOW>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&hdmi_bridge_pins>;
+		pwr18-supply = <&vhdmi_bridge_1v8>;
+		ivdd-supply = <&vhdmi_bridge_1v0>;
+		ovdd-supply = <&vhdmi_bridge_3v3>;
+		/*
+		 * Ports configuration is firmware dependent and has to be set
+		 * in the board SKU specific devicetree.
+		 */
+	};
 };
 
 &i2c6 {
@@ -453,8 +584,6 @@
 	regulator-name = "vio18";
 	regulator-min-microvolt = <1800000>;
 	regulator-max-microvolt = <1800000>;
-	/* Hack there */
-	 /delete-property/ regulator-allow-set-load;
 };
 
 &mt6363_vm18 {
@@ -598,6 +727,19 @@
 	pinctrl-names = "default";
 	pinctrl-0 = <&pcie2_pins>;
 	status = "okay";
+
+	/* Renesas μPD720201 USB 3.0 controller */
+	usb-controller@0 {
+		compatible = "pci1912,0014";
+		reg = <0x10000 0x0 0x0 0x0 0x0>;
+
+		avdd33-supply = <&vusb_hub_3v3_a>;
+		vdd10-supply = <&vusb_hub_1p05>;
+		vdd33-supply = <&vusb_hub>;
+
+		pinctrl-0 = <&pcie_usb_controller_pins>;
+		pinctrl-names = "default";
+	};
 };
 
 &pciephy2 {
@@ -614,6 +756,14 @@
 };
 
 &pio {
+
+	bt_reset_pins: bt-reset-default {
+		pins-reset {
+			pinmux = <PINMUX_GPIO112__FUNC_GPIO112>;
+			output-high;
+		};
+	};
+
 	can0_default_pins: can0-default-pins {
 		pins-irq {
 			pinmux = <PINMUX_GPIO15__FUNC_GPIO15>;
@@ -719,12 +869,51 @@
 		};
 	};
 
-	i2c2_pins: i2c2-pins {
+	hdmi_bridge_pins: hdmi-bridge-pins {
+		pins-sysrst-n {
+			pinmux = <PINMUX_GPIO135__FUNC_GPIO135>;
+			drive-strength = <4>;
+			output-low;
+		};
+	};
+
+	i2c0_pins: i2c0-pins {
 		pins-bus {
-			pinmux = <PINMUX_GPIO164__FUNC_SCP_SCL0>,
-				 <PINMUX_GPIO165__FUNC_SCP_SDA0>;
+			pinmux = <PINMUX_GPIO99__FUNC_SCL0>,
+				 <PINMUX_GPIO100__FUNC_SDA0>;
 			bias-disable;
 			drive-strength = <4>;
+		};
+	};
+
+	i2c1_pins: i2c1-pins {
+		pins-bus {
+			pinmux = <PINMUX_GPIO200__FUNC_SCL1>,
+				 <PINMUX_GPIO201__FUNC_SDA1>;
+			bias-disable;
+			drive-strength = <4>;
+		};
+	};
+
+	i2c2_pins: i2c2-pins {
+		pins-bus {
+			pinmux = <PINMUX_GPIO188__FUNC_SCL2>,
+				 <PINMUX_GPIO189__FUNC_SDA2>;
+			bias-disable;
+			drive-strength = <4>;
+		};
+	};
+
+	/* FIXME: dt_binding_check flags the 10000 ohm RSEL value: the
+	 * binding enum omits it although the driver's rsel table provides it.
+	 */
+	/* The net has external 4.7 kohm pull-ups, so the internal bias is redundant. */
+	i2c3_pins: i2c3-pins {
+		pins-bus {
+			pinmux = <PINMUX_GPIO123__FUNC_SCL3>,
+				 <PINMUX_GPIO124__FUNC_SDA3>;
+			bias-pull-up = <10000>;
+			drive-strength = <2>;
 		};
 	};
 
@@ -732,6 +921,15 @@
 		pins-bus {
 			pinmux = <PINMUX_GPIO104__FUNC_SCL6>,
 				 <PINMUX_GPIO105__FUNC_SDA6>;
+			bias-disable;
+			drive-strength = <4>;
+		};
+	};
+
+	i2c13_pins: i2c13-pins {
+		pins-bus {
+			pinmux = <PINMUX_GPIO204__FUNC_SCL13>,
+				 <PINMUX_GPIO205__FUNC_SDA13>;
 			bias-disable;
 			drive-strength = <4>;
 		};
@@ -774,12 +972,14 @@
 			input-enable;
 		};
 
+		/* WiFi+BT Level Shifter */
 		pins-shifter {
-			pinmux = <PINMUX_GPIO111__FUNC_GPIO111>; // WCN_3V3_EN (WiFi/BT level shifter)
+			pinmux = <PINMUX_GPIO111__FUNC_GPIO111>;
 			output-high;
 		};
 
-		pins-wf-reset {
+		/* WiFi Reset pin */
+		pins-rst {
 			pinmux = <PINMUX_GPIO110__FUNC_GPIO110>;
 			output-high;
 		};
@@ -806,9 +1006,11 @@
 				 <PINMUX_GPIO209__FUNC_PCIE_PERSTN_2P>;
 			bias-pull-up;
 		};
+	};
 
+	pcie_usb_controller_pins: pcie-usb-controller-pins {
 		pins-hub-reset {
-			pinmux = <PINMUX_GPIO186__FUNC_GPIO186>; // USBHOST_RST_N
+			pinmux = <PINMUX_GPIO186__FUNC_GPIO186>; /* USBHOST_RST_N */
 			output-high;
 		};
 	};
@@ -820,10 +1022,10 @@
 		};
 	};
 
-	fan_tach_pins: fan-tach-pins {
-		tach-pins {
-			pinmux = <PINMUX_GPIO35__FUNC_GPIO35>;
-			bias-pull-up;
+	rt1715_pins: rt1715-pins {
+		pins-irq {
+			pinmux = <PINMUX_GPIO141__FUNC_GPIO141>;
+			bias-pull-up = <MTK_PUPD_SET_R1R0_01>;
 			input-enable;
 		};
 	};
@@ -862,6 +1064,14 @@
 			pinmux = <PINMUX_GPIO120__FUNC_GPIO120>;
 			bias-pull-up;
 			input-enable;
+		};
+	};
+
+	typec_mux_pins: typec-mux-default {
+		pins-oe {
+			pinmux = <PINMUX_GPIO142__FUNC_GPIO142>;
+			bias-pull-down = <MTK_PUPD_SET_R1R0_10>;
+			output-low;
 		};
 	};
 
@@ -934,20 +1144,6 @@
 		};
 	};
 
-	bt_reset_pins: bt-reset-default {
-		pins-reset {
-			pinmux = <PINMUX_GPIO112__FUNC_GPIO112>;
-			output-high;
-		};
-	};
-
-	vsys5_pins: vsys5-default {
-		pins-regulator {
-			pinmux = <PINMUX_GPIO26__FUNC_GPIO26>;
-			output-high;
-		};
-	};
-
 	vaudio5_pins: vaudio5-default {
 		pins-regulator {
 			pinmux = <PINMUX_GPIO31__FUNC_GPIO31>;
@@ -962,9 +1158,33 @@
 		};
 	};
 
-	video5_pins: video5-default {
+	vhdmi_bridge_3v3_pins: hdmi-bridge-3v3-en-pins {
 		pins-regulator {
-			pinmux = <PINMUX_GPIO36__FUNC_GPIO36>;
+			pinmux = <PINMUX_GPIO257__FUNC_GPIO257>;
+			bias-pull-up;
+			output-high;
+		};
+	};
+
+	vhdmi_bridge_1v0_pins: hdmi-bridge-1v0-en-pins {
+		pins-regulator {
+			pinmux = <PINMUX_GPIO258__FUNC_GPIO258>;
+			bias-pull-up;
+			output-high;
+		};
+	};
+
+	vhdmi_port_5v_pins: hdmi-5v-en-pins {
+		pins-regulator {
+			pinmux = <PINMUX_GPIO256__FUNC_GPIO256>;
+			bias-pull-up;
+			output-high;
+		};
+	};
+
+	vmeas_en_pins: vmeas-en-default {
+		pins-regulator {
+			pinmux = <PINMUX_GPIO181__FUNC_GPIO181>;
 			output-high;
 		};
 	};
@@ -983,9 +1203,9 @@
 		};
 	};
 
-	vwifi33_pins: vwifi33-default {
+	vsys5_pins: vsys5-default {
 		pins-regulator {
-			pinmux = <PINMUX_GPIO113__FUNC_GPIO113>;
+			pinmux = <PINMUX_GPIO26__FUNC_GPIO26>;
 			output-high;
 		};
 	};
@@ -993,6 +1213,20 @@
 	vusb_hub_pins: vusb-hub-default {
 		pins-regulator {
 			pinmux = <PINMUX_GPIO149__FUNC_GPIO149>;
+			output-high;
+		};
+	};
+
+	vvideo_5v_pins: video5-default {
+		pins-regulator {
+			drive-strength = <8>;
+			output-high;
+		};
+	};
+
+	vwifi33_pins: vwifi33-default {
+		pins-regulator {
+			pinmux = <PINMUX_GPIO113__FUNC_GPIO113>;
 			output-high;
 		};
 	};
@@ -1032,15 +1266,14 @@
 		compatible = "microchip,mcp2518fd";
 		reg = <0>;
 		clocks = <&can_clk>;
+		interrupts-extended = <&pio 15 IRQ_TYPE_LEVEL_LOW>;
 		spi-max-frequency = <20000000>;
 		spi-cs-setup-delay-ns = <100>;
-		interrupts-extended = <&pio 15 IRQ_TYPE_LEVEL_LOW>;
-		vdd-supply = <&vcan_5v>;
-		xceiver-supply = <&vcan_5v>;
 		pinctrl-names = "default", "sleep";
 		pinctrl-0 = <&can0_default_pins>;
 		pinctrl-1 = <&can0_sleep_pins>;
-		status = "okay";
+		vdd-supply = <&vcan_5v>;
+		xceiver-supply = <&vcan_5v>;
 	};
 };
 
@@ -1104,12 +1337,19 @@
 };
 
 &ssusb0 {
-	dr_mode = "peripheral";
+	dr_mode = "otg";
 	maximum-speed = "high-speed";
+	role-switch-default-mode = "peripheral";
 	usb-role-switch;
 	vbus-supply = <&vbus_usb0>;
 	mediatek,force-vbus;
 	status = "okay";
+
+	port {
+		ssusb0_role_sw: endpoint {
+			remote-endpoint = <&typec_con_hs>;
+		};
+	};
 };
 
 &ssusb1 {
@@ -1193,6 +1433,12 @@
 &xhci0 {
 	usb2-lpm-disable;
 	status = "okay";
+
+	port {
+		xhci_ss_ep: endpoint {
+			remote-endpoint = <&typec_con_ss>;
+		};
+	};
 };
 
 &xhci1 {
@@ -1412,42 +1658,55 @@
 };
 
 &thermal_zones {
-	cpu0-thermal {
+	soc-top0-thermal {
 		trips {
-			cpu0_active0: trip-active0 {
-				temperature = <60000>;
-				hysteresis = <5000>;
-				type = "active";
+			cpu_trip_hot: hot {
+				temperature = <95000>;
+				hysteresis = <2000>;
+				type = "hot";
 			};
-			cpu0_active1: trip-active1 {
-				temperature = <75000>;
-				hysteresis = <5000>;
-				type = "active";
-			};
-			cpu0_active2: trip-active2 {
+
+			cpu_trip_active_high: active-high {
 				temperature = <88000>;
 				hysteresis = <5000>;
 				type = "active";
 			};
-			cpu0_crit: trip-crit {
-				temperature = <100000>;
-				hysteresis = <0>;
-				type = "critical";
+
+			cpu_trip_active_med: active-med {
+				temperature = <75000>;
+				hysteresis = <2000>;
+				type = "active";
+			};
+
+			cpu_trip_active_low: active-low {
+				temperature = <50000>;
+				hysteresis = <2000>;
+				type = "active";
+			};
+
+			cpu_trip_active_lowest: active-lowest {
+				temperature = <20000>;
+				hysteresis = <5000>;
+				type = "active";
 			};
 		};
 
 		cooling-maps {
-			map0 {
-				trip = <&cpu0_active0>;
-				cooling-device = <&fan0 1 2>;
+			map-high {
+				trip = <&cpu_trip_active_high>;
+				cooling-device = <&soc_fan 4 4>;
 			};
-			map1 {
-				trip = <&cpu0_active1>;
-				cooling-device = <&fan0 2 3>;
+			map-med {
+				trip = <&cpu_trip_active_med>;
+				cooling-device = <&soc_fan 3 3>;
 			};
-			map2 {
-				trip = <&cpu0_active2>;
-				cooling-device = <&fan0 4 4>;
+			map-low {
+				trip = <&cpu_trip_active_low>;
+				cooling-device = <&soc_fan 2 2>;
+			};
+			map-lowest {
+				trip = <&cpu_trip_active_lowest>;
+				cooling-device = <&soc_fan 1 1>;
 			};
 		};
 	};
