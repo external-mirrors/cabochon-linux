@@ -1072,6 +1072,20 @@ void mtk_mutex_add_trigger(struct mtk_mutex *mutex, enum mtk_ddp_comp_type type,
 }
 EXPORT_SYMBOL_NS_GPL(mtk_mutex_add_trigger, "MTK_MUTEX");
 
+void mtk_mutex_set_sof(struct mtk_mutex *mutex, enum mtk_ddp_comp_type type,
+		       unsigned int hw_inst_id)
+{
+	struct mtk_mutex_ctx *ctx = container_of(mutex, struct mtk_mutex_ctx, mutex[mutex->id]);
+	enum mtk_mutex_sof_id sof_id = mtk_mutex_get_sof_trig(type, hw_inst_id);
+
+	if (sof_id >= DDP_MUTEX_SOF_MAX)
+		return;
+
+	writel(ctx->data->mutex_sof[sof_id],
+	       ctx->regs + DISP_REG_MUTEX_SOF(ctx->data->mutex_sof_reg, mutex->id));
+}
+EXPORT_SYMBOL_NS_GPL(mtk_mutex_set_sof, "MTK_MUTEX");
+
 void mtk_mutex_remove_trigger(struct mtk_mutex *mutex, enum mtk_ddp_comp_type type,
 			      unsigned int hw_inst_id, unsigned int mtx_trig_id)
 {

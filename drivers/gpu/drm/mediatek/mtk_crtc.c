@@ -426,6 +426,16 @@ static unsigned int mtk_crtc_get_controller_map_idx(struct mtk_crtc *mtk_crtc,
 
 void mtk_mmsys_default_config(struct device *dev);
 
+/* FIXME: This is a hack - do it such that mtk_mutex_set_sof is not needed!! */
+void mtk_mutex_set_sof(struct mtk_mutex *mutex, enum mtk_ddp_comp_type type,
+		       unsigned int hw_inst_id);
+static void mtk_crtc_hack_set_sof(struct mtk_crtc *mtk_crtc, struct mtk_ddp_comp *out_comp)
+{
+	for (int i = 0; i < mtk_crtc->num_controllers; i++)
+		mtk_mutex_set_sof(mtk_crtc->mutex[i], out_comp->type,
+				  out_comp->inst_id);
+}
+
 static int mtk_crtc_ddp_hw_init(struct mtk_crtc *mtk_crtc)
 {
 	struct drm_crtc *crtc = &mtk_crtc->base;
@@ -526,6 +536,9 @@ static int mtk_crtc_ddp_hw_init(struct mtk_crtc *mtk_crtc)
 				      mtk_crtc->ddp_comp[i]->type,
 				      mtk_crtc->ddp_comp[i]->inst_id,
 				      mtk_crtc->ddp_comp[i]->mtx_trig_id);
+
+	/* HACK */
+	mtk_crtc_hack_set_sof(mtk_crtc, mtk_crtc->ddp_comp[mtk_crtc->ddp_comp_nr - 1]);
 
 	for (i = 0; i < mtk_crtc->num_controllers; i++)
 		mtk_mutex_enable(mtk_crtc->mutex[i]);
