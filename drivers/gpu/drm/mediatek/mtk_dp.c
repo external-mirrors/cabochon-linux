@@ -93,6 +93,7 @@ enum {
 
 struct mtk_dp_train_info {
 	bool sink_ssc;
+	bool fec_available;
 	bool cable_plugged_in;
 	/* link_rate is in multiple of 0.27Gbps */
 	int link_rate;
@@ -1198,6 +1199,17 @@ static void mtk_dp_initialize_psr_settings(struct mtk_dp *mtk_dp)
 			   DP_TX_SDP_PSR_AS_TESTBUS_MASK);
 }
 
+static void mtk_dp_initialize_settings_common(struct mtk_dp *mtk_dp)
+{
+	/* Forward Error Correction (FEC) configuration */
+	mtk_dp_update_bits(mtk_dp, MTK_DP_TRANS_P0_3540,
+			   FEC_CLOCK_EN_MODE_DP_TRANS_P0,
+			   FEC_CLOCK_EN_MODE_DP_TRANS_P0);
+	mtk_dp_update_bits(mtk_dp, MTK_DP_TRANS_P0_3540,
+			   FIELD_PREP_CONST(FEC_FIFO_UNDER_POINT_DP_TRANS_P0, 2),
+			   FEC_FIFO_UNDER_POINT_DP_TRANS_P0);
+}
+
 static void mtk_dp_initialize_settings_v2p1(struct mtk_dp *mtk_dp)
 {
 	/* For DP2.1 and eDP1.5 IPs, reset all and enable probing */
@@ -1210,6 +1222,8 @@ static void mtk_dp_initialize_settings_v2p1(struct mtk_dp *mtk_dp)
 
 	mtk_dp_update_bits(mtk_dp, MTK_DP_TOP_RESET_AND_PROBE,
 			   RG_PROBE_LOW_HIGH_SWAP, RG_PROBE_LOW_HIGH_SWAP);
+
+	mtk_dp_initialize_settings_common(mtk_dp);
 }
 
 static void mtk_dp_initialize_settings(struct mtk_dp *mtk_dp)
@@ -1223,9 +1237,8 @@ static void mtk_dp_initialize_settings(struct mtk_dp *mtk_dp)
 			   FIELD_PREP_CONST(XTAL_FREQ_DP_CLOCK_MHZ_MASK, 26),
 			   XTAL_FREQ_DP_ACCUM_NUM_MASK | XTAL_FREQ_DP_CLOCK_MHZ_MASK);
 
-	mtk_dp_update_bits(mtk_dp, MTK_DP_TRANS_P0_3540,
-			   FEC_CLOCK_EN_MODE_DP_TRANS_P0,
-			   FEC_CLOCK_EN_MODE_DP_TRANS_P0);
+	mtk_dp_initialize_settings_common(mtk_dp);
+
 	mtk_dp_update_bits(mtk_dp, MTK_DP_ENC0_P0_31EC,
 			   AUDIO_CH_SRC_SEL_DP_ENC0_P0,
 			   AUDIO_CH_SRC_SEL_DP_ENC0_P0);
@@ -2066,7 +2079,7 @@ static int mtk_dp_train_eq(struct mtk_dp *mtk_dp, u8 target_lane_count)
 
 static int mtk_dp_parse_capabilities(struct mtk_dp *mtk_dp)
 {
-	u8 val;
+	u8 fec, val;
 	ssize_t ret;
 
 	/*
@@ -2091,6 +2104,20 @@ static int mtk_dp_parse_capabilities(struct mtk_dp *mtk_dp)
 		mtk_dp->train_info.channel_eq_pattern = DP_TRAINING_PATTERN_2;
 
 	mtk_dp->train_info.sink_ssc = drm_dp_max_downspread(mtk_dp->rx_cap);
+
+	/* Use Forward Error Correction (FEC) capability with or without DSC */
+	ret = drm_dp_dpcd_readb(&mtk_dp->aux, DP_FEC_CAPABILITY, &fec);
+	if (ret < 0)
+		return ret;
+
+	if (drm_dp_sink_supports_fec(fec)) {
+		/* Failure to set FEC is not critical */
+		ret = drm_dp_dpcd_writeb(&mtk_dp->aux, DP_FEC_CONFIGURATION, DP_FEC_READY);
+		if (ret < 0)
+			dev_err(mtk_dp->dev, "Could not set Forward Error Correction Ready\n");
+		else
+			mtk_dp->train_info.fec_available = true;
+	}
 
 	ret = drm_dp_dpcd_readb(&mtk_dp->aux, DP_MSTM_CAP, &val);
 	if (ret < 1) {
@@ -2219,6 +2246,16 @@ static int mtk_dp_training(struct mtk_dp *mtk_dp)
 	 */
 	mtk_dp_training_set_scramble(mtk_dp, true);
 	mtk_dp_set_enhanced_frame_mode(mtk_dp);
+
+	if (mtk_dp->train_info.fec_available) {
+		ret = drm_dp_dpcd_writeb(&mtk_dp->aux, DP_FEC_STATUS,
+					 DP_FEC_DECODE_EN_DETECTED |
+					 DP_FEC_DECODE_DIS_DETECTED);
+		if (ret) {
+			dev_err(mtk_dp->dev, "Could not set FEC Status\n");
+			mtk_dp->train_info.fec_available = false;
+		}
+	}
 
 	return 0;
 }
@@ -2754,6 +2791,11 @@ static void mtk_dp_bridge_atomic_enable(struct drm_bridge *bridge,
 		}
 	}
 
+	if (mtk_dp->train_info.fec_available)
+		mtk_dp_update_bits(mtk_dp, MTK_DP_TRANS_P0_3540,
+				   FEC_EN_DP_TRANS_P0_MASK,
+				   FEC_EN_DP_TRANS_P0_MASK);
+
 	ret = mtk_dp_video_config(mtk_dp);
 	if (ret)
 		goto power_off_aux;
@@ -2796,6 +2838,10 @@ static void mtk_dp_bridge_atomic_disable(struct drm_bridge *bridge,
 	mtk_dp_update_plugged_status(mtk_dp);
 	mtk_dp_video_enable(mtk_dp, false);
 	mtk_dp_audio_mute(mtk_dp, true);
+
+	if (mtk_dp->train_info.fec_available)
+		mtk_dp_update_bits(mtk_dp, MTK_DP_TRANS_P0_3540,
+				   0, FEC_EN_DP_TRANS_P0_MASK);
 
 	/* SDP path reset sw*/
 	mtk_dp_sdp_path_reset(mtk_dp);
