@@ -447,29 +447,11 @@ static void mtk_dsi_mask(struct mtk_dsi *dsi, u32 offset, u32 mask, u32 data)
 	writel((temp & ~mask) | (data & mask), dsi->regs + offset);
 }
 
-static void mtk_dsi_phy_timconfig(struct mtk_dsi *dsi)
+static void mtk_dsi_phy_write_timings(struct mtk_dsi *dsi)
 {
-	u32 timcon0, timcon1, timcon2, timcon3;
-	u32 data_rate_mhz = DIV_ROUND_UP(dsi->data_rate, HZ_PER_MHZ);
 	struct mtk_phy_timing *timing = &dsi->phy_timing;
 	const u16 *reg_main = dsi->driver_data->reg_main;
-
-	timing->lpx = (60 * data_rate_mhz / (8 * 1000)) + 1;
-	timing->da_hs_prepare = (80 * data_rate_mhz + 4 * 1000) / 8000;
-	timing->da_hs_zero = (170 * data_rate_mhz + 10 * 1000) / 8000 + 1 -
-			     timing->da_hs_prepare;
-	timing->da_hs_trail = timing->da_hs_prepare + 1;
-
-	timing->ta_go = 4 * timing->lpx - 2;
-	timing->ta_sure = timing->lpx + 2;
-	timing->ta_get = 4 * timing->lpx;
-	timing->da_hs_exit = 2 * timing->lpx + 1;
-
-	timing->clk_hs_prepare = 70 * data_rate_mhz / (8 * 1000);
-	timing->clk_hs_post = timing->clk_hs_prepare + 8;
-	timing->clk_hs_trail = timing->clk_hs_prepare;
-	timing->clk_hs_zero = timing->clk_hs_trail * 4;
-	timing->clk_hs_exit = 2 * timing->clk_hs_trail;
+	u32 timcon0, timcon1, timcon2, timcon3;
 
 	timcon0 = FIELD_PREP(LPX, timing->lpx) |
 		  FIELD_PREP(HS_PREP, timing->da_hs_prepare) |
@@ -493,6 +475,65 @@ static void mtk_dsi_phy_timconfig(struct mtk_dsi *dsi)
 	writel(timcon1, dsi->regs + reg_main[DSI_PHY_TIMECON1]);
 	writel(timcon2, dsi->regs + reg_main[DSI_PHY_TIMECON2]);
 	writel(timcon3, dsi->regs + reg_main[DSI_PHY_TIMECON3]);
+}
+
+static void mtk_dsi_phy_timconfig(struct mtk_dsi *dsi)
+{
+	u32 data_rate_mhz = DIV_ROUND_UP(dsi->data_rate, HZ_PER_MHZ);
+	struct mtk_phy_timing *timing = &dsi->phy_timing;
+
+	timing->lpx = (60 * data_rate_mhz / (8 * 1000)) + 1;
+	timing->da_hs_prepare = (80 * data_rate_mhz + 4 * 1000) / 8000;
+	timing->da_hs_zero = (170 * data_rate_mhz + 10 * 1000) / 8000 + 1 -
+			     timing->da_hs_prepare;
+	timing->da_hs_trail = timing->da_hs_prepare + 1;
+
+	timing->ta_go = 4 * timing->lpx - 2;
+	timing->ta_sure = timing->lpx + 2;
+	timing->ta_get = 4 * timing->lpx;
+	timing->da_hs_exit = 2 * timing->lpx + 1;
+
+	timing->clk_hs_prepare = 70 * data_rate_mhz / (8 * 1000);
+	timing->clk_hs_post = timing->clk_hs_prepare + 8;
+	timing->clk_hs_trail = timing->clk_hs_prepare;
+	timing->clk_hs_zero = timing->clk_hs_trail * 4;
+	timing->clk_hs_exit = 2 * timing->clk_hs_trail;
+
+	mtk_dsi_phy_write_timings(dsi);
+}
+
+static void mtk_dsi_phy_timconfig_v2(struct mtk_dsi *dsi)
+{
+	u32 data_rate_mhz = DIV_ROUND_UP(dsi->data_rate, HZ_PER_MHZ);
+	struct mtk_phy_timing *timing = &dsi->phy_timing;
+
+	timing->lpx = (80 * data_rate_mhz / (8 * 1000)) + 1;
+	timing->da_hs_prepare = (59 * data_rate_mhz + (4 * 1000)) / 8000 + 1;
+	timing->da_hs_zero = (163 * data_rate_mhz + (11 * 1000)) / 8000 + 1 -
+			     timing->da_hs_prepare;
+	timing->da_hs_trail = (66 * data_rate_mhz + (42 * 1000)) / 8000 + 1;
+	timing->da_hs_exit = (118 * data_rate_mhz / (8 * 1000)) + 1;
+
+	timing->ta_go = 4 * timing->lpx;
+	timing->ta_sure = 3 * timing->lpx / 2;
+	timing->ta_get = 5 * timing->lpx;
+
+	timing->clk_hs_exit = timing->da_hs_exit;
+	timing->clk_hs_prepare = (57 * data_rate_mhz / (8 * 1000)) + 1;
+
+	timing->clk_hs_zero = (330 * data_rate_mhz / (8 * 1000)) + 1;
+	timing->clk_hs_trail = (65 * data_rate_mhz + (52 * 1000)) / (8 * 1000) + 1;
+	timing->clk_hs_post = (65 * data_rate_mhz + (53 * 1000)) / (8 * 1000) + 1;
+
+	/* LPx, DA_HS_PREPARE, CLK_HS_PREPARE must be EVEN */
+	timing->lpx = (timing->lpx + 1) & ~1;
+	timing->da_hs_prepare = (timing->da_hs_prepare + 1) & ~1;
+	timing->clk_hs_prepare = (timing->clk_hs_prepare + 1) & ~1;
+
+	/* DA_HS_EXIT must be ODD */
+	timing->da_hs_exit = (timing->da_hs_exit + 1) | 1;
+
+	mtk_dsi_phy_write_timings(dsi);
 }
 
 static void mtk_dsi_enable(struct mtk_dsi *dsi)
@@ -1855,7 +1896,7 @@ static const struct mtk_dsi_driver_data mt8196_dsi_driver_data = {
 	.reg_main = mtk_dsi_regs_main_v2,
 	.reg_qos = mtk_dsi_regs_qos_v2,
 	.reg_adv = mtk_dsi_regs_mt8196,
-	.dphy_timing_config = mtk_dsi_phy_timconfig,
+	.dphy_timing_config = mtk_dsi_phy_timconfig_v2,
 	.max_link_rate_mbps = 2000,
 	.dsi_sram_bytes = 32,
 	.pixels_per_iter = 2,
