@@ -253,3 +253,5 @@
 		//bias-pull-up = <MTK_PUPD_SET_R1R0_10>; /* 50kOhm PU */
 	};
 };
+
+#include "mt8894-genio-pro-display-pipeline.dtsi"

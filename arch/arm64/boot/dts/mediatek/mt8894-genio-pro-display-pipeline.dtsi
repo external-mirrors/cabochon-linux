@@ -1,0 +1,466 @@
+// SPDX-License-Identifier: GPL-2.0 OR MIT
+/*
+ * Copyright (C) 2026 Collabora Ltd.
+ *
+ * This is a temporary DTSI for display bringup. The pipelines
+ * will be added to the Genio Pro common DT whenever this is ready
+ * for prime time.
+ *
+ * *** Include this at the end of the Genio Pro DTS ***
+ */
+
+/ {
+	backlight_lcm1: backlight-lcm1 {
+		compatible = "pwm-backlight";
+		brightness-levels = <0 1023>;
+		default-brightness-level = <576>;
+		num-interpolated-steps = <1023>;
+		power-supply = <&vddp_lcm1>;
+		pwms = <&disp_pwm0 0 500000>;
+	};
+
+	vsys_lcm1: regulator-vsys-lcm1 {
+		compatible = "regulator-fixed";
+		regulator-name = "vsys_lcm1";
+		regulator-min-microvolt = <5000000>; /*4.5-7.5V*/
+		regulator-max-microvolt = <5000000>;
+		enable-active-high;
+		gpio = <&pio 91 GPIO_ACTIVE_HIGH>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&vsys_lcm1_pins>;
+		vin-supply = <&vvideo_5v>;
+		regulator-always-on;
+	};
+
+	vddp_lcm1: regulator-vddp-lcm1 {
+		compatible = "regulator-fixed";
+		regulator-name = "vddp_lcm1";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		enable-active-high;
+		gpio = <&pio 92 GPIO_ACTIVE_HIGH>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&vddp_lcm1_pins>;
+		vin-supply = <&vvideo_5v>;
+		regulator-always-on;
+	};
+
+	iovcc_lcm1: regulator-iovcc-lcm1 {
+		compatible = "regulator-fixed";
+		regulator-name = "iovcc_lcm1";
+		regulator-min-microvolt = <1800000>;
+		regulator-max-microvolt = <1800000>;
+		enable-active-high;
+		gpio = <&pio 93 GPIO_ACTIVE_HIGH>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&iovcc_lcm1_pins>;
+		vin-supply = <&vvideo_5v>;
+		regulator-always-on;
+	};
+};
+
+&gce0 {
+	status = "disabled";
+};
+
+&gce1 {
+	status = "disabled";
+};
+
+&dispsys0 {
+	status = "okay";
+};
+
+&dispsys1 {
+	status = "okay";
+};
+
+&ovlsys0 {
+	status = "okay";
+};
+
+&ovlsys1  {
+	status = "okay";
+};
+
+&vdecsys_soc {
+	status = "disabled";
+};
+
+&vdecsys1 {
+	status = "disabled";
+};
+
+&vencsys0 {
+	status = "disabled";
+};
+
+&vencsys1 {
+	status = "disabled";
+};
+
+&vencsys2 {
+	status = "disabled";
+};
+
+&mdpsys0 {
+	status = "disabled";
+};
+
+&mdpsys1 {
+	status = "disabled";
+};
+/*
+&smi_mdp_common {
+	status = "disabled";
+};
+
+&disp_ssc1_smi_2x1_sub_comm {
+	status = "disabled";
+};
+
+&mdp_ssc4_smi_2x1_sub_comm {
+	status = "disabled";
+};
+
+&mdp_ssc5_smi_2x1_sub_comm {
+	status = "disabled";
+};
+*/
+&smi_larb32 {
+	status = "disabled";
+};
+
+&smi_larb33 {
+	status = "disabled";
+};
+
+&smi_larb5 {
+	status = "disabled";
+};
+
+&smi_larb6 {
+	status = "disabled";
+};
+
+&smi_larb4 {
+	status = "disabled";
+};
+
+&smi_larb7 {
+	status = "disabled";
+};
+
+&smi_disp_venc_sub_comm0 {
+	status = "disabled";
+};
+
+&smi_larb41 {
+	status = "disabled";
+};
+
+&smi_larb8 {
+	status = "disabled";
+};
+
+&smi_mdp_venc_sub_comm1 {
+	status = "disabled";
+};
+
+&smi_larb42 {
+	status = "disabled";
+};
+
+&smi_larb24 {
+	status = "disabled";
+};
+
+&smi_mdp_venc_sub_comm2 {
+	status = "disabled";
+};
+
+&smi_larb47 {
+	status = "disabled";
+};
+
+&smi_larb2 {
+	status = "disabled";
+};
+
+&smi_larb3 {
+	status = "disabled";
+};
+
+&vdisp_ctrl {
+	status = "okay";
+};
+
+
+
+
+&mipi_tx_config0 {
+	drive-strength-microamp = <5600>;
+	status = "okay";
+};
+
+&mipi_tx_config1 {
+	drive-strength-microamp = <5600>;
+	status = "okay";
+};
+
+/*
+ * DSI0 on dispsys lane 1, with the picture-quality blocks bypassed.
+ *
+ * dispsys0's local segment for this lane normally runs the PQ chain
+ * (dl_in_relay0_0 -> rsz0).  Point it at its own DL_OUT instead, exactly as
+ * lane 3 does, so the walker resolves a pass-through with no blocks in
+ * between; the matching DIRECT_LINK_IN 0 -> DIRECT_LINK_OUT 1 route already
+ * exists in mt8196-mmsys.h.  This is the one configuration not yet tried:
+ * lane 1 with the full PQ chain stalls at postmask0, and the reference board's
+ * negative result for this route came from poking a live pipeline, which a
+ * stalled DL async FIFO cannot recover from either way.
+ *
+ * The DSI0 tail is unchanged - SPLITTER_OUT_CB9 -> COMP_OUT_CB6 ->
+ * MERGE_OUT_CB0 -> disp_dsi0_in0, the only DSI0 input that reports ready.
+ */
+&dl_in_relay0_0 {
+	remote-endpoint = <&dl_out_async0_1>;
+};
+
+/*
+ * The PQ chain is out of the path, so remove both of its edges on the
+ * direct-link node.  Leaving the DL_OUT_RELAY pointing at dither0 makes the
+ * walker follow the PQ exit and fail with -ELOOP ("Last component: 7-0"):
+ * the lane then has two descriptions of its local segment.  Lane 3, which
+ * works, has no DL_OUT_RELAY endpoint at all - only the DL_IN_RELAY
+ * self-reference.
+ */
+&rsz0_in {
+	/delete-property/ remote-endpoint;
+};
+
+&dl_out_relay0_1 {
+	/delete-property/ remote-endpoint;
+};
+
+&dither0_out {
+	/delete-property/ remote-endpoint;
+};
+
+#define USE_DSI0_HDMI_PANEL
+
+#ifdef USE_DSI0_HDMI_PANEL
+
+&dl_in_relay1_1 {
+	remote-endpoint = <&dsi0_in>;
+	///delete-property/ remote-endpoint;
+};
+
+#else
+
+&dl_in_relay1_1 {
+	remote-endpoint = <&dsi1_in>;
+	///delete-property/ remote-endpoint;
+};
+
+#endif
+
+
+
+&dl_in_relay1_3 {
+	//remote-endpoint = <&dsi1_in>;
+	/delete-property/ remote-endpoint;
+};
+
+&dl_in_relay1_2 {
+	/delete-property/ remote-endpoint;
+};
+
+&dvo0_in {
+	/delete-property/ remote-endpoint;
+};
+
+&disp_pwm0 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&disp_pwm0_pins>;
+	status = "okay";
+};
+
+/*
+&dsc1_out {
+	remote-endpoint = <&dsi0_in>;
+};
+*/
+
+#ifdef USE_DSI0_HDMI_PANEL
+&it6162_in {
+	remote-endpoint = <&dsi0_out>;
+};
+#endif
+
+&dsi0 {
+	status = "okay";
+
+	ports {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		port@0 {
+			#address-cells = <1>;
+			#size-cells = <0>;
+			reg = <0>;
+
+			dsi0_in: endpoint@0 {
+				reg = <0>;
+#ifdef USE_DSI0_HDMI_PANEL
+				remote-endpoint = <&dl_in_relay1_1>;
+#endif
+			};
+		};
+
+		port@1 {
+			reg = <1>;
+
+			dsi0_out: endpoint {
+				remote-endpoint = <&it6162_in>;
+			};
+		};
+	};
+};
+
+&dsi1 {
+	#address-cells = <1>;
+	#size-cells = <0>;
+	status = "okay";
+
+	panel@0 {
+		compatible = "startek,kd070fhfid078", "himax,hx8279";
+		reg = <0>;
+		backlight = <&backlight_lcm1>;
+		enable-gpios = <&pio 89 GPIO_ACTIVE_HIGH>;
+		reset-gpios = <&pio 90 GPIO_ACTIVE_HIGH>;
+		iovcc-supply = <&iovcc_lcm1>;
+		vdd-supply = <&vsys_lcm1>; //vddp_lcm1>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&lcm1_default_pins>;
+
+		port {
+			dsi_panel_in: endpoint {
+				remote-endpoint = <&dsi1_out>;
+			};
+		};
+	};
+
+	ports {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		port@0 {
+			#address-cells = <1>;
+			#size-cells = <0>;
+			reg = <0>;
+
+			dsi1_in: endpoint@1 {
+				reg = <1>;
+#ifndef USE_DSI0_HDMI_PANEL
+				remote-endpoint = <&dl_in_relay1_1>;
+#endif
+			};
+		};
+
+		/*
+		 * mtk_dsi_host_attach() resolves its next bridge from
+		 * port@1/endpoint@0, so the IT6162 must be reachable here.
+		 */
+		port@1 {
+			reg = <1>;
+
+			dsi1_out: endpoint {
+				remote-endpoint = <&dsi_panel_in>;
+			};
+		};
+	};
+};
+
+&dl_in_async1_2 {
+	remote-endpoint = <&dl_out_async0_2>;
+};
+
+&dl_out_async0_2 {
+	remote-endpoint = <&dl_in_async1_2>;
+};
+
+/*
+ * Point ovlsys0's exDMAs at a LARB that exists.  Lane 1's cascade is
+ * exdma2 -> blender1 -> exdma3 -> blender2 -> exdma4 -> blender3 -> exdma5
+ * -> blender4 -> outproc0, so all four have to bind or the component master
+ * waits for ever.  They name smi_larb0/1/20/21, which stay disabled; one LARB
+ * can back several consumers, and translation comes from the "iommus"
+ * property and the SMMU rather than from the LARB, so this does not change
+ * where the fetches actually go.
+ */
+&ovl0_exdma2 {
+	mediatek,larb = <&smi_larb37>;
+};
+
+&ovl0_exdma3 {
+	mediatek,larb = <&smi_larb37>;
+};
+
+&ovl0_exdma4 {
+	mediatek,larb = <&smi_larb37>;
+};
+
+&ovl0_exdma5 {
+	mediatek,larb = <&smi_larb37>;
+};
+
+&pio {
+	disp_pwm0_pins: disp-pwm0-pins {
+		pins-pwm {
+			pinmux = <PINMUX_GPIO103__FUNC_DISP_PWM>;
+		};
+	};
+
+	lcm1_default_pins: lcm1-pins {
+		pins-rst {
+			pinmux = <PINMUX_GPIO90__FUNC_GPIO90>;
+			drive-strength = <8>;
+			output-low;
+		};
+
+		pins-en {
+			pinmux = <PINMUX_GPIO89__FUNC_GPIO89>;
+			drive-strength = <8>;
+			bias-pull-up;
+			output-low;
+		};
+	};
+
+	vsys_lcm1_pins: vsys-lcm1-default {
+		pins-regulator {
+			pinmux = <PINMUX_GPIO91__FUNC_GPIO91>;
+			bias-pull-up;
+			drive-strength = <8>;
+			output-high;
+		};
+	};
+
+	vddp_lcm1_pins: vddp-lcm1-default {
+		pins-regulator {
+			pinmux = <PINMUX_GPIO92__FUNC_GPIO92>;
+			bias-pull-up;
+			drive-strength = <8>;
+			output-high;
+		};
+	};
+
+	iovcc_lcm1_pins: iovcc-lcm1-default {
+		pins-regulator {
+			pinmux = <PINMUX_GPIO93__FUNC_GPIO93>;
+			bias-pull-up;
+			drive-strength = <8>;
+			output-high;
+		};
+	};
+};
