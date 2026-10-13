@@ -21,6 +21,8 @@
 		     "mediatek,mt8196";
 
 	aliases {
+		ethernet0 = &eth0;
+		ethernet1 = &eth1;
 		i2c2 = &i2c2;
 		i2c6 = &i2c6;
 		i2c9 = &i2c9;
@@ -168,6 +170,7 @@
 		regulator-name = "veth_3v3";
 		regulator-min-microvolt = <3300000>;
 		regulator-max-microvolt = <3300000>;
+		regulator-enable-ramp-delay = <3000>;
 		enable-active-high;
 		gpio = <&pio 159 GPIO_ACTIVE_HIGH>;
 		pinctrl-names = "default";
@@ -450,11 +453,34 @@
 	};
 };
 
+&eth0 {
+	pinctrl-names = "default", "sleep";
+	pinctrl-0 = <&eth0_default_pins>;
+	pinctrl-1 = <&eth0_sleep_pins>;
+	phy-handle = <&eth_phy0>;
+	phy-mode = "2500base-x";
+	snps,reset-delays-us = <0 10000 20000>;
+	snps,reset-gpio = <&pio 20 GPIO_ACTIVE_LOW>;
+	status = "okay";
+
+	mdio {
+		compatible = "snps,dwmac-mdio";
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		eth_phy0: ethernet-phy@f {
+			compatible = "ethernet-phy-id03a2.a411";
+			reg = <0xf>;
+			phy-supply = <&veth_3v3>;
+		};
+	};
+};
+
 &eth1 {
 	pinctrl-names = "default", "sleep";
 	pinctrl-0 = <&eth1_default_pins>;
 	pinctrl-1 = <&eth1_sleep_pins>;
-	phy-handle = <&eth_phy0>;
+	phy-handle = <&eth_phy1>;
 	phy-mode = "rgmii-id";
 	snps,reset-delays-us = <0 10000 10000>;
 	snps,reset-gpio = <&pio 226 GPIO_ACTIVE_LOW>;
@@ -465,7 +491,7 @@
 		#address-cells = <1>;
 		#size-cells = <0>;
 
-		eth_phy0: ethernet-phy@0 {
+		eth_phy1: ethernet-phy@0 {
 			compatible = "ethernet-phy-idc0ff.0421";
 			pinctrl-names = "default";
 			pinctrl-0 = <&eth1_phy_pins>;
@@ -803,6 +829,37 @@
 		pins {
 			pinmux = <PINMUX_GPIO17__FUNC_GPIO17>;
 			output-high;
+		};
+	};
+
+	eth0_default_pins: eth0-default-pins {
+		pins-intr {
+			pinmux = <PINMUX_GPIO14__FUNC_GPIO14>;
+			input-enable;
+			bias-pull-up;
+		};
+
+		pins-mdio {
+			pinmux = <PINMUX_GPIO214__FUNC_GBE0_MDC>,
+				 <PINMUX_GPIO215__FUNC_GBE0_MDIO>;
+			drive-strength = <8>;
+			input-enable;
+			input-schmitt-enable;
+		};
+
+		pins-reset {
+			pinmux = <PINMUX_GPIO20__FUNC_GPIO20>;
+			output-high;
+			bias-disable;
+		};
+	};
+
+	eth0_sleep_pins: eth0-sleep-pins {
+		pins-mdio {
+			pinmux = <PINMUX_GPIO214__FUNC_GPIO214>,
+				 <PINMUX_GPIO215__FUNC_GPIO215>;
+			input-disable;
+			bias-disable;
 		};
 	};
 
