@@ -862,6 +862,28 @@
 			};
 		};
 
+		sgmii0: phy@138d0000 {
+			compatible = "mediatek,mt8196-sgmii-phy";
+			reg = <0 0x138d0000 0 0x1000>, <0 0x13910000 0 0x10000>;
+			reg-names = "pcs", "phy";
+			clocks = <&topckgen CLK_TOP_SGMII0_REG>,
+				 <&topckgen CLK_TOP_SGMII0_REF_325M>;
+			clock-names = "bus", "ref";
+			power-domains = <&spm MT8196_POWER_DOMAIN_HSGMII0>;
+			#phy-cells = <0>;
+		};
+
+		sgmii1: phy@138e0000 {
+			compatible = "mediatek,mt8196-sgmii-phy";
+			reg = <0 0x138e0000 0 0x1000>, <0 0x13920000 0 0x10000>;
+			reg-names = "pcs", "phy";
+			clocks = <&topckgen CLK_TOP_SGMII1_REG>,
+				 <&topckgen CLK_TOP_SGMII1_REF_325M>;
+			clock-names = "bus", "ref";
+			power-domains = <&spm MT8196_POWER_DOMAIN_HSGMII1>;
+			#phy-cells = <0>;
+		};
+
 		i2c1: i2c@13930000 {
 			compatible = "mediatek,mt8196-i2c", "mediatek,mt8188-i2c";
 			reg = <0 0x13930000 0 0x80000>, <0 0x16380000 0 0x10000>;
