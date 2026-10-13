@@ -25,6 +25,19 @@ config PHY_MTK_PCIE_SPHY
 	  To compile this driver as module, say 'M' here: the module will be
 	  called phy-mtk-pcie-sphy.
 	  
+config PHY_MTK_SGMII
+	tristate "MediaTek SGMII SerDes PHY Driver"
+	depends on ARCH_MEDIATEK || COMPILE_TEST
+	depends on OF
+	select GENERIC_PHY
+	help
+	  Say 'Y' here to add support for MediaTek SGMII PHY driver.
+	  The driver provides access to the Ethernet SerDes PHY supporting
+	  1GE and 2.5GE modes over (H)SGMII.
+
+	  To compile this driver as module, say 'M' here: the module will be
+	  called phy-mtk-sgmii.
+	  
 
 config PHY_MTK_XFI_TPHY
 	tristate "MediaTek 10GE SerDes XFI T-PHY driver"
