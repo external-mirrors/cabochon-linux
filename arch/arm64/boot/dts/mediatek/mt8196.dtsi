@@ -1997,6 +1997,16 @@
 					clock-names = "bus";
 				};
 
+				power-domain@MT8196_POWER_DOMAIN_HSGMII0 {
+					reg = <MT8196_POWER_DOMAIN_HSGMII0>;
+					#power-domain-cells = <0>;
+				};
+
+				power-domain@MT8196_POWER_DOMAIN_HSGMII1 {
+					reg = <MT8196_POWER_DOMAIN_HSGMII1>;
+					#power-domain-cells = <0>;
+				};
+
 				power-domain@MT8196_POWER_DOMAIN_SSUSB_P0 {
 					reg = <MT8196_POWER_DOMAIN_SSUSB_P0>;
 					#address-cells = <1>;

@@ -48,6 +48,13 @@
  #define MT8196_SPM_PROT_EN_BUS_ADSP_AO		BIT(23)
  #define MT8196_SPM_PROT_EN_BUS_MM_PROC		BIT(24)
 
+/* SPM BUS_PROTECT registers for the SGMII subsystem */
+#define MT8196_HSGMII_BUS_PROTECT_CON_SET	0xe8
+#define MT8196_HSGMII_BUS_PROTECT_CON_CLR	0xec
+#define MT8196_HSGMII_BUS_PROTECT_RDY		0x20c
+ #define MT8196_HSGMII_PROT_EN_BUS_HSGMII0	BIT(14)
+ #define MT8196_HSGMII_PROT_EN_BUS_HSGMII1	BIT(15)
+
 /* PWR_CON registers */
 #define MT8196_PWR_ACK				BIT(30)
 #define MT8196_PWR_ACK_2ND			BIT(31)
@@ -360,6 +367,34 @@ static const struct scpsys_domain_data scpsys_domain_data_mt8196[] = {
 		},
 		.caps = MTK_SCPD_ALWAYS_ON,
 		.rtff_type = SCPSYS_RTFF_TYPE_GENERIC,
+	},
+	[MT8196_POWER_DOMAIN_HSGMII0] = {
+		.name = "hsgmii0",
+		.sta_mask = MT8196_PWR_ACK,
+		.sta2nd_mask = MT8196_PWR_ACK_2ND,
+		.ctl_offs = 0xe94,
+		.pwr_sta_offs = 0xe94,
+		.pwr_sta2nd_offs = 0xe94,
+		.bp_cfg = {
+			BUS_PROT_WR_IGN(SPM, MT8196_HSGMII_PROT_EN_BUS_HSGMII0,
+					MT8196_HSGMII_BUS_PROTECT_CON_SET,
+					MT8196_HSGMII_BUS_PROTECT_CON_CLR,
+					MT8196_HSGMII_BUS_PROTECT_RDY),
+		},
+	},
+	[MT8196_POWER_DOMAIN_HSGMII1] = {
+		.name = "hsgmii1",
+		.sta_mask = MT8196_PWR_ACK,
+		.sta2nd_mask = MT8196_PWR_ACK_2ND,
+		.ctl_offs = 0xe98,
+		.pwr_sta_offs = 0xe98,
+		.pwr_sta2nd_offs = 0xe98,
+		.bp_cfg = {
+			BUS_PROT_WR_IGN(SPM, MT8196_HSGMII_PROT_EN_BUS_HSGMII1,
+					MT8196_HSGMII_BUS_PROTECT_CON_SET,
+					MT8196_HSGMII_BUS_PROTECT_CON_CLR,
+					MT8196_HSGMII_BUS_PROTECT_RDY),
+		},
 	},
 };
 
