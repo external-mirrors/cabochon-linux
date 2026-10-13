@@ -136,6 +136,8 @@ struct mtk_dpi_factor {
  * @dpi_factor: SoC-specific pixel clock PLL factor values.
  * @num_dpi_factor: Number of pixel clock PLL factor values.
  * @reg_h_fre_con: Register address of frequency control.
+ * @reg_matrix_set: Register address of color matrix setting.
+ * @mask_matrix_sel: Mask of the color matrix selector in @reg_matrix_set.
  * @max_clock_khz: Max clock frequency supported for this SoCs in khz units.
  * @edge_sel_en: Enable of edge selection.
  * @output_fmts: Array of supported output formats.
@@ -164,6 +166,8 @@ struct mtk_dpi_conf {
 	const struct mtk_dpi_factor *dpi_factor;
 	const u8 num_dpi_factor;
 	u32 reg_h_fre_con;
+	u32 reg_matrix_set;
+	u32 mask_matrix_sel;
 	u32 max_clock_khz;
 	bool edge_sel_en;
 	const u32 *output_fmts;

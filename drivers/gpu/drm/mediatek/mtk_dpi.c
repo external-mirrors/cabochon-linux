@@ -258,6 +258,8 @@ static void mtk_dpi_config_disable_edge(struct mtk_dpi *dpi)
 static void mtk_dpi_config_color_format(struct mtk_dpi *dpi,
 					enum mtk_dpi_out_color_format format)
 {
+	const struct mtk_dpi_conf *conf = dpi->conf;
+
 	mtk_dpi_config_channel_swap(dpi, dpi->channel_swap);
 
 	switch (format) {
@@ -275,9 +277,9 @@ static void mtk_dpi_config_color_format(struct mtk_dpi *dpi,
 		 * If height is smaller than 720, we need to use RGB_TO_BT601
 		 * to transfer to yuv422. Otherwise, we use RGB_TO_JPEG.
 		 */
-		mtk_dpi_mask(dpi, DPI_MATRIX_SET, dpi->mode.hdisplay <= 720 ?
+		mtk_dpi_mask(dpi, conf->reg_matrix_set, dpi->mode.hdisplay <= 720 ?
 			     MATRIX_SEL_RGB_TO_BT601 : MATRIX_SEL_RGB_TO_JPEG,
-			     INT_MATRIX_SEL_MASK);
+			     conf->mask_matrix_sel);
 		break;
 	default:
 	case MTK_DPI_COLOR_FORMAT_RGB:
@@ -577,6 +579,8 @@ static const struct mtk_dpi_conf mt8173_conf = {
 	.dpi_factor = dpi_factor_mt8173,
 	.num_dpi_factor = ARRAY_SIZE(dpi_factor_mt8173),
 	.reg_h_fre_con = 0xe0,
+	.reg_matrix_set = DPI_MATRIX_SET,
+	.mask_matrix_sel = INT_MATRIX_SEL_MASK,
 	.max_clock_khz = 300000,
 	.output_fmts = mt8173_output_fmts,
 	.num_output_fmts = ARRAY_SIZE(mt8173_output_fmts),
@@ -595,6 +599,8 @@ static const struct mtk_dpi_conf mt2701_conf = {
 	.dpi_factor = dpi_factor_mt2701,
 	.num_dpi_factor = ARRAY_SIZE(dpi_factor_mt2701),
 	.reg_h_fre_con = 0xb0,
+	.reg_matrix_set = DPI_MATRIX_SET,
+	.mask_matrix_sel = INT_MATRIX_SEL_MASK,
 	.edge_sel_en = true,
 	.max_clock_khz = 150000,
 	.output_fmts = mt8173_output_fmts,
@@ -614,6 +620,8 @@ static const struct mtk_dpi_conf mt8183_conf = {
 	.dpi_factor = dpi_factor_mt8183,
 	.num_dpi_factor = ARRAY_SIZE(dpi_factor_mt8183),
 	.reg_h_fre_con = 0xe0,
+	.reg_matrix_set = DPI_MATRIX_SET,
+	.mask_matrix_sel = INT_MATRIX_SEL_MASK,
 	.max_clock_khz = 100000,
 	.output_fmts = mt8183_output_fmts,
 	.num_output_fmts = ARRAY_SIZE(mt8183_output_fmts),
@@ -632,6 +640,8 @@ static const struct mtk_dpi_conf mt8186_conf = {
 	.dpi_factor = dpi_factor_mt8183,
 	.num_dpi_factor = ARRAY_SIZE(dpi_factor_mt8183),
 	.reg_h_fre_con = 0xe0,
+	.reg_matrix_set = DPI_MATRIX_SET,
+	.mask_matrix_sel = INT_MATRIX_SEL_MASK,
 	.max_clock_khz = 150000,
 	.output_fmts = mt8183_output_fmts,
 	.num_output_fmts = ARRAY_SIZE(mt8183_output_fmts),
@@ -651,6 +661,8 @@ static const struct mtk_dpi_conf mt8192_conf = {
 	.dpi_factor = dpi_factor_mt8183,
 	.num_dpi_factor = ARRAY_SIZE(dpi_factor_mt8183),
 	.reg_h_fre_con = 0xe0,
+	.reg_matrix_set = DPI_MATRIX_SET,
+	.mask_matrix_sel = INT_MATRIX_SEL_MASK,
 	.max_clock_khz = 150000,
 	.output_fmts = mt8183_output_fmts,
 	.num_output_fmts = ARRAY_SIZE(mt8183_output_fmts),
@@ -666,6 +678,8 @@ static const struct mtk_dpi_conf mt8192_conf = {
 };
 
 static const struct mtk_dpi_conf mt8195_conf = {
+	.reg_matrix_set = DPI_MATRIX_SET,
+	.mask_matrix_sel = INT_MATRIX_SEL_MASK,
 	.max_clock_khz = 594000,
 	.output_fmts = mt8195_dpi_output_fmts,
 	.num_output_fmts = ARRAY_SIZE(mt8195_dpi_output_fmts),
@@ -686,6 +700,8 @@ static const struct mtk_dpi_conf mt8195_conf = {
 static const struct mtk_dpi_conf mt8195_dpintf_conf = {
 	.dpi_factor = dpi_factor_mt8195_dp_intf,
 	.num_dpi_factor = ARRAY_SIZE(dpi_factor_mt8195_dp_intf),
+	.reg_matrix_set = DPI_MATRIX_SET,
+	.mask_matrix_sel = INT_MATRIX_SEL_MASK,
 	.max_clock_khz = 600000,
 	.output_fmts = mt8195_dp_intf_output_fmts,
 	.num_output_fmts = ARRAY_SIZE(mt8195_dp_intf_output_fmts),
