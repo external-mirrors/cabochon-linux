@@ -9,6 +9,8 @@
 #include <linux/of.h>
 #include <linux/of_net.h>
 #include <linux/platform_device.h>
+#include <linux/phy.h>
+#include <linux/phy/phy.h>
 #include <linux/regmap.h>
 #include <linux/stmmac.h>
 
@@ -80,6 +82,8 @@
 #define MT8195_DLY_TXC_STAGE_DIV	290 /* 290ps per stage */
 #define MT8195_DLY_TXC_MAX		9280 /* 32 x 290ps */
 
+#define MT8196_SGMII_CLK_INTERNAL	BIT(29)
+
 struct mac_delay_struct {
 	u32 tx_delay;
 	u32 rx_delay;
@@ -95,6 +99,7 @@ struct mediatek_dwmac_plat_data {
 	struct regmap *peri_regmap;
 	struct device_node *np;
 	struct device *dev;
+	struct phy *sgmii;
 	phy_interface_t phy_mode;
 	bool rmii_clk_from_mac;
 	bool rmii_rxc;
@@ -318,8 +323,35 @@ static int mt8195_set_interface(struct mediatek_dwmac_plat_data *plat,
 			intf_val |= MT8195_RMII_CLK_SRC_RXC;
 	}
 
-	/* MT8195 only support external PHY */
-	intf_val |= MT8195_EXT_PHY_MODE;
+	if (plat->phy_mode == PHY_INTERFACE_MODE_2500BASEX ||
+	    plat->phy_mode == PHY_INTERFACE_MODE_SGMII) {
+		int ret;
+
+		if (!plat->sgmii) {
+			dev_err(plat->dev, "SGMII requested without a PHY!\n");
+			return -EINVAL;
+		}
+
+		ret = phy_init(plat->sgmii);
+		if (ret) {
+			dev_err(plat->dev, "Failed to init SGMII PHY\n");
+			return ret;
+		}
+
+		ret = phy_set_mode_ext(plat->sgmii, PHY_MODE_ETHERNET,
+				       plat->phy_mode);
+		if (ret) {
+			dev_err(plat->dev, "Failed to set SGMII PHY mode\n");
+			return ret;
+		}
+
+		intf_val = MT8196_SGMII_CLK_INTERNAL |
+			   MT8195_RMII_CLK_SRC_INTERNAL |
+			   MT8189_CTRL0_TXC_OUT_OP_EN;
+	} else {
+		/* MT8195 only support external PHY */
+		intf_val |= MT8195_EXT_PHY_MODE;
+	}
 
 	if (plat->variant->mac_txclk_out_en)
 		intf_val |= MT8189_CTRL0_TXC_OUT_OP_EN;
@@ -434,6 +466,10 @@ static int mt8195_set_delay(struct mediatek_dwmac_plat_data *plat)
 					rx_delay_stage_val);
 		delay_val |= FIELD_PREP(MT8195_DLY_RXC_INV, mac_delay->rx_inv);
 
+		break;
+	case PHY_INTERFACE_MODE_2500BASEX:
+	case PHY_INTERFACE_MODE_SGMII:
+		delay_val |= MT8195_DLY_RXC_INV;
 		break;
 	default:
 		dev_err(plat->dev, "phy interface not supported\n");
@@ -638,12 +674,17 @@ static int mediatek_dwmac_init(struct device *dev, void *priv)
 	int phy_intf_sel, ret;
 
 	if (variant->dwmac_set_phy_interface) {
-		phy_intf_sel = stmmac_get_phy_intf_sel(plat->phy_mode);
-		if (phy_intf_sel != PHY_INTF_SEL_GMII_MII &&
-		    phy_intf_sel != PHY_INTF_SEL_RGMII &&
-		    phy_intf_sel != PHY_INTF_SEL_RMII) {
-			dev_err(plat->dev, "phy interface not supported\n");
-			return phy_intf_sel < 0 ? phy_intf_sel : -EINVAL;
+		if (plat->phy_mode == PHY_INTERFACE_MODE_2500BASEX ||
+		    plat->phy_mode == PHY_INTERFACE_MODE_SGMII)
+			phy_intf_sel = PHY_INTF_SEL_SGMII;
+		else {
+			phy_intf_sel = stmmac_get_phy_intf_sel(plat->phy_mode);
+			if (phy_intf_sel != PHY_INTF_SEL_GMII_MII &&
+			    phy_intf_sel != PHY_INTF_SEL_RGMII &&
+			    phy_intf_sel != PHY_INTF_SEL_RMII) {
+				dev_err(plat->dev, "phy interface not supported\n");
+				return phy_intf_sel < 0 ? phy_intf_sel : -EINVAL;
+			}
 		}
 
 		ret = variant->dwmac_set_phy_interface(plat, phy_intf_sel);
@@ -690,6 +731,24 @@ static int mediatek_dwmac_clks_config(void *priv, bool enabled)
 	return ret;
 }
 
+static int mediatek_dwmac_sgmii_configure(struct net_device *ndev, void *priv)
+{
+	struct mediatek_dwmac_plat_data *plat = priv;
+	int ret;
+
+	if (plat->phy_mode != PHY_INTERFACE_MODE_2500BASEX &&
+	    plat->phy_mode != PHY_INTERFACE_MODE_SGMII)
+		return 0;
+
+	ret = phy_power_on(plat->sgmii);
+	if (ret) {
+		phy_exit(plat->sgmii);
+		dev_err(plat->dev, "Failed to configure SGMII PHY\n");
+	}
+
+	return ret;
+}
+
 static int mediatek_dwmac_common_data(struct platform_device *pdev,
 				      struct plat_stmmacenet_data *plat,
 				      struct mediatek_dwmac_plat_data *priv_plat)
@@ -707,6 +766,9 @@ static int mediatek_dwmac_common_data(struct platform_device *pdev,
 	plat->bsp_priv = priv_plat;
 	plat->resume = mediatek_dwmac_init;
 	plat->clks_config = mediatek_dwmac_clks_config;
+	if (priv_plat->sgmii)
+		plat->serdes_powerup = mediatek_dwmac_sgmii_configure;
+
 
 	if (priv_plat->variant->dwmac_fix_mac_speed)
 		plat->fix_mac_speed = priv_plat->variant->dwmac_fix_mac_speed;
@@ -771,6 +833,11 @@ static int mediatek_dwmac_probe(struct platform_device *pdev)
 	plat_dat = devm_stmmac_probe_config_dt(pdev, stmmac_res.mac);
 	if (IS_ERR(plat_dat))
 		return PTR_ERR(plat_dat);
+
+	priv_plat->sgmii = devm_phy_optional_get(&pdev->dev, "serdes");
+	if (IS_ERR(priv_plat->sgmii))
+		return dev_err_probe(&pdev->dev, PTR_ERR(priv_plat->sgmii),
+				     "Failed to get serdes phy\n");
 
 	mediatek_dwmac_common_data(pdev, plat_dat, priv_plat);
 	mediatek_dwmac_init(&pdev->dev, priv_plat);
