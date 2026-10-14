@@ -285,7 +285,7 @@ static void mtk_spmi_pmic_handle_chained_irq(struct irq_desc *desc)
 
 	for (i = 0; i < variant->num_groups; i++) {
 		const struct mtk_spmi_pmic_irq_grp *irq_grp = &variant->pmic_irq[i];
-		u8 group_bit = BIT(irq_grp[i].group_num);
+		u8 group_bit = BIT(irq_grp->group_num);
 
 		if (val & group_bit) {
 			ret = mtk_spmi_pmic_handle_group_irq(pmic, i);
