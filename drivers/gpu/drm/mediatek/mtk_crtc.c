@@ -1114,7 +1114,7 @@ enum drm_plane_type mtk_crtc_plane_type(unsigned int plane_idx,
 
 }
 
-static int mtk_crtc_init_comp_planes(struct drm_device *drm_dev,
+static int mtk_crtc_init_hwlayers(struct drm_device *drm_dev,
 				     struct mtk_crtc *mtk_crtc,
 				     int comp_idx, int pipe)
 {
@@ -1124,16 +1124,6 @@ static int mtk_crtc_init_comp_planes(struct drm_device *drm_dev,
 
 	for (i = 0; i < num_planes; i++) {
 		struct mtk_crtc_hw_layer *hwlayer = &mtk_crtc->hwlayers[mtk_crtc->hwlayer_nr];
-
-		ret = mtk_plane_init(drm_dev, &hwlayer->plane, BIT(pipe),
-				mtk_crtc_plane_type(mtk_crtc->hwlayer_nr, num_planes),
-				mtk_ddp_comp_supported_rotations(comp),
-				mtk_ddp_comp_get_blend_modes(comp),
-				mtk_ddp_comp_get_formats(comp),
-				mtk_ddp_comp_get_num_formats(comp),
-				mtk_ddp_comp_is_afbc_supported(comp), i);
-		if (ret)
-			return ret;
 
 		hwlayer->layer_stages[hwlayer->layer_stages_nr] = comp_idx;
 		hwlayer->layer_stages_nr++;
@@ -1161,7 +1151,7 @@ static struct mtk_crtc_hw_layer
 	return NULL;
 }
 
-static int mtk_crtc_init_layer_stages(struct mtk_crtc *mtk_crtc)
+static int mtk_crtc_init_layer_stages(struct drm_device *drm_dev, struct mtk_crtc *mtk_crtc, int pipe)
 {
 	unsigned int prev_master_layer_component = UINT_MAX;
 	unsigned int master_layer_component = 0;
@@ -1229,6 +1219,47 @@ static int mtk_crtc_init_layer_stages(struct mtk_crtc *mtk_crtc)
 		hwlayer->layer_stages_nr++;
 	}
 	return 0;
+}
+
+static int mtk_crtc_init_comp_planes(struct drm_device *drm_dev,
+				     struct mtk_crtc *mtk_crtc,
+				     int comp_idx, int pipe,
+				     int plane_cur)
+{
+	struct mtk_ddp_comp *comp = mtk_crtc->ddp_comp[comp_idx];
+	unsigned int num_master_layers = mtk_ddp_comp_layer_nr(comp, comp_idx);
+	unsigned int num_new_planes = 0;
+	int i, j, ret;
+
+	for (i = 0; i < num_master_layers; i++) {
+		unsigned int blend_mode = 0;
+		unsigned int plane_num = plane_cur + num_new_planes;
+		struct mtk_crtc_hw_layer *hwlayer = &mtk_crtc->hwlayers[plane_num];
+
+		/* On Multi-Stage HW the blending HW is in a different component */
+		for (j = 0; j < hwlayer->layer_stages_nr; j++) {
+			unsigned int stage_comp_idx = hwlayer->layer_stages[j];
+			struct mtk_ddp_comp *stg = mtk_crtc->ddp_comp[stage_comp_idx];
+
+			blend_mode = mtk_ddp_comp_get_blend_modes(stg);
+			if (!blend_mode)
+				continue;
+		}
+
+		ret = mtk_plane_init(drm_dev, &hwlayer->plane, BIT(pipe),
+				mtk_crtc_plane_type(plane_num, mtk_crtc->hwlayer_nr),
+				mtk_ddp_comp_supported_rotations(comp),
+				blend_mode,
+				mtk_ddp_comp_get_formats(comp),
+				mtk_ddp_comp_get_num_formats(comp),
+				mtk_ddp_comp_is_afbc_supported(comp), plane_num);
+		if (ret)
+			return ret;
+
+		num_new_planes++;
+	}
+
+	return num_new_planes;
 }
 
 struct device *mtk_crtc_dma_dev_get(struct drm_crtc *crtc)
@@ -1413,6 +1444,7 @@ int mtk_crtc_create(struct drm_device *drm_dev,
 	unsigned int num_comp_planes = 0;
 	unsigned int max_comp_stages = 0;
 	unsigned int output_path_len = 0;
+	unsigned int plane_num = 0;
 	int ret;
 	int i, j, k;
 	bool has_ctm = false;
@@ -1589,20 +1621,29 @@ int mtk_crtc_create(struct drm_device *drm_dev,
 		}
 	}
 
+	/* Initialize HW Layer Master arrays */
 	for (i = 0; i < mtk_crtc->ddp_comp_nr; i++) {
-		ret = mtk_crtc_init_comp_planes(drm_dev, mtk_crtc, i, crtc_i);
+		ret = mtk_crtc_init_hwlayers(drm_dev, mtk_crtc, i, crtc_i);
 		if (ret)
 			goto err_free_layer_stages;
 	}
 
 	/* Initialize multi-stage only if present */
 	if (max_comp_stages > 1) {
-		ret = mtk_crtc_init_layer_stages(mtk_crtc);
+		ret = mtk_crtc_init_layer_stages(drm_dev, mtk_crtc, crtc_i);
 		if (ret)
 			goto err_free_layer_stages;
 	}
 	dev_dbg(dev, "Found %u layers composed by maximum of %u stage(s) each.\n",
 		mtk_crtc->hwlayer_nr, max_comp_stages);
+
+	for (i = 0; i < mtk_crtc->ddp_comp_nr; i++) {
+		ret = mtk_crtc_init_comp_planes(drm_dev, mtk_crtc, i, crtc_i, plane_num);
+		if (ret < 0)
+			goto err_free_layer_stages;
+
+		plane_num += ret;
+	}
 
 	ret = mtk_crtc_find_suitable_dma_dev(mtk_crtc);
 	if (ret) {
