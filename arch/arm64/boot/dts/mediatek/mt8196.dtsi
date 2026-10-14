@@ -1340,6 +1340,8 @@
 			clocks = <&topckgen CLK_TOP_GMAC_125M>,
 				 <&topckgen CLK_TOP_GMAC_62P4M_PTP>,
 				 <&topckgen CLK_TOP_GMAC_RMII>;
+			phys = <&sgmii0>;
+			phy-names = "serdes";
 			power-domains = <&spm MT8196_POWER_DOMAIN_PERI_ETHER>;
 			mediatek,pericfg = <&pericfg_ao 0x300>;
 			snps,axi-config = <&stmmac_axi_setup_mac0>;
@@ -1428,6 +1430,8 @@
 			clocks = <&topckgen CLK_TOP_GMAC_125M>,
 				 <&topckgen CLK_TOP_GMAC_62P4M_PTP>,
 				 <&topckgen CLK_TOP_GMAC_RMII>;
+			phys = <&sgmii1>;
+			phy-names = "serdes";
 			power-domains = <&spm MT8196_POWER_DOMAIN_PERI_ETHER>;
 			mediatek,pericfg = <&pericfg_ao 0x310>;
 			snps,axi-config = <&stmmac_axi_setup_mac1>;
