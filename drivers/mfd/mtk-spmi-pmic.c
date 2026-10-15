@@ -274,11 +274,12 @@ static void mtk_spmi_pmic_handle_chained_irq(struct irq_desc *desc)
 		if (ret)
 			handle_bad_irq(desc);
 
-		/* This is very unlikely to happen */
-		if (val == 0) {
-			chained_irq_exit(chip, desc);
-			return;
-		}
+		/*
+		 * The status may already be gone, e.g. when it got cleared
+		 * right after the RCS was sent: the RCS still needs an ack.
+		 */
+		if (val == 0)
+			goto out;
 	} else {
 		val = BIT(0);
 	}
@@ -294,13 +295,14 @@ static void mtk_spmi_pmic_handle_chained_irq(struct irq_desc *desc)
 		}
 	}
 
+	if (!irq_handled)
+		handle_bad_irq(desc);
+
+out:
 	/* The RCS flag has to be cleared even if the IRQ was not handled. */
 	ret = regmap_write(regmap, MTK_SPMI_PMIC_RCS_IRQ_DONE, 1);
 	if (ret)
 		dev_warn(pmic->dev, "Could not clear RCS flag!\n");
-
-	if (!irq_handled)
-		handle_bad_irq(desc);
 
 	chained_irq_exit(chip, desc);
 }
