@@ -313,6 +313,34 @@ static void mtk_spmi_pmic_irq_remove(void *data)
 	irq_domain_remove(pmic->dom);
 }
 
+/*
+ * The bootloader may leave interrupts enabled, and the PMIC keeps on sending
+ * RCS for a level one nobody handles. Start with all of them disabled, then
+ * ack the RCS that may be pending: the PMIC does not send a new one before.
+ */
+static int mtk_spmi_pmic_irq_hw_init(struct mtk_spmi_pmic *pmic)
+{
+	const struct mtk_spmi_pmic_variant *variant = pmic->variant;
+	struct regmap *regmap = pmic->regmap;
+	int i, j, ret;
+
+	for (i = 0; i < variant->num_groups; i++) {
+		const struct mtk_spmi_pmic_irq_grp *irq_grp = &variant->pmic_irq[i];
+
+		for (j = 0; j < irq_grp->num_int_regs; j++) {
+			ret = regmap_write(regmap, irq_grp->con_reg + variant->con_reg_len * j, 0);
+			if (ret)
+				return ret;
+
+			ret = regmap_write(regmap, irq_grp->sta_reg + j, GENMASK(7, 0));
+			if (ret)
+				return ret;
+		}
+	}
+
+	return regmap_write(regmap, MTK_SPMI_PMIC_RCS_IRQ_DONE, 1);
+}
+
 static int mtk_spmi_pmic_irq_init(struct device *dev, struct regmap *regmap,
 				  const struct mtk_spmi_pmic_variant *variant)
 {
@@ -343,6 +371,10 @@ static int mtk_spmi_pmic_irq_init(struct device *dev, struct regmap *regmap,
 	}
 
 	irq_set_chained_handler_and_data(pmic->irq, mtk_spmi_pmic_handle_chained_irq, pmic);
+
+	ret = mtk_spmi_pmic_irq_hw_init(pmic);
+	if (ret)
+		return dev_err_probe(dev, ret, "Could not initialize the IRQs\n");
 
 	return 0;
 }
