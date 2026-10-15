@@ -771,12 +771,13 @@ static int mtk_spmi_bus_probe(struct platform_device *pdev,
 
 	raw_spin_lock_init(&pbus->lock);
 
+	/* The slave drivers may enable and ack their RCS while being added */
+	if (pbus->dom)
+		irq_set_chained_handler_and_data(pbus->irq, mtk_spmi_handle_chained_irq, pbus);
+
 	err = spmi_controller_add(ctrl);
 	if (err)
 		goto err_remove_irq;
-
-	if (pbus->dom)
-		irq_set_chained_handler_and_data(pbus->irq, mtk_spmi_handle_chained_irq, pbus);
 
 	return 0;
 
