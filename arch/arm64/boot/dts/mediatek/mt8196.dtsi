@@ -51,11 +51,14 @@
 		dither0 = &dither0;
 		dither1 = &dither1;
 		dither2 = &disp1_dither2;
+		dp-intf0 = &dp_intf0;
+		dp-intf1 = &dp_intf1;
 		dsc0 = &dsc0;
 		dsc1 = &dsc1;
+		dsi0 = &dsi0;
+		dsi1 = &dsi1;
+		dsi2 = &dsi2;
 		dvo0 = &dvo0;
-		dvo1 = &dp_intf0;
-		dvo2 = &dp_intf1;
 		exdma2 = &ovl0_exdma2;
 		exdma3 = &ovl0_exdma3;
 		exdma4 = &ovl0_exdma4;
@@ -2854,29 +2857,29 @@
 			};
 
 			dp_intf0: displayport-interface@30000 {
-				compatible = "mediatek,mt8196-dp-dvo";
+				compatible = "mediatek,mt8196-dp-intf";
 				reg = <0 0x30000 0 0x1000>;
 				interrupts = <GIC_SPI 460 IRQ_TYPE_LEVEL_HIGH 0>;
-				clocks = <&topckgen_gp2 CLK_TOP2_DP0>,
-					 <&dispsys1 CLK_MM1_DISP_DP_INTF0>,
+				clocks = <&dispsys1 CLK_MM1_DISP_DP_INTF0>,
+					 <&dispsys1 CLK_MM1_MOD4>,
 					 <&apmixedsys_gp2 CLK_APMIXED2_TVDPLL1>;
 				clock-names = "pixel", "engine", "pll";
 				power-domains = <&hpm MT8196_POWER_DOMAIN_DPTX>;
 				trigger-sources = <&disp1_mutex 13>;
-				status = "fail";
+				status = "disabled";
 			};
 
 			dp_intf1: displayport-interface@40000 {
-				compatible = "mediatek,mt8196-dp-dvo";
+				compatible = "mediatek,mt8196-dp-intf";
 				reg = <0 0x40000 0 0x1000>;
 				interrupts = <GIC_SPI 464 IRQ_TYPE_LEVEL_HIGH 0>;
-				clocks = <&topckgen_gp2 CLK_TOP2_DP1>,
-					 <&dispsys1 CLK_MM1_DISP_DP_INTF1>,
+				clocks = <&dispsys1 CLK_MM1_DISP_DP_INTF1>,
+					 <&dispsys1 CLK_MM1_MOD5>,
 					 <&apmixedsys_gp2 CLK_APMIXED2_TVDPLL2>;
 				clock-names = "pixel", "engine", "pll";
 				power-domains = <&hpm MT8196_POWER_DOMAIN_EDPTX>;
 				trigger-sources = <&disp1_mutex 14>;
-				status = "fail";
+				status = "disabled";
 			};
 
 			dsc0: dsc@50000 {
