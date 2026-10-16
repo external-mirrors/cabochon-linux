@@ -641,6 +641,15 @@
 			interrupts = <GIC_SPI 396 IRQ_TYPE_LEVEL_HIGH 0>;
 			#interrupt-cells = <2>;
 			mediatek,rsel-resistance-in-si-unit;
+
+			spmi_pins: spmi-pins {
+				pins-bus {
+					pinmux = <PINMUX_GPIO75__FUNC_SPMI_M_SCL>,
+						 <PINMUX_GPIO76__FUNC_SPMI_M_SDA>,
+						 <PINMUX_GPIO77__FUNC_SPMI_P_SCL>,
+						 <PINMUX_GPIO78__FUNC_SPMI_P_SDA>;
+				};
+			};
 		};
 
 		ipmux: mux-controller@1002d600 {
@@ -2189,11 +2198,13 @@
 			#clock-cells = <1>;
 		};
 
-		spmi-arbiter@1c018000 {
+		spmi_arb: spmi-arbiter@1c018000 {
 			compatible = "mediatek,mt8196-spmi";
 			ranges = <0 0 0x1c018000 0x4900>;
 			#address-cells = <1>;
 			#size-cells = <1>;
+			pinctrl-names = "default";
+			pinctrl-0 = <&spmi_pins>,
 
 			spmi1: spmi@0 {
 				reg = <0 0x900>, <0x4800 0x100>;
