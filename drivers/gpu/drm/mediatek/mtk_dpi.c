@@ -356,9 +356,12 @@ static void mtk_dpi_config_hw(struct mtk_dpi *dpi,
 		mtk_dpi_config_disable_edge(dpi);
 	}
 
-	if (dpi->conf->input_2p_en_bit)
-		mtk_dpi_mask(dpi, DPI_CON, dpi->conf->input_2p_en_bit,
-			     dpi->conf->input_2p_en_bit);
+	if (dpi->conf->input_2p_en_bit) {
+		u32 mask = dpi->conf->input_2p_en_mask ?
+			   dpi->conf->input_2p_en_mask : dpi->conf->input_2p_en_bit;
+
+		mtk_dpi_mask(dpi, dpi->conf->input_2p_en_reg, dpi->conf->input_2p_en_bit, mask);
+	}
 
 	mtk_dpi_sw_reset(dpi, false);
 	return;
@@ -692,6 +695,7 @@ static const struct mtk_dpi_conf mt8195_conf = {
 	.channel_swap_shift = CH_SWAP,
 	.yuv422_en_bit = YUV422_EN,
 	.csc_enable_bit = CSC_ENABLE,
+	.input_2p_en_reg = DPI_CON,
 	.input_2p_en_bit = DPI_INPUT_2P_EN,
 	.clocked_by_hdmi = true,
 	.output_1pixel = true,
@@ -711,6 +715,7 @@ static const struct mtk_dpi_conf mt8195_dpintf_conf = {
 	.channel_swap_shift = DPINTF_CH_SWAP,
 	.yuv422_en_bit = DPINTF_YUV422_EN,
 	.csc_enable_bit = DPINTF_CSC_ENABLE,
+	.input_2p_en_reg = DPI_CON,
 	.input_2p_en_bit = DPINTF_INPUT_2P_EN,
 };
 

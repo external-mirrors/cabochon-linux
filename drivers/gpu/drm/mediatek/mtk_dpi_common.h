@@ -151,8 +151,10 @@ struct mtk_dpi_factor {
  * @channel_swap_shift: Shift value of channel swap.
  * @yuv422_en_bit: Enable bit of yuv422.
  * @csc_enable_bit: Enable bit of CSC.
+ * @input_2p_en_reg: Register holding the bits for the two pixel per round feature
  * @input_2p_en_bit: Enable bit for input two pixel per round feature.
  *		     If present, implies that the feature must be enabled.
+ * @input_2p_en_mask: Register mask for the two pixel per round feature
  * @pixels_per_iter: Quantity of transferred pixels per iteration.
  * @edge_cfg_in_mmsys: If the edge configuration for DPI's output needs to be set in MMSYS.
  * @clocked_by_hdmi: HDMI IP outputs clock to dpi_pixel_clk input clock, needed
@@ -180,7 +182,9 @@ struct mtk_dpi_conf {
 	u32 channel_swap_shift;
 	u32 yuv422_en_bit;
 	u32 csc_enable_bit;
+	u32 input_2p_en_reg;
 	u32 input_2p_en_bit;
+	u32 input_2p_en_mask;
 	u32 pixels_per_iter;
 	bool edge_cfg_in_mmsys;
 	bool clocked_by_hdmi;
