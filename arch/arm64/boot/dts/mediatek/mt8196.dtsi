@@ -1553,6 +1553,7 @@
 				      "dma_ck", "xhci_ck", "frmcnt_ck";
 			phys = <&u2port0 PHY_TYPE_USB2>, <&u3port0 PHY_TYPE_USB3>;
 			power-domains = <&spm MT8196_POWER_DOMAIN_SSUSB_P0>;
+			mediatek,syscon-wakeup = <&usbwakecfg 0x200 105>;
 			status = "disabled";
 
 			xhci0: usb@0 {
@@ -1583,6 +1584,7 @@
 				      "dma_ck", "xhci_ck", "frmcnt_ck";
 			phys = <&u2port1 PHY_TYPE_USB2>;
 			power-domains = <&spm MT8196_POWER_DOMAIN_SSUSB_P1>;
+			mediatek,syscon-wakeup = <&usbwakecfg 0x200 106>;
 			status = "disabled";
 
 			xhci1: usb@0 {
@@ -1613,6 +1615,7 @@
 				      "dma_ck", "xhci_ck", "frmcnt_ck";
 			phys = <&u2port2 PHY_TYPE_USB2>, <&u2port3 PHY_TYPE_USB2>;
 			power-domains = <&spm MT8196_POWER_DOMAIN_SSUSB_P23>;
+			mediatek,syscon-wakeup = <&usbwakecfg 0x200 107>;
 			status = "disabled";
 
 			xhci2: usb@0 {
@@ -1692,6 +1695,11 @@
 				clock-names = "ref";
 				#phy-cells = <1>;
 			};
+		};
+
+		usbwakecfg: system-controller@167a0000 {
+			compatible = "mediatek,mt8196-usbwakecfg", "syscon";
+			reg = <0 0x167a0000 0 0x1000>;
 		};
 
 		ufsphy: ufs-phy@16800000 {
