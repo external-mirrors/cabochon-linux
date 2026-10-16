@@ -2198,13 +2198,13 @@
 			#clock-cells = <1>;
 		};
 
-		spmi_arb: spmi-arbiter@1c018000 {
+		spmi-arbiter@1c018000 {
 			compatible = "mediatek,mt8196-spmi";
 			ranges = <0 0 0x1c018000 0x4900>;
 			#address-cells = <1>;
 			#size-cells = <1>;
 			pinctrl-names = "default";
-			pinctrl-0 = <&spmi_pins>,
+			pinctrl-0 = <&spmi_pins>;
 
 			spmi1: spmi@0 {
 				reg = <0 0x900>, <0x4800 0x100>;

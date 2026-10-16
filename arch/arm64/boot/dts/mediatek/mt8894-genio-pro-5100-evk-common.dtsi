@@ -988,7 +988,7 @@
 			pinmux = <PINMUX_GPIO200__FUNC_SCL1>,
 				 <PINMUX_GPIO201__FUNC_SDA1>;
 			bias-disable;
-			drive-strength = <4>;
+			drive-strength-microamp = <1000>;
 		};
 	};
 
@@ -1010,7 +1010,7 @@
 			pinmux = <PINMUX_GPIO123__FUNC_SCL3>,
 				 <PINMUX_GPIO124__FUNC_SDA3>;
 			bias-pull-up = <10000>;
-			drive-strength = <2>;
+			drive-strength-microamp = <1000>;
 		};
 	};
 
@@ -1019,7 +1019,7 @@
 			pinmux = <PINMUX_GPIO104__FUNC_SCL6>,
 				 <PINMUX_GPIO105__FUNC_SDA6>;
 			bias-disable;
-			drive-strength = <4>;
+			drive-strength-microamp = <1000>;
 		};
 	};
 
@@ -1028,7 +1028,7 @@
 			pinmux = <PINMUX_GPIO204__FUNC_SCL13>,
 				 <PINMUX_GPIO205__FUNC_SDA13>;
 			bias-disable;
-			drive-strength = <4>;
+			drive-strength = <2>;
 		};
 	};
 
@@ -1109,6 +1109,25 @@
 		pins-hub-reset {
 			pinmux = <PINMUX_GPIO186__FUNC_GPIO186>; /* USBHOST_RST_N */
 			output-high;
+		};
+	};
+
+	pmic_mt6319_b_pins: pmic-mt6319-b-pins {
+		pins-watchdog {
+			pinmux = <PINMUX_GPIO66__FUNC_WATCHDOG>;
+			drive-strength = <2>;
+		};
+
+		pins-clk {
+			pinmux = <PINMUX_GPIO67__FUNC_SRCLKENA0>;
+			drive-strength = <2>;
+		};
+	};
+
+	pmic_mt6363_pins: pmic-mt6363-pins {
+		pins-vreq {
+			pinmux = <PINMUX_GPIO68__FUNC_SCP_VREQ_VAO>;
+			drive-strength = <2>;
 		};
 	};
 
@@ -1410,6 +1429,8 @@
 	pmic@15 {
 		compatible = "mediatek,mt6319-regulator", "mediatek,mt6315-regulator";
 		reg = <0xf SPMI_USID>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&pmic_mt6319_b_pins>;
 
 		regulators {
 			mt6319_s15_vbuck1: vbuck1 {
