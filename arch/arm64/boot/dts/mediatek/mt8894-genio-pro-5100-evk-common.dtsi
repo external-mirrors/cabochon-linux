@@ -112,14 +112,16 @@
 		regulator-always-on;
 	};
 
-	/* separately switched 5.0V power rail */
+	/* TPS2555: separately switched 5.0V power rail */
 	vbus_usb0: regulator-vbus-usb0 {
 		compatible = "regulator-fixed";
 		regulator-name = "vbus_usb0_p0";
 		regulator-min-microvolt = <5000000>;
 		regulator-max-microvolt = <5000000>;
-		enable-active-high;
+		enable-active-high; /* active-high needs to be removed once TypeC is done */
 		gpio = <&pio 140 GPIO_ACTIVE_HIGH>;
+		off-on-delay-us = <3000>;
+		startup-delay-us = <4000>;
 		pinctrl-names = "default";
 		pinctrl-0 = <&usb0_vbus_pins>;
 		vin-supply = <&vsys_5v>;
@@ -133,6 +135,7 @@
 		regulator-max-microvolt = <5000000>;
 		enable-active-high;
 		gpio = <&pio 252 GPIO_ACTIVE_HIGH>;
+		off-on-delay-us = <1000>;
 		pinctrl-names = "default";
 		pinctrl-0 = <&usb1_vbus_pins>;
 		vin-supply = <&vsys_5v>;
@@ -146,6 +149,7 @@
 		regulator-max-microvolt = <5000000>;
 		enable-active-high;
 		gpio = <&pio 255 GPIO_ACTIVE_HIGH>;
+		off-on-delay-us = <1000>;
 		pinctrl-names = "default";
 		pinctrl-0 = <&usb2_vbus_pins>;
 		vin-supply = <&vsys_5v>;
@@ -156,9 +160,10 @@
 		regulator-name = "can_5v";
 		regulator-min-microvolt = <5000000>;
 		regulator-max-microvolt = <5000000>;
-		regulator-always-on;
-		enable-active-high;
 		gpio = <&pio 17 GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+		off-on-delay-us = <1000>;
+		regulator-always-on;
 		pinctrl-names = "default";
 		pinctrl-0 = <&can_vdd_en_pins>;
 		vin-supply = <&vaudio_5v>;
@@ -173,6 +178,7 @@
 		regulator-enable-ramp-delay = <3000>;
 		enable-active-high;
 		gpio = <&pio 159 GPIO_ACTIVE_HIGH>;
+		off-on-delay-us = <1000>;
 		pinctrl-names = "default";
 		pinctrl-0 = <&veth33_pins>;
 		vin-supply = <&vaudio_5v>;
@@ -185,11 +191,12 @@
 		regulator-name = "hdmi-5v";
 		regulator-min-microvolt = <5000000>;
 		regulator-max-microvolt = <5000000>;
+		enable-active-high;
 		gpio = <&pio 256 GPIO_ACTIVE_HIGH>;
+		off-on-delay-us = <1000>;
 		vin-supply = <&vvideo_5v>;
 		pinctrl-names = "default";
 		pinctrl-0 = <&vhdmi_port_5v_pins>;
-		enable-active-high;
 		regulator-boot-on;
 		regulator-always-on;
 	};
@@ -199,11 +206,13 @@
 		regulator-name = "it6162_1v0";
 		regulator-min-microvolt = <1000000>;
 		regulator-max-microvolt = <1000000>;
+		enable-active-high;
 		gpio = <&pio 258 GPIO_ACTIVE_HIGH>;
+		off-on-delay-us = <1000>;
 		vin-supply = <&vvideo_5v>;
 		pinctrl-names = "default";
 		pinctrl-0 = <&vhdmi_bridge_1v0_pins>;
-		enable-active-high;
+
 		regulator-boot-on;
 		regulator-always-on;
 	};
@@ -221,11 +230,12 @@
 		regulator-name = "it6162_3v3";
 		regulator-min-microvolt = <3300000>;
 		regulator-max-microvolt = <3300000>;
+		enable-active-high;
 		gpio = <&pio 257 GPIO_ACTIVE_HIGH>;
+		off-on-delay-us = <1000>;
 		vin-supply = <&vvideo_5v>;
 		pinctrl-names = "default";
 		pinctrl-0 = <&vhdmi_bridge_3v3_pins>;
-		enable-active-high;
 		regulator-boot-on;
 		regulator-always-on;
 	};
@@ -237,6 +247,7 @@
 		regulator-max-microvolt = <3300000>;
 		enable-active-high;
 		gpio = <&pio 181 GPIO_ACTIVE_HIGH>;
+		off-on-delay-us = <1000>;
 		pinctrl-names = "default";
 		pinctrl-0 = <&vmeas_en_pins>;
 		regulator-always-on;
@@ -270,6 +281,7 @@
 		regulator-name = "vraspi";
 		enable-active-high;
 		gpio = <&pio 139 GPIO_ACTIVE_HIGH>;
+		off-on-delay-us = <1000>;
 		pinctrl-names = "default";
 		pinctrl-0 = <&vraspi_pins>;
 		vin-supply = <&vvideo_5v>;
@@ -294,6 +306,7 @@
 		regulator-max-microvolt = <5000000>;
 		enable-active-high;
 		gpio = <&pio 26 GPIO_ACTIVE_HIGH>;
+		off-on-delay-us = <1000>;
 		pinctrl-names = "default";
 		pinctrl-0 = <&vsys5_pins>;
 		vin-supply = <&vsys_12v>;
@@ -308,6 +321,7 @@
 		regulator-max-microvolt = <3300000>;
 		enable-active-high;
 		gpio = <&pio 150 GPIO_ACTIVE_HIGH>;
+		off-on-delay-us = <1000>;
 		pinctrl-names = "default";
 		pinctrl-0 = <&vsys33_pins>;
 		vin-supply = <&vsys_5v>;
@@ -338,6 +352,7 @@
 		regulator-max-microvolt = <3300000>;
 		enable-active-high;
 		gpio = <&pio 149 GPIO_ACTIVE_HIGH>;
+		off-on-delay-us = <1000>;
 		pinctrl-names = "default";
 		pinctrl-0 = <&vusb_hub_pins>;
 		vin-supply = <&vvideo_5v>;
@@ -352,6 +367,7 @@
 		regulator-min-microvolt = <5000000>;
 		regulator-max-microvolt = <5000000>;
 		enable-active-high;
+		off-on-delay-us = <1000>;
 		pinctrl-names = "default";
 		pinctrl-0 = <&vvideo_5v_pins>;
 		vin-supply = <&vsys_12v>;
@@ -365,6 +381,7 @@
 		regulator-max-microvolt = <3300000>;
 		enable-active-high;
 		gpio = <&pio 113 GPIO_ACTIVE_HIGH>;
+		off-on-delay-us = <1000>;
 		pinctrl-names = "default";
 		pinctrl-0 = <&vwifi33_pins>;
 		vin-supply = <&vvideo_5v>;
