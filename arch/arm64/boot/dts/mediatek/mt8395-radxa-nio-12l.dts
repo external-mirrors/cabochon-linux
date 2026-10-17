@@ -1215,6 +1215,7 @@
 };
 
 &ufshci {
+	lanes-per-direction = <1>;
 	avdd12-supply = <&mt6359_vrf12_ldo_reg>;
 	avdd12-ckbuf-supply = <&mt6359_vbbck_ldo_reg>;
 	avdd18-supply = <&mt6359_vio18_ldo_reg>;
