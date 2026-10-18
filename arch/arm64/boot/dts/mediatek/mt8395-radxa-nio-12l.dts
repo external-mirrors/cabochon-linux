@@ -1011,6 +1011,8 @@
 		pins-bus {
 			pinmux = <PINMUX_GPIO102__FUNC_UTXD1>,
 				 <PINMUX_GPIO103__FUNC_URXD1>;
+			bias-disable;
+			drive-strength = <16>;
 		};
 	};
 
