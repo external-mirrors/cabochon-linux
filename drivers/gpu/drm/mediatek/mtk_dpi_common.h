@@ -149,7 +149,8 @@ struct mtk_dpi_factor {
  *		    (no shift).
  * @hvsize_mask: Mask of HSIZE and VSIZE mask (no shift).
  * @channel_swap_shift: Shift value of channel swap.
- * @yuv422_en_bit: Enable bit of yuv422.
+ * @yuv_en_reg: Register holding the bits to enable YCBCR color format
+ * @yuv422_en_bit: Bit to choose between YCBCR 4:2:2 and 4:4:4
  * @csc_enable_bit: Enable bit of CSC.
  * @input_2p_en_reg: Register holding the bits for the two pixel per round feature
  * @input_2p_en_bit: Enable bit for input two pixel per round feature.
@@ -180,6 +181,7 @@ struct mtk_dpi_conf {
 	u32 dimension_mask;
 	u32 hvsize_mask;
 	u32 channel_swap_shift;
+	u32 yuv_en_reg;
 	u32 yuv422_en_bit;
 	u32 csc_enable_bit;
 	u32 input_2p_en_reg;
