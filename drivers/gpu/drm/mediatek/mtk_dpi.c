@@ -226,10 +226,14 @@ static void mtk_dpi_config_channel_swap(struct mtk_dpi *dpi,
 		     CH_SWAP_MASK << dpi->conf->channel_swap_shift);
 }
 
-static void mtk_dpi_config_yuv422_enable(struct mtk_dpi *dpi, bool enable)
+static void mtk_dpi_config_yuv_enable(struct mtk_dpi *dpi, bool enable, bool is_422)
 {
+	if (dpi->conf->yuv_en_bit)
+		mtk_dpi_mask(dpi, dpi->conf->yuv_en_reg,
+			     enable ? dpi->conf->yuv_en_bit : 0, dpi->conf->yuv_en_bit);
+
 	mtk_dpi_mask(dpi, dpi->conf->yuv_en_reg,
-		     enable ? dpi->conf->yuv422_en_bit : 0, dpi->conf->yuv422_en_bit);
+		     (enable && is_422) ? dpi->conf->yuv422_en_bit : 0, dpi->conf->yuv422_en_bit);
 }
 
 static void mtk_dpi_config_csc_enable(struct mtk_dpi *dpi, bool enable)
@@ -264,13 +268,13 @@ static void mtk_dpi_config_color_format(struct mtk_dpi *dpi,
 
 	switch (format) {
 	case MTK_DPI_COLOR_FORMAT_YCBCR_444:
-		mtk_dpi_config_yuv422_enable(dpi, false);
+		mtk_dpi_config_yuv_enable(dpi, true, false);
 		mtk_dpi_config_csc_enable(dpi, true);
 		if (dpi->conf->swap_input_support)
 			mtk_dpi_config_swap_input(dpi, false);
 		break;
 	case MTK_DPI_COLOR_FORMAT_YCBCR_422:
-		mtk_dpi_config_yuv422_enable(dpi, true);
+		mtk_dpi_config_yuv_enable(dpi, true, true);
 		mtk_dpi_config_csc_enable(dpi, true);
 
 		/*
@@ -283,7 +287,7 @@ static void mtk_dpi_config_color_format(struct mtk_dpi *dpi,
 		break;
 	default:
 	case MTK_DPI_COLOR_FORMAT_RGB:
-		mtk_dpi_config_yuv422_enable(dpi, false);
+		mtk_dpi_config_yuv_enable(dpi, false, false);
 		mtk_dpi_config_csc_enable(dpi, false);
 		if (dpi->conf->swap_input_support)
 			mtk_dpi_config_swap_input(dpi, false);
