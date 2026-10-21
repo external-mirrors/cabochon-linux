@@ -736,6 +736,30 @@ static const struct mtk_dpi_conf mt8195_dpintf_conf = {
 	.input_2p_en_bit = DPINTF_INPUT_2P_EN,
 };
 
+static const struct mtk_dpi_conf mt8196_dpintf_conf = {
+	.dpi_factor = dpi_factor_mt8195_dp_intf,
+	.num_dpi_factor = ARRAY_SIZE(dpi_factor_mt8195_dp_intf),
+	.reg_matrix_set = DPIV2_MATRIX_SET,
+	.mask_matrix_sel = DPIV2_MATRIX_SEL_MASK,
+	.reg_h_fre_con = 0xb0,
+	.max_clock_khz = 600000,
+	.output_fmts = mt8195_dp_intf_output_fmts,
+	.num_output_fmts = ARRAY_SIZE(mt8195_dp_intf_output_fmts),
+	.pixels_per_iter = 4,
+	.dimension_mask = DPINTF_HPW_MASK,
+	.hvsize_mask = DPINTF_HSIZE_MASK,
+	.channel_swap_shift = DPINTF_CH_SWAP,
+	.csc_enable_bit = DPINTF_CSC_ENABLE,
+	.input_2p_en_reg = DPI_CONFIG_1TNP,
+	.input_2p_en_bit = DPI_CONFIG_1T2P,
+	.input_2p_en_mask = DPI_CONFIG_1TNP_MASK,
+	.yuv_en_reg = DPIV2_MATRIX_SET,
+	.yuv_en_bit = DPIV2_YUV_EN,
+	.yuv422_en_bit = DPIV2_YUV422_EN,
+	.quirk_hfp_bs_fix = true,
+	.quirk_force_pol_high = true,
+};
+
 static int mtk_dpi_probe(struct platform_device *pdev)
 {
 	struct mtk_dpi *dpi;
@@ -766,6 +790,7 @@ static const struct of_device_id mtk_dpi_of_ids[] = {
 	{ .compatible = "mediatek,mt8192-dpi", .data = &mt8192_conf },
 	{ .compatible = "mediatek,mt8195-dp-intf", .data = &mt8195_dpintf_conf },
 	{ .compatible = "mediatek,mt8195-dpi", .data = &mt8195_conf },
+	{ .compatible = "mediatek,mt8196-dp-intf", .data = &mt8196_dpintf_conf },
 	{ /* sentinel */ },
 };
 MODULE_DEVICE_TABLE(of, mtk_dpi_of_ids);
