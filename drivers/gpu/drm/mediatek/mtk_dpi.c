@@ -263,6 +263,7 @@ static void mtk_dpi_config_color_format(struct mtk_dpi *dpi,
 					enum mtk_dpi_out_color_format format)
 {
 	const struct mtk_dpi_conf *conf = dpi->conf;
+	u32 val;
 
 	mtk_dpi_config_channel_swap(dpi, dpi->channel_swap);
 
@@ -281,8 +282,13 @@ static void mtk_dpi_config_color_format(struct mtk_dpi *dpi,
 		 * If height is smaller than 720, we need to use RGB_TO_BT601
 		 * to transfer to yuv422. Otherwise, we use RGB_TO_JPEG.
 		 */
-		mtk_dpi_mask(dpi, conf->reg_matrix_set, dpi->mode.hdisplay <= 720 ?
-			     MATRIX_SEL_RGB_TO_BT601 : MATRIX_SEL_RGB_TO_JPEG,
+		if (dpi->mode.hdisplay <= 720)
+			val = MATRIX_SEL_RGB_TO_BT601;
+		else
+			val = MATRIX_SEL_RGB_TO_JPEG;
+
+		mtk_dpi_mask(dpi, conf->reg_matrix_set,
+			     field_prep(conf->mask_matrix_sel, val),
 			     conf->mask_matrix_sel);
 		break;
 	default:
