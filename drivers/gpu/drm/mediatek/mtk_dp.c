@@ -616,6 +616,10 @@ static int mtk_dp_set_color_format(struct mtk_dp *mtk_dp,
 	u32 misc0_color;
 
 	switch (color_format) {
+	case DP_PIXELFORMAT_YUV444:
+		val = PIXEL_ENCODE_FORMAT_DP_ENC0_P0_RGB;
+		misc0_color = DP_COLOR_FORMAT_YCbCr444;
+		break;
 	case DP_PIXELFORMAT_YUV422:
 		val = PIXEL_ENCODE_FORMAT_DP_ENC0_P0_YCBCR422;
 		misc0_color = DP_COLOR_FORMAT_YCbCr422;
@@ -2977,10 +2981,17 @@ static int mtk_dp_bridge_atomic_check(struct drm_bridge *bridge,
 		bridge_state->input_bus_cfg.format,
 		 bridge_state->output_bus_cfg.format);
 
-	if (input_bus_format == MEDIA_BUS_FMT_YUYV8_1X16)
+	switch (input_bus_format) {
+	case MEDIA_BUS_FMT_YUYV8_1X16:
 		mtk_dp->info.format = DP_PIXELFORMAT_YUV422;
-	else
+		break;
+	case MEDIA_BUS_FMT_YUV8_1X24:
+		mtk_dp->info.format = DP_PIXELFORMAT_YUV444;
+		break;
+	case MEDIA_BUS_FMT_RGB888_1X24:
+	default:
 		mtk_dp->info.format = DP_PIXELFORMAT_RGB;
+	}
 
 	if (!crtc) {
 		drm_err(mtk_dp->drm_dev,
