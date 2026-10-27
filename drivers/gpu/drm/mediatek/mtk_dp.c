@@ -70,6 +70,7 @@
 #define MTK_DP_4P1T 4
 #define MTK_DP_HDE 2
 #define MTK_DP_PIX_PER_ADDR 2
+#define MTK_DP_BASE_LINK_RATE_MHZ 270
 #define MTK_DP_AUX_WAIT_REPLY_COUNT 20
 #define MTK_DP_TBC_BUF_READ_START_ADDR 0x8
 #define MTK_DP_TRAIN_VOLTAGE_LEVEL_RETRY 5
@@ -1818,8 +1819,7 @@ static void mtk_dp_initialize_priv_data(struct mtk_dp *mtk_dp)
 	mtk_dp->audio_enable = false;
 }
 
-static void mtk_dp_sdp_set_down_cnt_init(struct mtk_dp *mtk_dp,
-					 u32 sram_read_start)
+static void mtk_dp_sdp_set_down_cnt_init(struct mtk_dp *mtk_dp, u16 sram_read_start)
 {
 	u32 sdp_down_cnt_init = 0;
 	struct drm_display_mode mode;
@@ -1827,23 +1827,36 @@ static void mtk_dp_sdp_set_down_cnt_init(struct mtk_dp *mtk_dp,
 
 	drm_display_mode_from_videomode(vm, &mode);
 
-	if (mode.clock > 0)
-		sdp_down_cnt_init = sram_read_start *
-				    mtk_dp->train_info.link_rate * 2700 * 8 /
-				    (mode.clock * 4);
+	if (mode.clock > 0) {
+		u64 pixel_rate_hz = (u64)mode.clock * 1000;
+		u64 total_cnt;
+
+		total_cnt = (u64)sram_read_start * mtk_dp->train_info.lane_count;
+		total_cnt *= MTK_DP_PIX_PER_ADDR;
+
+		/* Normalize to SRAM bits */
+		total_cnt += MTK_DP_BASE_LINK_RATE_MHZ * 8;
+
+		/* Nobody uses Hectohertz: scale to Kilohertz! */
+		total_cnt *= 10;
+
+		sdp_down_cnt_init = div_u64(total_cnt, pixel_rate_hz);
+	}
+
+	if (mtk_dp->info.format == DP_PIXELFORMAT_YUV420)
+		sdp_down_cnt_init /= 2;
 
 	switch (mtk_dp->train_info.lane_count) {
 	case 1:
-		sdp_down_cnt_init = max_t(u32, sdp_down_cnt_init, 0x1A);
+		sdp_down_cnt_init = max_t(u32, sdp_down_cnt_init, 0x1e);
 		break;
 	case 2:
-		/* case for LowResolution && High Audio Sample Rate */
-		sdp_down_cnt_init = max_t(u32, sdp_down_cnt_init, 0x10);
+		sdp_down_cnt_init = max_t(u32, sdp_down_cnt_init, 0x14);
 		sdp_down_cnt_init += mode.vtotal <= 525 ? 4 : 0;
 		break;
 	case 4:
 	default:
-		sdp_down_cnt_init = max_t(u32, sdp_down_cnt_init, 6);
+		sdp_down_cnt_init = max_t(u32, sdp_down_cnt_init, 8);
 		break;
 	}
 
@@ -1852,51 +1865,65 @@ static void mtk_dp_sdp_set_down_cnt_init(struct mtk_dp *mtk_dp,
 			   SDP_DOWN_CNT_INIT_DP_ENC0_P0_MASK);
 }
 
-static void mtk_dp_sdp_set_down_cnt_init_in_hblank(struct mtk_dp *mtk_dp)
+static void mtk_dp_asp_sdp_set_down_cnt_init_in_hblank(struct mtk_dp *mtk_dp)
 {
-	int pix_clk_mhz;
-	u32 dc_offset;
-	u32 spd_down_cnt_init = 0;
+	u32 asp_en_val;
+	u32 asp_down_cnt_init;
+	u32 sdp_down_cnt_init;
 	struct drm_display_mode mode;
 	struct videomode *vm = &mtk_dp->info.vm;
 
 	drm_display_mode_from_videomode(vm, &mode);
 
-	pix_clk_mhz = mtk_dp->info.format == DP_PIXELFORMAT_YUV420 ?
-		      mode.clock / 2000 : mode.clock / 1000;
+
+	if (mode.clock > 0 && mode.htotal > vm->hactive) {
+		u64 pixel_rate_hz = (u64)mode.clock * 1000;
+		u64 hblank = mode.htotal - vm->hactive;
+		u64 total_cnt;
+
+		total_cnt = hblank * mtk_dp->train_info.link_rate;
+		total_cnt *= MTK_DP_HDE * MTK_DP_BASE_LINK_RATE_MHZ;
+
+		/* Nobody uses Hectohertz: scale to Kilohertz! */
+		total_cnt *= 10;
+
+		sdp_down_cnt_init = div_u64(total_cnt, pixel_rate_hz);
+	} else {
+		sdp_down_cnt_init = 2;
+	}
+
+	if (mtk_dp->data->audio_pkt_in_hblank_area) {
+		asp_en_val = SDP_ASP_INSERT_IN_HBLANK_DP_ENC1_P0_MASK;
+		asp_down_cnt_init = sdp_down_cnt_init;
+	} else {
+		asp_en_val = 0;
+		asp_down_cnt_init = 0;
+	}
+
+	if (mtk_dp->info.format == DP_PIXELFORMAT_YUV420)
+		sdp_down_cnt_init /= 2;
 
 	switch (mtk_dp->train_info.lane_count) {
 	case 1:
-		spd_down_cnt_init = 0x20;
+		sdp_down_cnt_init = max_t(u32, sdp_down_cnt_init, 0x1e);
 		break;
 	case 2:
-		dc_offset = (mode.vtotal <= 525) ? 0x14 : 0x00;
-		spd_down_cnt_init = 0x18 + dc_offset;
+		sdp_down_cnt_init = max_t(u32, sdp_down_cnt_init, 0x14);
+		sdp_down_cnt_init += mode.vtotal <= 525 ? 4 : 0;
 		break;
 	case 4:
 	default:
-		dc_offset = (mode.vtotal <= 525) ? 0x08 : 0x00;
-		if (pix_clk_mhz > mtk_dp->train_info.link_rate * 27)
-			spd_down_cnt_init = 0x8;
-		else
-			spd_down_cnt_init = 0x10 + dc_offset;
+		sdp_down_cnt_init = max_t(u32, sdp_down_cnt_init, 0x08);
 		break;
 	}
 
-	mtk_dp_update_bits(mtk_dp, MTK_DP_ENC1_P0_3364, spd_down_cnt_init,
-			   SDP_DOWN_CNT_INIT_IN_HBLANK_DP_ENC1_P0_MASK);
-}
 
-static void mtk_dp_audio_sample_arrange_disable(struct mtk_dp *mtk_dp)
-{
-	/* arrange audio packets into the Hblanking and Vblanking area */
-	if (!mtk_dp->data->audio_pkt_in_hblank_area)
-		return;
-
-	mtk_dp_update_bits(mtk_dp, MTK_DP_ENC1_P0_3374, 0,
+	mtk_dp_update_bits(mtk_dp, MTK_DP_ENC1_P0_3374, asp_en_val,
 			   SDP_ASP_INSERT_IN_HBLANK_DP_ENC1_P0_MASK);
-	mtk_dp_update_bits(mtk_dp, MTK_DP_ENC1_P0_3374, 0,
+	mtk_dp_update_bits(mtk_dp, MTK_DP_ENC1_P0_3374, asp_down_cnt_init,
 			   SDP_DOWN_ASP_CNT_INIT_DP_ENC1_P0_MASK);
+	mtk_dp_update_bits(mtk_dp, MTK_DP_ENC1_P0_3364, sdp_down_cnt_init,
+			   SDP_DOWN_CNT_INIT_IN_HBLANK_DP_ENC1_P0_MASK);
 }
 
 static void mtk_dp_setup_tu(struct mtk_dp *mtk_dp)
@@ -1908,8 +1935,7 @@ static void mtk_dp_setup_tu(struct mtk_dp *mtk_dp)
 				    MTK_DP_PIX_PER_ADDR);
 	mtk_dp_set_sram_read_start(mtk_dp, sram_read_start);
 	mtk_dp_setup_encoder(mtk_dp);
-	mtk_dp_audio_sample_arrange_disable(mtk_dp);
-	mtk_dp_sdp_set_down_cnt_init_in_hblank(mtk_dp);
+	mtk_dp_asp_sdp_set_down_cnt_init_in_hblank(mtk_dp);
 	mtk_dp_sdp_set_down_cnt_init(mtk_dp, sram_read_start);
 }
 
