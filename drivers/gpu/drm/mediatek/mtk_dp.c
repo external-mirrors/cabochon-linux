@@ -1292,6 +1292,17 @@ static void mtk_dp_initialize_aux_hpd_detect_settings(struct mtk_dp *mtk_dp)
 	mtk_dp_update_bits(mtk_dp, REG_366C_AUX_TX_P0,
 			   FIELD_PREP_CONST(XTAL_FREQ_DP_TX_AUX_MASK, XTAL_FREQ_DP_TX_AUX_VAL),
 			   XTAL_FREQ_DP_TX_AUX_MASK);
+
+	/* Additional settings below are for full DP only */
+	if (mtk_dp->data->bridge_type == DRM_MODE_CONNECTOR_eDP)
+		return;
+
+	/* Enable Hotplug Detect on AUX Port 0 */
+	mtk_dp_update_bits(mtk_dp, MTK_DP_AUX_P0_364C, HPD_SET_AUX_TX_P0, HPD_SET_AUX_TX_P0);
+
+	/* Trigger Hotplug Detect when debounce threshold valid */
+	mtk_dp_update_bits(mtk_dp, MTK_DP_AUX_P0_364C,
+			   HPD_OVER_THD_AUX_TX_P0, HPD_OVER_THD_AUX_TX_P0);
 }
 
 static void mtk_dp_initialize_hpd_detect_settings(struct mtk_dp *mtk_dp)
