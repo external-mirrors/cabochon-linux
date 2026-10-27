@@ -3470,6 +3470,20 @@ static const struct mtk_dp_data mt8195_dp_data = {
 	.sdp_encoder1_enable = true,
 };
 
+static const struct mtk_dp_data mt8196_dp_data = {
+	.bridge_type = DRM_MODE_CONNECTOR_DisplayPort,
+	.smc_cmd = MTK_DP_SIP_ATF_VIDEO_UNMUTE,
+	.sip_v2 = true,
+	.audio_supported = true,
+	.audio_pkt_in_hblank_area = true,
+	.audio_m_div2_bit = MT8195_AUDIO_M_CODE_MULT_DIV_SEL_DP_ENC0_P0_DIV_2,
+	.hw_max_link_rate = DP_LINK_BW_8_1,
+	.bs2bs_mode = BS2BS_MODE_SYNC_VDE,
+	.hwip_v1p4 = false,
+	.aux_hpd_supported = true,
+	.sdp_encoder1_enable = true,
+};
+
 static const struct mtk_dp_data mt8196_edp_data = {
 	.bridge_type = DRM_MODE_CONNECTOR_eDP,
 	.smc_cmd = MTK_DP_SIP_ATF_EDP_SET_VID_MUTE,
@@ -3500,6 +3514,10 @@ static const struct of_device_id mtk_dp_of_match[] = {
 	{
 		.compatible = "mediatek,mt8195-dp-tx",
 		.data = &mt8195_dp_data,
+	},
+	{
+		.compatible = "mediatek,mt8196-dp-tx",
+		.data = &mt8196_dp_data,
 	},
 	{
 		.compatible = "mediatek,mt8196-edp-tx",
