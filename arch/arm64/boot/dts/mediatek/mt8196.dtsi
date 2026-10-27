@@ -641,15 +641,6 @@
 			interrupts = <GIC_SPI 396 IRQ_TYPE_LEVEL_HIGH 0>;
 			#interrupt-cells = <2>;
 			mediatek,rsel-resistance-in-si-unit;
-
-			spmi_pins: spmi-pins {
-				pins-bus {
-					pinmux = <PINMUX_GPIO75__FUNC_SPMI_M_SCL>,
-						 <PINMUX_GPIO76__FUNC_SPMI_M_SDA>,
-						 <PINMUX_GPIO77__FUNC_SPMI_P_SCL>,
-						 <PINMUX_GPIO78__FUNC_SPMI_P_SDA>;
-				};
-			};
 		};
 
 		ipmux: mux-controller@1002d600 {
@@ -2203,8 +2194,6 @@
 			ranges = <0 0 0x1c018000 0x4900>;
 			#address-cells = <1>;
 			#size-cells = <1>;
-			pinctrl-names = "default";
-			pinctrl-0 = <&spmi_pins>;
 
 			spmi1: spmi@0 {
 				reg = <0 0x900>, <0x4800 0x100>;
@@ -4762,7 +4751,7 @@
 			compatible = "mediatek,mt8196-dp-tx";
 			reg = <0 0x3ec02000 0 0x3000>,  <0 0x3ec00000 0 0x1000>;
 			phys = <&dp_phy>;
-			power-domains = <&hpm MT8196_POWER_DOMAIN_DPTX>;
+			power-domains = <&hpm_hwv MT8196_POWER_DOMAIN_DISP_DPTX_DORMANT>;
 			max-linkrate-mhz = <8100>;
 			interrupts = <GIC_SPI 447 IRQ_TYPE_LEVEL_HIGH 0>;
 			status = "disabled";
