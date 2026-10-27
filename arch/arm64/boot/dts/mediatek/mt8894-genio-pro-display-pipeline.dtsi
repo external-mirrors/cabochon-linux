@@ -28,6 +28,22 @@
 	status = "disabled";
 };
 
+&dispsys0 {
+	/delete-property/ mboxes;
+};
+
+&dispsys1 {
+	/delete-property/ mboxes;
+};
+
+&ovlsys0 {
+	/delete-property/ mboxes;
+};
+
+&ovlsys1 {
+	/delete-property/ mboxes;
+};
+
 &vdisp_ctrl {
 	status = "okay";
 };
