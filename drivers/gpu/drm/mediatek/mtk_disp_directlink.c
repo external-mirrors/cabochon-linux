@@ -326,7 +326,7 @@ static int mtk_direct_link_probe(struct platform_device *pdev)
 	default:
 		/* fallthrough */
 	case 2:
-		if (in_mtx_id && out_mtx_id) {
+		if (in_mtx_id >= 0 && out_mtx_id >= 0) {
 			ret = 0;
 			break;
 		}
