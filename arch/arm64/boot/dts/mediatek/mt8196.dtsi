@@ -676,7 +676,7 @@
 			#phy-cells = <0>;
 			mux-controls = <&ipmux 0>, <&ipmux 1>;
 			mux-control-names = "ext-lanes", "phy-flip";
-			power-domains = <&hpm_hwv MT8196_POWER_DOMAIN_DISP_DPTX_DORMANT>;
+			power-domains = <&hpm MT8196_POWER_DOMAIN_DPTX>;
 			status = "disabled";
 		};
 
@@ -2440,6 +2440,10 @@
 							reg = <1>;
 							remote-endpoint = <&dl_out_async0_2>;
 						};
+
+						dl_in_relay0_2: endpoint@2 {
+							reg = <2>;
+						};
 					};
 
 					port@3 {
@@ -2456,6 +2460,11 @@
 						dl_out_relay0_2: endpoint@1 {
 							reg = <1>;
 							mediatek,port-id = <2>;
+						};
+
+						dl_out_relay0_3: endpoint@2 {
+							reg = <2>;
+							mediatek,port-id = <3>;
 						};
 					};
 				};
@@ -2799,7 +2808,7 @@
 						};
 
 						dl_out_async1_2: endpoint@2 {
-							reg = <1>;
+							reg = <2>;
 							clocks = <&dispsys1 CLK_MM1_DISPSYS1_CONFIG>;
 							mediatek,port-id = <3>;
 						};
