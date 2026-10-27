@@ -169,6 +169,12 @@ static void ssusb_mode_sw_work(struct work_struct *work)
 	default:
 		dev_err(ssusb->dev, "invalid role\n");
 	}
+
+	if (otg_sx->role_sw_used && otg_sx->desired_role != USB_ROLE_NONE)
+		mtu3_setbits(mtu->mac_base, U3D_MISC_CTRL, VBUS_FRC_EN | VBUS_ON);
+	else
+		mtu3_clrbits(mtu->mac_base, U3D_MISC_CTRL, VBUS_FRC_EN | VBUS_ON);
+
 	pm_runtime_put(ssusb->dev);
 }
 
