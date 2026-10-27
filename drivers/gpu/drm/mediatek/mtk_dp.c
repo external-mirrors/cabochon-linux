@@ -2913,6 +2913,16 @@ mtk_dp_bridge_mode_valid(struct drm_bridge *bridge,
 	u32 rate = drm_dp_bw_code_to_link_rate(mtk_dp->train_info.link_rate) *
 		   lane_count_min;
 
+	/* Front Porch, HSync, Back Porch must be multiple of 4 */
+	if (((mode->hsync_start - mode->hdisplay) & 3) ||
+	    ((mode->hsync_end - mode->hsync_start) & 3) ||
+	    ((mode->htotal - mode->hsync_end) & 3))
+		return MODE_BAD;
+
+	/* Height must be even */
+	if (mode->hdisplay & 1)
+		return MODE_BAD;
+
 	/*
 	 *FEC overhead is approximately 2.4% from DP 1.4a spec 2.2.1.4.2.
 	 *The down-spread amplitude shall either be disabled (0.0%) or up
