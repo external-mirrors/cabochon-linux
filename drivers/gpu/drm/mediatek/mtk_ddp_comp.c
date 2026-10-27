@@ -532,15 +532,33 @@ bool mtk_ddp_find_comp_dev_in_table(const struct mtk_drm_comp_list *hlist,
 	return false;
 }
 
+static bool mtk_ddp_find_comp_inst_in_table(const struct mtk_drm_comp_list *hlist,
+					    const unsigned int comp_type,
+					    const unsigned short inst_id,
+					    struct device *dev)
+{
+	struct mtk_ddp_comp *ddp_comp;
+
+	hash_for_each_possible(hlist->ddp_list, ddp_comp, lnode, comp_type) {
+		if (ddp_comp->dev == dev && ddp_comp->inst_id == inst_id)
+			return true;
+	}
+
+	return false;
+}
+
 static bool mtk_ddp_comp_find(struct device *dev,
 			      const struct mtk_drm_path_definition *output_path,
 			      const struct mtk_drm_comp_list *hlist)
 {
 	unsigned int i;
 
-	for (i = 0U; i < output_path->len; i++)
-		if (mtk_ddp_find_comp_dev_in_table(hlist, output_path->comp[i].type, dev))
+	for (i = 0U; i < output_path->len; i++) {
+		const struct mtk_drm_comp_definition *comp = &output_path->comp[i];
+
+		if (mtk_ddp_find_comp_inst_in_table(hlist, comp->type, comp->inst_id, dev))
 			return true;
+	}
 
 	return false;
 }
@@ -555,9 +573,12 @@ static int mtk_ddp_comp_find_in_route(struct device *dev,
 	if (!routes)
 		return -EINVAL;
 
-	for (i = 0; i < num_routes; i++)
-		if (mtk_ddp_find_comp_dev_in_table(hlist, routes[i].route_ddp_type, dev))
+	for (i = 0; i < num_routes; i++) {
+		if (mtk_ddp_find_comp_inst_in_table(hlist,
+						    routes[i].route_ddp_type,
+						    routes[i].route_ddp_inst_id, dev))
 			return BIT(routes[i].crtc_id);
+	}
 
 	return -ENODEV;
 }
