@@ -162,7 +162,7 @@ int mtk_dpi_set_display_mode(struct mtk_dpi *dpi, struct videomode *vm,
 
 	if (dpi->conf->quirk_hfp_bs_fix) {
 		sync->hsync.back_porch += sync->hsync.front_porch;
-		sync->hsync.front_porch = 0;
+		sync->hsync.front_porch = 1;
 	}
 
 	sync->vsync_l_odd.sync_width = vm->vsync_len;
