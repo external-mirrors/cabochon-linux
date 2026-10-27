@@ -319,6 +319,72 @@ static void mtk_dpi_dual_edge(struct mtk_dpi *dpi)
 	}
 }
 
+/* TODO: Rewrite this so that it actually makes sense when reading it */
+static void mtk_dpi_set_golden_setting(struct mtk_dpi *dpi)
+{
+	unsigned int dp_buf_sodi_high, dp_buf_sodi_low;
+	unsigned int dp_buf_preultra_high, dp_buf_preultra_low;
+	unsigned int dp_buf_ultra_high, dp_buf_ultra_low;
+	unsigned int dp_buf_urgent_high, dp_buf_urgent_low;
+	unsigned int mmsys_clk, dp_clk;
+	unsigned int twait = 12, twake = 5;
+	unsigned int fill_rate, consume_rate;
+	unsigned int vtotal = 0;
+	unsigned int vrefresh = 0;
+	u32 val = 0, line_time = 0;
+
+	dp_clk = dpi->mode.clock / 4;
+	dp_clk = dp_clk > 0 ? dp_clk : 74250;
+	mmsys_clk = 273000; /* FIXME: Get from real clock! */
+
+	fill_rate = mmsys_clk * 4 / 8;
+	consume_rate = dp_clk * 4 / 8;
+	dev_dbg(dpi->dev, "mmsys_clk=%d, dp_clk=%d, fill_rate=%d, consume_rate=%d\n",
+		mmsys_clk, dp_clk, fill_rate, consume_rate);
+
+	dp_buf_sodi_high = (5940000 - twait * 100 * fill_rate / 1000 - consume_rate) * 30 / 32000;
+	dp_buf_sodi_low = (25 + twake) * consume_rate * 30 / 32000;
+
+	dp_buf_preultra_high = 36 * consume_rate * 30 / 32000;
+	dp_buf_preultra_low = 35 * consume_rate * 30 / 32000;
+
+	dp_buf_ultra_high = 26 * consume_rate * 30 / 32000;
+	dp_buf_ultra_low = 25 * consume_rate * 30 / 32000;
+
+	dp_buf_urgent_high = 12 * consume_rate * 30 / 32000;
+	dp_buf_urgent_low = 11 * consume_rate * 30 / 32000;
+
+	dev_dbg(dpi->dev, "SODI H:%u L:%u, PreUltra H:%u L:%u\n",
+		dp_buf_sodi_high, dp_buf_sodi_low,
+		dp_buf_preultra_high, dp_buf_preultra_low);
+
+	dev_dbg(dpi->dev, "Ultra H:%u L:%u, Urgent H:%u L:%u\n",
+		dp_buf_ultra_high, dp_buf_ultra_low,
+		dp_buf_urgent_high, dp_buf_urgent_low);
+
+	writel(dp_buf_sodi_high, dpi->regs + DPI_BUF_SODI_HIGH);
+	writel(dp_buf_sodi_low, dpi->regs + DPI_BUF_SODI_LOW);
+
+	writel(dp_buf_preultra_high, dpi->regs + DPI_BUF_PREULTRA_HIGH);
+	writel(dp_buf_preultra_low, dpi->regs + DPI_BUF_PREULTRA_LOW);
+
+	writel(dp_buf_ultra_high, dpi->regs + DPI_BUF_ULTRA_HIGH);
+	writel(dp_buf_ultra_low, dpi->regs + DPI_BUF_ULTRA_LOW);
+
+	writel(dp_buf_urgent_high, dpi->regs + DPI_BUF_URGENT_HIGH);
+	writel(dp_buf_urgent_low, dpi->regs + DPI_BUF_URGENT_HIGH);
+
+	vtotal = dpi->mode.vtotal;
+	vrefresh = drm_mode_vrefresh(&dpi->mode);
+	line_time = 1000000 / (vtotal * vrefresh);
+	val = (200 + line_time - 1) / line_time;
+	val = val | MUTEX_VSYNC_SEL;
+	dev_dbg(dpi->dev, "vtotal %d  vrefresh %d line_time %u val 0x%X\n",
+		 vtotal, vrefresh, line_time, val);
+
+	writel(val, dpi->regs + DPI_MUTEX_VSYNC_SETTING);
+}
+
 static void mtk_dpi_config_hw(struct mtk_dpi *dpi,
 			      struct videomode *vm, struct mtk_dpi_sync *sync,
 			      struct mtk_dpi_polarities *dpi_pol,
@@ -326,6 +392,9 @@ static void mtk_dpi_config_hw(struct mtk_dpi *dpi,
 {
 	struct drm_display_mode *mode = &dpi->mode;
 	u32 vactive = vm->vactive;
+
+	/* Set Quality of Service parameters */
+	mtk_dpi_set_golden_setting(dpi);
 
 	mtk_dpi_sw_reset(dpi, true);
 	mtk_dpi_config_pol(dpi, dpi_pol);
