@@ -1675,6 +1675,11 @@ static void mtk_dp_video_mute(struct mtk_dp *mtk_dp, bool enable)
 	/* Set VIDEO_MUTE in unsecured world... */
 	mtk_dp_update_bits(mtk_dp, MTK_DP_ENC0_P0_3000, val, mask);
 
+	/* ...and VBID Mute... */
+	mtk_dp_update_bits(mtk_dp, MTK_DP_ENC0_P0_304C,
+			   enable ? VBID_VIDEO_MUTE_DP_ENC0_P0_MASK : 0,
+			   VBID_VIDEO_MUTE_DP_ENC0_P0_MASK);
+
 	/* ...and do the same in ATF as well */
 	if (mtk_dp->data->hwip_v1p4) {
 		smc_para = (mtk_dp->data->smc_cmd << 16) | enable;
