@@ -1328,9 +1328,9 @@ static void mtk_dp_initialize_hpd_detect_settings(struct mtk_dp *mtk_dp)
 
 static void mtk_dp_initialize_aux_settings(struct mtk_dp *mtk_dp)
 {
-	/* modify timeout threshold = 0x1595 */
+	/* Timeout threshold: 2974.4uS */
 	mtk_dp_update_bits(mtk_dp, MTK_DP_AUX_P0_360C,
-			   AUX_TIMEOUT_THR_AUX_TX_P0_VAL,
+			   AUX_TIMEOUT_THRESHOLD_NS(2974400),
 			   AUX_TIMEOUT_THR_AUX_TX_P0_MASK);
 	mtk_dp_update_bits(mtk_dp, MTK_DP_AUX_P0_3658,
 			   0, AUX_TX_OV_EN_AUX_TX_P0_MASK);
