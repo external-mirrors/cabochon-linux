@@ -24,7 +24,7 @@
 };
 
 &hdmi_bridge_it6162 {
-	//interrupts-extended = <&pio 143 IRQ_TYPE_LEVEL_LOW>;
+	interrupts-extended = <&pio 143 IRQ_TYPE_LEVEL_LOW>;
 
 	/* IT6162CFN - Firmware expects DSI on Port 0 */
 	ports {
