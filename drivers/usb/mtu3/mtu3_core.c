@@ -111,7 +111,14 @@ static int mtu3_device_enable(struct mtu3 *mtu)
 		SSUSB_U2_PORT_HOST_SEL));
 
 	if (mtu->ssusb->dr_mode == USB_DR_MODE_OTG) {
-		mtu3_setbits(ibase, SSUSB_U2_CTRL(0), SSUSB_U2_PORT_OTG_SEL);
+		/*
+		 * OTG_SEL makes the U2 port take VBUS valid from the PHY,
+		 * which is redundant with the connector triggering role
+		 * switches (and may be an issue if VBUS isn't routed).
+		 */
+		if (!mtu->ssusb->otg_switch.role_sw_used)
+			mtu3_setbits(ibase, SSUSB_U2_CTRL(0),
+				     SSUSB_U2_PORT_OTG_SEL);
 		if (mtu->u3_capable)
 			mtu3_setbits(ibase, SSUSB_U3_CTRL(0),
 				     SSUSB_U3_PORT_DUAL_MODE);
