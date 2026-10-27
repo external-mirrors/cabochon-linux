@@ -174,6 +174,7 @@ struct mtk_dp_data {
 	u16 audio_m_div2_bit;
 	u8 hw_max_link_rate;
 	bool hwip_v1p4;
+	bool sip_v2;
 	bool aux_hpd_supported;
 	bool sdp_encoder1_enable;
 	bool force_pwr_states;
@@ -1681,7 +1682,7 @@ static void mtk_dp_video_mute(struct mtk_dp *mtk_dp, bool enable)
 			   VBID_VIDEO_MUTE_DP_ENC0_P0_MASK);
 
 	/* ...and do the same in ATF as well */
-	if (mtk_dp->data->hwip_v1p4) {
+	if (mtk_dp->data->sip_v2) {
 		smc_para = (mtk_dp->data->smc_cmd << 16) | enable;
 		smc_val = MTK_DP_SIP_REQ_VIDEO_UNMUTE;
 	} else {
@@ -3424,6 +3425,7 @@ static const struct mtk_dp_data mt8196_edp_data = {
 	.audio_m_div2_bit = MT8195_AUDIO_M_CODE_MULT_DIV_SEL_DP_ENC0_P0_DIV_2,
 	.hw_max_link_rate = DP_LINK_BW_8_1,
 	.hwip_v1p4 = true,
+	.sip_v2 = true,
 	.aux_hpd_supported = true,
 	.force_pwr_states = true,
 	.psr_supported = true,
