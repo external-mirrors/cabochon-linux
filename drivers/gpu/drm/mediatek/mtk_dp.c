@@ -514,6 +514,19 @@ static void mtk_dp_msa_bypass_enable(struct mtk_dp *mtk_dp, bool enable)
 	mtk_dp_update_bits(mtk_dp, MTK_DP_ENC0_P0_3030, enable ? 0 : mask, mask);
 }
 
+static void mtk_dp_set_interlaced_mode(struct mtk_dp *mtk_dp, bool enable)
+{
+	u32 val = VBID_INTERLACE_FLAG_SEL_DP_ENC0_P0;
+
+	/* Interlaced if set, or Progressive if not set */
+	if (enable)
+		val |= VBID_INTERLACE_FLAG_SW_DP_ENC0_P0;
+
+	mtk_dp_update_bits(mtk_dp, MTK_DP_ENC0_P0_3030, val,
+			   VBID_INTERLACE_FLAG_SEL_DP_ENC0_P0 |
+			   VBID_INTERLACE_FLAG_SW_DP_ENC0_P0);
+}
+
 static void mtk_dp_set_msa(struct mtk_dp *mtk_dp)
 {
 	u32 fde_start_val;
@@ -521,6 +534,8 @@ static void mtk_dp_set_msa(struct mtk_dp *mtk_dp)
 	struct videomode *vm = &mtk_dp->info.vm;
 
 	drm_display_mode_from_videomode(vm, &mode);
+
+	mtk_dp_set_interlaced_mode(mtk_dp, vm->flags & DISPLAY_FLAGS_INTERLACED);
 
 	/* horizontal */
 	mtk_dp_update_bits(mtk_dp, MTK_DP_ENC0_P0_3010,
