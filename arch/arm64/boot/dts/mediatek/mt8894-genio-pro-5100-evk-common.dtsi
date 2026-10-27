@@ -1501,12 +1501,10 @@
 };
 
 &ssusb0 {
-	dr_mode = "peripheral";
-	maximum-speed = "high-speed";
-	// role-switch-default-mode = "peripheral";
-	// usb-role-switch;
-	vbus-supply = <&vbus_usb0>;
-	mediatek,force-vbus;
+	dr_mode = "otg";
+	maximum-speed = "super-speed";
+	role-switch-default-mode = "host";
+	usb-role-switch;
 	status = "okay";
 
 	port {
