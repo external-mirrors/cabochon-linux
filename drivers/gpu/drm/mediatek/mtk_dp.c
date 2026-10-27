@@ -2840,10 +2840,14 @@ static void mtk_dp_bridge_atomic_enable(struct drm_bridge *bridge,
 				   FEC_EN_DP_TRANS_P0_MASK,
 				   FEC_EN_DP_TRANS_P0_MASK);
 
+	/* Make sure video is muted while configuring the params */
+	mtk_dp_video_mute(mtk_dp, true);
+
 	ret = mtk_dp_video_config(mtk_dp);
 	if (ret)
 		goto power_off_aux;
 
+	/* This will take care of unmuting as well */
 	mtk_dp_video_enable(mtk_dp, true);
 
 	mtk_dp->audio_enable =
