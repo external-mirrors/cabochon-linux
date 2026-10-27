@@ -172,6 +172,7 @@ struct mtk_dp_data {
 	bool audio_supported;
 	bool audio_pkt_in_hblank_area;
 	u16 audio_m_div2_bit;
+	u8 bs2bs_mode;
 	u8 hw_max_link_rate;
 	bool hwip_v1p4;
 	bool sip_v2;
@@ -692,14 +693,20 @@ static void mtk_dp_setup_encoder(struct mtk_dp *mtk_dp)
 			   FIFO_READ_START_POINT_DP_ENC1_P0_MASK);
 
 	mask = VIDEO_SRAM_FIFO_CNT_RESET_SEL_DP_ENC1_P0 | VIDEO_STABLE_CNT_THRD_DP_ENC1_P0;
-	mask |= BS2BS_MODE_DP_ENC1_P0;
-
 	val = mask;
 
 	mask |= SDP_DP13_EN_DP_ENC1_P0;
 
 	if (mtk_dp->data->sdp_encoder1_enable)
 		val |= SDP_DP13_EN_DP_ENC1_P0;
+
+	mask |= BS2BS_MODE_DP_ENC1_P0_MASK;
+	val |= FIELD_PREP(BS2BS_MODE_DP_ENC1_P0_MASK, mtk_dp->data->bs2bs_mode);
+
+	if (mtk_dp->data->bs2bs_mode == BS2BS_MODE_SYNC_VDE) {
+		mask |= BS_FOLLOW_SEL_DP_ENC0_P0;
+		val |= BS_FOLLOW_SEL_DP_ENC0_P0;
+	}
 
 	mtk_dp_update_bits(mtk_dp, MTK_DP_ENC1_P0_3368, val, mask);
 }
@@ -1370,7 +1377,8 @@ static void mtk_dp_initialize_common_digital_settings(struct mtk_dp *mtk_dp)
 			   0, VBID_VIDEO_MUTE_DP_ENC0_P0_MASK);
 
 	mtk_dp_update_bits(mtk_dp, MTK_DP_ENC1_P0_3368,
-			   BS2BS_MODE_DP_ENC1_P0, BS2BS_MODE_DP_ENC1_P0_MASK);
+			   FIELD_PREP_CONST(BS2BS_MODE_DP_ENC1_P0_MASK, BS2BS_MODE_VBID),
+			   BS2BS_MODE_DP_ENC1_P0_MASK);
 }
 
 static void mtk_dp_initialize_digital_settings_v2p1(struct mtk_dp *mtk_dp)
@@ -3394,6 +3402,7 @@ static const struct mtk_dp_data mt8188_dp_data = {
 	.audio_supported = true,
 	.audio_pkt_in_hblank_area = true,
 	.audio_m_div2_bit = MT8188_AUDIO_M_CODE_MULT_DIV_SEL_DP_ENC0_P0_DIV_2,
+	.bs2bs_mode = BS2BS_MODE_VBID,
 	.hw_max_link_rate = DP_LINK_BW_5_4,
 	.sdp_encoder1_enable = true,
 };
@@ -3404,6 +3413,7 @@ static const struct mtk_dp_data mt8195_edp_data = {
 	.efuse_fmt = mt8195_edp_efuse_fmt,
 	.audio_supported = false,
 	.audio_m_div2_bit = MT8195_AUDIO_M_CODE_MULT_DIV_SEL_DP_ENC0_P0_DIV_2,
+	.bs2bs_mode = BS2BS_MODE_VBID,
 	.hw_max_link_rate = DP_LINK_BW_5_4,
 	.sdp_encoder1_enable = true,
 };
@@ -3414,6 +3424,7 @@ static const struct mtk_dp_data mt8195_dp_data = {
 	.efuse_fmt = mt8195_dp_efuse_fmt,
 	.audio_supported = true,
 	.audio_m_div2_bit = MT8195_AUDIO_M_CODE_MULT_DIV_SEL_DP_ENC0_P0_DIV_2,
+	.bs2bs_mode = BS2BS_MODE_VBID,
 	.hw_max_link_rate = DP_LINK_BW_5_4,
 	.sdp_encoder1_enable = true,
 };
@@ -3423,6 +3434,7 @@ static const struct mtk_dp_data mt8196_edp_data = {
 	.smc_cmd = MTK_DP_SIP_ATF_EDP_SET_VID_MUTE,
 	.audio_supported = false,
 	.audio_m_div2_bit = MT8195_AUDIO_M_CODE_MULT_DIV_SEL_DP_ENC0_P0_DIV_2,
+	.bs2bs_mode = BS2BS_MODE_VBID,
 	.hw_max_link_rate = DP_LINK_BW_8_1,
 	.hwip_v1p4 = true,
 	.sip_v2 = true,
