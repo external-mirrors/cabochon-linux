@@ -118,8 +118,7 @@
 		regulator-name = "vbus_usb0_p0";
 		regulator-min-microvolt = <5000000>;
 		regulator-max-microvolt = <5000000>;
-		enable-active-high; /* active-high needs to be removed once TypeC is done */
-		gpio = <&pio 140 GPIO_ACTIVE_HIGH>;
+		gpio = <&pio 140 GPIO_ACTIVE_LOW>;
 		off-on-delay-us = <3000>;
 		startup-delay-us = <4000>;
 		pinctrl-names = "default";
@@ -240,6 +239,28 @@
 		regulator-always-on;
 	};
 
+	vio18_lcm1: regulator-vio18-lcm1 {
+		compatible = "regulator-fixed";
+		regulator-name = "vio18_lcm1";
+		regulator-min-microvolt = <1800000>;
+		regulator-max-microvolt = <1800000>;
+		off-on-delay-us = <1000>;
+		enable-active-high;
+		vin-supply = <&vvideo_5v>;
+		regulator-always-on;
+	};
+
+	vio33_tp1_lcm1: regulator-vio33-tp1-lcm1 {
+		compatible = "regulator-fixed";
+		regulator-name = "vio33_lcm1";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		off-on-delay-us = <1000>;
+		enable-active-high;
+		vin-supply = <&vvideo_5v>;
+		regulator-always-on;
+	};
+
 	vmeas_3v3: regulator-vmeas-3v3 {
 		compatible = "regulator-fixed";
 		regulator-name = "vmeas_3v3";
@@ -325,6 +346,16 @@
 		pinctrl-names = "default";
 		pinctrl-0 = <&vsys33_pins>;
 		vin-supply = <&vsys_5v>;
+		regulator-always-on;
+	};
+
+	vsys_lcm1: regulator-vsys-lcm1 {
+		compatible = "regulator-fixed";
+		regulator-name = "vsys_lcm1";
+		regulator-min-microvolt = <5000000>;
+		regulator-max-microvolt = <5000000>;
+		enable-active-high;
+		vin-supply = <&vvideo_5v>;
 		regulator-always-on;
 	};
 
@@ -630,6 +661,8 @@
 
 &mt6363_vbuck7 {
 	regulator-name = "dvdd_mm_phase2";
+	regulator-min-microvolt = <490000>;
+	regulator-max-microvolt = <935000>;
 	regulator-always-on;
 };
 
@@ -846,6 +879,19 @@
 		pins {
 			pinmux = <PINMUX_GPIO17__FUNC_GPIO17>;
 			output-high;
+		};
+	};
+
+	disp_pwm1_pins: disp-pwm1-pins {
+		pins-pwm {
+			pinmux = <PINMUX_GPIO4__FUNC_DISP_PWM1>;
+		};
+	};
+
+	edp_hpd_pins: edp-hpd-pins {
+		pins-hpd {
+			pinmux = <PINMUX_GPIO8__FUNC_EDP_TX_HPD>;
+			bias-pull-up;
 		};
 	};
 
@@ -1587,191 +1633,7 @@
 	status = "disabled";
 };
 
-&dispsys0 {
-	status = "disabled";
-};
-
-&dispsys1 {
-	status = "disabled";
-};
-
-&ovlsys0 {
-	status = "disabled";
-};
-
-&ovlsys1  {
-	status = "disabled";
-};
-
-&vdecsys_soc {
-	status = "disabled";
-};
-
-&vdecsys1 {
-	status = "disabled";
-};
-
-&vencsys0 {
-	status = "disabled";
-};
-
-&vencsys1 {
-	status = "disabled";
-};
-
-&vencsys2 {
-	status = "disabled";
-};
-
-&mdpsys0 {
-	status = "disabled";
-};
-
-&mdpsys1 {
-	status = "disabled";
-};
-
-&smi_disp_common {
-	status = "disabled";
-};
-
-&smi_mdp_common {
-	status = "disabled";
-};
-
-&disp_ssc0_smi_2x1_sub_comm {
-	status = "disabled";
-};
-
-&disp_ssc1_smi_2x1_sub_comm {
-	status = "disabled";
-};
-
-&mdp_ssc4_smi_2x1_sub_comm {
-	status = "disabled";
-};
-
-&mdp_ssc5_smi_2x1_sub_comm {
-	status = "disabled";
-};
-
-&smi_larb32 {
-	status = "disabled";
-};
-
-&smi_larb33 {
-	status = "disabled";
-};
-
-&smi_larb0 {
-	status = "disabled";
-};
-
-&smi_larb1 {
-	status = "disabled";
-};
-
-&smi_larb20 {
-	status = "disabled";
-};
-
-&smi_larb21 {
-	status = "disabled";
-};
-
-&smi_larb34 {
-	status = "disabled";
-};
-
-&smi_larb35 {
-	status = "disabled";
-};
-
-&smi_larb36 {
-	status = "disabled";
-};
-
-&smi_larb37 {
-	status = "disabled";
-};
-
-&smi_larb5 {
-	status = "disabled";
-};
-
-&smi_larb6 {
-	status = "disabled";
-};
-
-&smi_larb4 {
-	status = "disabled";
-};
-
-&smi_larb7 {
-	status = "disabled";
-};
-
-&smi_disp_venc_sub_comm0 {
-	status = "disabled";
-};
-
-&smi_larb41 {
-	status = "disabled";
-};
-
-&smi_larb8 {
-	status = "disabled";
-};
-
-&smi_mdp_venc_sub_comm1 {
-	status = "disabled";
-};
-
-&smi_larb42 {
-	status = "disabled";
-};
-
-&smi_larb24 {
-	status = "disabled";
-};
-
-&smi_mdp_venc_sub_comm2 {
-	status = "disabled";
-};
-
-&smi_larb47 {
-	status = "disabled";
-};
-
-&smi_larb2 {
-	status = "disabled";
-};
-
-&smi_larb3 {
-	status = "disabled";
-};
-
-&smi_disp_dram_sub_comm0 {
-	status = "disabled";
-};
-
-&smi_disp_dram_sub_comm1 {
-	status = "disabled";
-};
-
-&smi_mdp_dram_sub_comm2 {
-	status = "disabled";
-};
-
-&smi_mdp_dram_sub_comm3 {
-	status = "disabled";
-};
-
 &vcp {
-	status = "disabled";
-};
-
-&vdisp_ctrl {
 	status = "disabled";
 };
 

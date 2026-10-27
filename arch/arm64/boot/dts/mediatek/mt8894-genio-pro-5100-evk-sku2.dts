@@ -80,20 +80,9 @@
 			compatible = "usb-c-connector";
 			label = "USB-C";
 			data-role = "dual";
-			power-role = "dual";
-			try-power-role = "sink";
-
-			source-pdos = <PDO_FIXED(5000, 2400,
-					     PDO_FIXED_DUAL_ROLE |
-					     PDO_FIXED_USB_COMM |
-					     PDO_FIXED_DATA_SWAP)>;
-			sink-pdos = <PDO_FIXED(5000, 3000,
-					   PDO_FIXED_DUAL_ROLE |
-					   PDO_FIXED_USB_COMM |
-					   PDO_FIXED_DATA_SWAP)
-				     PDO_VAR(5000, 20000, 3000)>;
+			power-role = "source";
 			pd-revision = /bits/ 8 <0x03 0x00 0x01 0x08>;
-			op-sink-microwatt = <10000000>;
+			source-pdos = <PDO_FIXED(5000, 2000, PDO_FIXED_USB_COMM | PDO_FIXED_DATA_SWAP)>;
 
 			altmodes {
 				displayport {
@@ -235,12 +224,57 @@
 			input-enable;
 		};
 	};
+
+	vio18_lcm1_pins: vio18-lcm1-default {
+		pins-regulator {
+			pinmux = <PINMUX_GPIO48__FUNC_GPIO48>;
+			bias-pull-up = <10000>;
+			drive-strength-microamp = <1000>;
+			output-high;
+		};
+	};
+
+	vio33_tp1_lcm1_pins: vio33-tp1-lcm1-default {
+		pins-regulator {
+			pinmux = <PINMUX_GPIO168__FUNC_GPIO168>;
+			bias-pull-up = <10000>;
+			drive-strength-microamp = <1000>;
+			output-high;
+		};
+	};
+
+	vsys_lcm1_pins: vsys-lcm1-default {
+		pins-regulator {
+			pinmux = <PINMUX_GPIO136__FUNC_GPIO136>;
+			bias-pull-up = <MTK_PUPD_SET_R1R0_01>;
+			drive-strength = <4>;
+			output-high;
+		};
+	};
 };
 
 &soc_fan {
 	pinctrl-names = "default";
 	pinctrl-0 = <&fan_tach_pins>;
 	interrupts-extended = <&pio 38 IRQ_TYPE_EDGE_RISING>;
+};
+
+&vio18_lcm1 {
+	gpio = <&pio 48 GPIO_ACTIVE_HIGH>;
+	pinctrl-names = "default";
+	pinctrl-0 = <&vio18_lcm1_pins>;
+};
+
+&vio33_tp1_lcm1 {
+	gpio = <&pio 168 GPIO_ACTIVE_HIGH>;
+	pinctrl-names = "default";
+	pinctrl-0 = <&vio33_tp1_lcm1_pins>;
+};
+
+&vsys_lcm1 {
+	gpio = <&pio 136 GPIO_ACTIVE_HIGH>;
+	pinctrl-names = "default";
+	pinctrl-0 = <&vsys_lcm1_pins>;
 };
 
 &vvideo_5v {

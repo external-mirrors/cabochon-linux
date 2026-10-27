@@ -15,47 +15,8 @@
 		brightness-levels = <0 1023>;
 		default-brightness-level = <576>;
 		num-interpolated-steps = <1023>;
-		power-supply = <&vddp_lcm1>;
+		power-supply = <&vio33_tp1_lcm1>;
 		pwms = <&disp_pwm0 0 500000>;
-	};
-
-	vsys_lcm1: regulator-vsys-lcm1 {
-		compatible = "regulator-fixed";
-		regulator-name = "vsys_lcm1";
-		regulator-min-microvolt = <5000000>; /*4.5-7.5V*/
-		regulator-max-microvolt = <5000000>;
-		enable-active-high;
-		gpio = <&pio 91 GPIO_ACTIVE_HIGH>;
-		pinctrl-names = "default";
-		pinctrl-0 = <&vsys_lcm1_pins>;
-		vin-supply = <&vvideo_5v>;
-		regulator-always-on;
-	};
-
-	vddp_lcm1: regulator-vddp-lcm1 {
-		compatible = "regulator-fixed";
-		regulator-name = "vddp_lcm1";
-		regulator-min-microvolt = <3300000>;
-		regulator-max-microvolt = <3300000>;
-		enable-active-high;
-		gpio = <&pio 92 GPIO_ACTIVE_HIGH>;
-		pinctrl-names = "default";
-		pinctrl-0 = <&vddp_lcm1_pins>;
-		vin-supply = <&vvideo_5v>;
-		regulator-always-on;
-	};
-
-	iovcc_lcm1: regulator-iovcc-lcm1 {
-		compatible = "regulator-fixed";
-		regulator-name = "iovcc_lcm1";
-		regulator-min-microvolt = <1800000>;
-		regulator-max-microvolt = <1800000>;
-		enable-active-high;
-		gpio = <&pio 93 GPIO_ACTIVE_HIGH>;
-		pinctrl-names = "default";
-		pinctrl-0 = <&iovcc_lcm1_pins>;
-		vin-supply = <&vvideo_5v>;
-		regulator-always-on;
 	};
 };
 
@@ -67,136 +28,9 @@
 	status = "disabled";
 };
 
-&dispsys0 {
-	status = "okay";
-};
-
-&dispsys1 {
-	status = "okay";
-};
-
-&ovlsys0 {
-	status = "okay";
-};
-
-&ovlsys1  {
-	status = "okay";
-};
-
-&vdecsys_soc {
-	status = "disabled";
-};
-
-&vdecsys1 {
-	status = "disabled";
-};
-
-&vencsys0 {
-	status = "disabled";
-};
-
-&vencsys1 {
-	status = "disabled";
-};
-
-&vencsys2 {
-	status = "disabled";
-};
-
-&mdpsys0 {
-	status = "disabled";
-};
-
-&mdpsys1 {
-	status = "disabled";
-};
-/*
-&smi_mdp_common {
-	status = "disabled";
-};
-
-&disp_ssc1_smi_2x1_sub_comm {
-	status = "disabled";
-};
-
-&mdp_ssc4_smi_2x1_sub_comm {
-	status = "disabled";
-};
-
-&mdp_ssc5_smi_2x1_sub_comm {
-	status = "disabled";
-};
-*/
-&smi_larb32 {
-	status = "disabled";
-};
-
-&smi_larb33 {
-	status = "disabled";
-};
-
-&smi_larb5 {
-	status = "disabled";
-};
-
-&smi_larb6 {
-	status = "disabled";
-};
-
-&smi_larb4 {
-	status = "disabled";
-};
-
-&smi_larb7 {
-	status = "disabled";
-};
-
-&smi_disp_venc_sub_comm0 {
-	status = "disabled";
-};
-
-&smi_larb41 {
-	status = "disabled";
-};
-
-&smi_larb8 {
-	status = "disabled";
-};
-
-&smi_mdp_venc_sub_comm1 {
-	status = "disabled";
-};
-
-&smi_larb42 {
-	status = "disabled";
-};
-
-&smi_larb24 {
-	status = "disabled";
-};
-
-&smi_mdp_venc_sub_comm2 {
-	status = "disabled";
-};
-
-&smi_larb47 {
-	status = "disabled";
-};
-
-&smi_larb2 {
-	status = "disabled";
-};
-
-&smi_larb3 {
-	status = "disabled";
-};
-
 &vdisp_ctrl {
 	status = "okay";
 };
-
-
-
 
 &mipi_tx_config0 {
 	drive-strength-microamp = <5600>;
@@ -204,7 +38,6 @@
 };
 
 &mipi_tx_config1 {
-	drive-strength-microamp = <5600>;
 	status = "okay";
 };
 
@@ -224,7 +57,61 @@
  * MERGE_OUT_CB0 -> disp_dsi0_in0, the only DSI0 input that reports ready.
  */
 &dl_in_relay0_0 {
+	remote-endpoint = <&dl_out_relay0_1>;
+};
+
+&dl_out_relay0_1 {
+	remote-endpoint = <&dl_in_relay0_0>;
+};
+
+&dl_out_async0_1 {
+	remote-endpoint = <&dl_in_async1_1>;
+};
+
+&dl_in_async1_1 {
 	remote-endpoint = <&dl_out_async0_1>;
+};
+
+&dl_in_relay0_2 {
+	remote-endpoint = <&dl_out_relay0_3>;
+};
+
+&dl_out_relay0_3 {
+	remote-endpoint = <&dl_in_relay0_2>;
+};
+
+&dl_in_relay0_1 {
+	remote-endpoint = <&dl_out_relay0_2>;
+};
+
+&dl_out_relay0_2 {
+	remote-endpoint = <&dl_in_relay0_1>;
+};
+
+&dl_in_async1_2 {
+	remote-endpoint = <&dl_out_async0_2>;
+};
+
+&dl_out_async0_2 {
+	remote-endpoint = <&dl_in_async1_2>;
+};
+
+/* Final outputs on DISPSYS1 */
+&dl_in_relay1_1 {
+	remote-endpoint = <&dsi0_in>;
+};
+
+&dl_in_relay1_2 {
+	remote-endpoint = <&dp_intf0_in>;
+};
+
+&dl_in_relay1_3 {
+	remote-endpoint = <&dsi1_in>;
+};
+
+/* Remove OVL's DLO6 for now */
+&ovl_dl_out_async1_6 {
+	/delete-property/ remote-endpoint;
 };
 
 /*
@@ -239,64 +126,25 @@
 	/delete-property/ remote-endpoint;
 };
 
-&dl_out_relay0_1 {
-	/delete-property/ remote-endpoint;
-};
-
 &dither0_out {
 	/delete-property/ remote-endpoint;
 };
 
-#define USE_DSI0_HDMI_PANEL
-
-#ifdef USE_DSI0_HDMI_PANEL
-
-&dl_in_relay1_1 {
-	remote-endpoint = <&dsi0_in>;
-	///delete-property/ remote-endpoint;
-};
-
-#else
-
-&dl_in_relay1_1 {
-	remote-endpoint = <&dsi1_in>;
-	///delete-property/ remote-endpoint;
-};
-
-#endif
-
-
-
-&dl_in_relay1_3 {
-	//remote-endpoint = <&dsi1_in>;
-	/delete-property/ remote-endpoint;
-};
-
-&dl_in_relay1_2 {
-	/delete-property/ remote-endpoint;
-};
-
+/* eDP DVO */
 &dvo0_in {
 	/delete-property/ remote-endpoint;
 };
 
+/* DSI1 PWM for Backlight */
 &disp_pwm0 {
 	pinctrl-names = "default";
 	pinctrl-0 = <&disp_pwm0_pins>;
 	status = "okay";
 };
 
-/*
-&dsc1_out {
-	remote-endpoint = <&dsi0_in>;
-};
-*/
-
-#ifdef USE_DSI0_HDMI_PANEL
 &it6162_in {
 	remote-endpoint = <&dsi0_out>;
 };
-#endif
 
 &dsi0 {
 	status = "okay";
@@ -312,9 +160,7 @@
 
 			dsi0_in: endpoint@0 {
 				reg = <0>;
-#ifdef USE_DSI0_HDMI_PANEL
 				remote-endpoint = <&dl_in_relay1_1>;
-#endif
 			};
 		};
 
@@ -339,8 +185,8 @@
 		backlight = <&backlight_lcm1>;
 		enable-gpios = <&pio 89 GPIO_ACTIVE_HIGH>;
 		reset-gpios = <&pio 90 GPIO_ACTIVE_HIGH>;
-		iovcc-supply = <&iovcc_lcm1>;
-		vdd-supply = <&vsys_lcm1>; //vddp_lcm1>;
+		iovcc-supply = <&vio18_lcm1>;
+		vdd-supply = <&vsys_lcm1>;
 		pinctrl-names = "default";
 		pinctrl-0 = <&lcm1_default_pins>;
 
@@ -362,9 +208,7 @@
 
 			dsi1_in: endpoint@1 {
 				reg = <1>;
-#ifndef USE_DSI0_HDMI_PANEL
-				remote-endpoint = <&dl_in_relay1_1>;
-#endif
+				remote-endpoint = <&dl_in_relay1_3>;
 			};
 		};
 
@@ -382,37 +226,67 @@
 	};
 };
 
-&dl_in_async1_2 {
-	remote-endpoint = <&dl_out_async0_2>;
+&dp_phy {
+	status = "okay";
 };
 
-&dl_out_async0_2 {
-	remote-endpoint = <&dl_in_async1_2>;
+&dp_intf0 {
+	status = "okay";
+
+	ports {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		port@0 {
+			#address-cells = <1>;
+			#size-cells = <0>;
+			reg = <0>;
+
+			dp_intf0_in: endpoint@0 {
+				reg = <0>;
+				remote-endpoint = <&dl_in_relay1_2>;
+			};
+		};
+
+		port@1 {
+			#address-cells = <1>;
+			#size-cells = <0>;
+			reg = <1>;
+
+			dp_intf0_out: endpoint@1 {
+				reg = <1>;
+				remote-endpoint = <&dptx_in0>;
+			};
+		};
+	};
 };
 
-/*
- * Point ovlsys0's exDMAs at a LARB that exists.  Lane 1's cascade is
- * exdma2 -> blender1 -> exdma3 -> blender2 -> exdma4 -> blender3 -> exdma5
- * -> blender4 -> outproc0, so all four have to bind or the component master
- * waits for ever.  They name smi_larb0/1/20/21, which stay disabled; one LARB
- * can back several consumers, and translation comes from the "iommus"
- * property and the SMMU rather than from the LARB, so this does not change
- * where the fetches actually go.
- */
-&ovl0_exdma2 {
-	mediatek,larb = <&smi_larb37>;
-};
+&dp_tx {
+	status = "okay";
+	#sound-dai-cells = <0>;
 
-&ovl0_exdma3 {
-	mediatek,larb = <&smi_larb37>;
-};
+	ports {
+		#address-cells = <1>;
+		#size-cells = <0>;
 
-&ovl0_exdma4 {
-	mediatek,larb = <&smi_larb37>;
-};
+		port@0 {
+			#address-cells = <1>;
+			#size-cells = <0>;
+			reg = <0>;
 
-&ovl0_exdma5 {
-	mediatek,larb = <&smi_larb37>;
+			dptx_in0: endpoint@0 {
+				reg = <0>;
+				remote-endpoint = <&dp_intf0_out>;
+			};
+		};
+
+		port@1 {
+			reg = <1>;
+			dptx_out0: endpoint {
+				data-lanes = <0 1>;
+			};
+		};
+	};
 };
 
 &pio {
@@ -434,33 +308,6 @@
 			drive-strength = <8>;
 			bias-pull-up;
 			output-low;
-		};
-	};
-
-	vsys_lcm1_pins: vsys-lcm1-default {
-		pins-regulator {
-			pinmux = <PINMUX_GPIO91__FUNC_GPIO91>;
-			bias-pull-up;
-			drive-strength = <8>;
-			output-high;
-		};
-	};
-
-	vddp_lcm1_pins: vddp-lcm1-default {
-		pins-regulator {
-			pinmux = <PINMUX_GPIO92__FUNC_GPIO92>;
-			bias-pull-up;
-			drive-strength = <8>;
-			output-high;
-		};
-	};
-
-	iovcc_lcm1_pins: iovcc-lcm1-default {
-		pins-regulator {
-			pinmux = <PINMUX_GPIO93__FUNC_GPIO93>;
-			bias-pull-up;
-			drive-strength = <8>;
-			output-high;
 		};
 	};
 };
