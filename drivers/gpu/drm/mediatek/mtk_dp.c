@@ -1173,6 +1173,7 @@ static void mtk_dp_hwirq_enable(struct mtk_dp *mtk_dp, bool enable)
 	}
 	mtk_dp_update_bits(mtk_dp, MTK_DP_TX_AUX_INT_MASKING, aux_val, mask);
 	mtk_dp_update_bits(mtk_dp, MTK_DP_TRANS_P0_3418, tra_val, IRQ_MASK_DP_TRANS_P0_MASK);
+	mtk_dp_update_bits(mtk_dp, MTK_DP_TRANS_SW_INT_MASK, aux_val, mask);
 }
 
 static void mtk_dp_encoder_force_bias_power_on(struct mtk_dp *mtk_dp)
