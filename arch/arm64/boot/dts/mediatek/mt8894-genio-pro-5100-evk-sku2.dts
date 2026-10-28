@@ -111,8 +111,14 @@
 
 				port@2 {
 					reg = <2>;
-					typec_con_out: endpoint {
+					typec_con_out: endpoint@0 {
+						reg = <0>;
 						remote-endpoint = <&typec_mux_in>;
+					};
+
+					typec_con_dp: endpoint@1 {
+						reg = <1>;
+						remote-endpoint = <&dptx_out0>;
 					};
 				};
 			};

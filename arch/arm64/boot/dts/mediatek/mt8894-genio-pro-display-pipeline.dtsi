@@ -300,6 +300,7 @@
 			reg = <1>;
 			dptx_out0: endpoint {
 				data-lanes = <0 1>;
+				remote-endpoint = <&typec_con_dp>;
 			};
 		};
 	};
