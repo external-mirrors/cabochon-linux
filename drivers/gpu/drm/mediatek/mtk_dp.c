@@ -2643,6 +2643,40 @@ mtk_dp_bdg_detect(struct drm_bridge *bridge, struct drm_connector *connector)
 	return ret;
 }
 
+static void mtk_dp_oob_hpd_notify(struct drm_bridge *bridge,
+				  struct drm_connector *connector,
+				  enum drm_connector_status status)
+{
+	struct mtk_dp *mtk_dp = mtk_dp_from_bridge(bridge);
+	bool plugged_in = status == connector_status_connected;
+
+	if (mtk_dp->train_info.cable_plugged_in == plugged_in)
+		return;
+
+	mtk_dp_power_enable(mtk_dp);
+
+	mtk_dp_update_bits(mtk_dp, MTK_DP_TRANS_P0_3414,
+			   HPD_OVERRIDE_EN_DP_TRANS_P0_MASK,
+			   HPD_OVERRIDE_EN_DP_TRANS_P0_MASK);
+
+	mtk_dp_update_bits(mtk_dp, MTK_DP_TRANS_P0_3414,
+			   plugged_in ? HPD_OVERRIDE_EN_DP_TRANS_P0_MASK : 0,
+			   HPD_OVERRIDE_EN_DP_TRANS_P0_MASK);
+
+	/* Force HPD interrupt status to reuse the normal (dis)connect logic */
+	mtk_dp_write(mtk_dp, MTK_DP_TRANS_SW_IRQ_FORCE,
+		     plugged_in ? HPD_CONNECT_EVENT : HPD_DISCONNECT_EVENT);
+
+	/* Run the ISR function as that contains the normal HPD logic */
+	mtk_dp_hpd_event(0, mtk_dp);
+
+	/* Make sure that the cable_plugged_in status reflects the OOB state */
+	mtk_dp->train_info.cable_plugged_in = plugged_in;
+
+	/* Wake up the interrupt thread like the ISR would do */
+	irq_wake_thread(mtk_dp->irq, mtk_dp);
+}
+
 static const struct drm_edid *mtk_dp_edid_read(struct drm_bridge *bridge,
 					       struct drm_connector *connector)
 {
@@ -3100,6 +3134,7 @@ static const struct drm_bridge_funcs mtk_dp_bridge_funcs = {
 	.mode_valid = mtk_dp_bridge_mode_valid,
 	.edid_read = mtk_dp_edid_read,
 	.detect = mtk_dp_bdg_detect,
+	.hpd_notify = mtk_dp_oob_hpd_notify,
 };
 
 static void mtk_dp_debounce_timer(struct timer_list *t)
