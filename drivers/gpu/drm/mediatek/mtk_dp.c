@@ -138,6 +138,7 @@ struct mtk_dp {
 	spinlock_t irq_thread_lock;
 
 	struct device *dev;
+	struct device_node *oob_conn;
 	struct drm_bridge bridge;
 	struct drm_bridge *next_bridge;
 	struct drm_connector *conn;
@@ -2549,7 +2550,7 @@ static int mtk_dp_dt_parse(struct mtk_dp *mtk_dp,
 {
 	const struct regmap_config *regmap_cfg;
 	struct device *dev = &pdev->dev;
-	struct device_node *endpoint;
+	struct device_node *endpoint, *connector;
 	int ret;
 	void __iomem *base;
 	u32 linkrate;
@@ -2571,6 +2572,7 @@ static int mtk_dp_dt_parse(struct mtk_dp *mtk_dp,
 	endpoint = of_graph_get_endpoint_by_regs(pdev->dev.of_node, 1, -1);
 	len = of_property_count_elems_of_size(endpoint,
 					      "data-lanes", sizeof(u32));
+	connector = of_graph_get_remote_port_parent(endpoint);
 	of_node_put(endpoint);
 	if (len < 0 || len > 4 || len == 3) {
 		dev_err(dev, "invalid data lane size: %d\n", len);
@@ -2578,6 +2580,14 @@ static int mtk_dp_dt_parse(struct mtk_dp *mtk_dp,
 	}
 
 	mtk_dp->max_lanes = len;
+
+	/*
+	 * For DisplayPort, the only possible out connection is to an external
+	 * connector, especially for Out-Of-Band Hotplug use.
+	 * A typical example of that is a Type-C connector behind a TCPM.
+	 */
+	if (mtk_dp->data->bridge_type == DRM_MODE_CONNECTOR_DisplayPort && connector)
+		mtk_dp->oob_conn = connector;
 
 	ret = device_property_read_u32(dev, "max-linkrate-mhz", &linkrate);
 	if (ret) {
@@ -2797,6 +2807,9 @@ static int mtk_dp_bridge_attach(struct drm_bridge *bridge,
 	if (ret)
 		goto err_aux_register;
 
+	if (mtk_dp->oob_conn)
+		bridge->of_node = mtk_dp->oob_conn;
+
 	if (mtk_dp->next_bridge) {
 		ret = drm_bridge_attach(encoder, mtk_dp->next_bridge,
 					&mtk_dp->bridge, flags);
@@ -2827,6 +2840,9 @@ err_aux_register:
 static void mtk_dp_bridge_detach(struct drm_bridge *bridge)
 {
 	struct mtk_dp *mtk_dp = mtk_dp_from_bridge(bridge);
+
+	if (mtk_dp->oob_conn)
+		bridge->of_node = mtk_dp->dev->of_node;
 
 	if (mtk_dp->bridge.type != DRM_MODE_CONNECTOR_eDP) {
 		mtk_dp_hwirq_enable(mtk_dp, false);
@@ -3270,7 +3286,6 @@ static int mtk_dp_probe(struct platform_device *pdev)
 				       &mtk_dp_bridge_funcs);
 	if (IS_ERR(mtk_dp))
 		return PTR_ERR(mtk_dp);
-
 	mtk_dp->dev = dev;
 	mtk_dp->data = (struct mtk_dp_data *)of_device_get_match_data(dev);
 
