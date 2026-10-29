@@ -1934,9 +1934,8 @@
 			reg = <0 0x1e980000 0 0x4000>;
 			interrupts = <GIC_SPI 290 IRQ_TYPE_LEVEL_HIGH 0>;
 			#mbox-cells = <2>;
-			clocks = <&mminfra CLK_MMINFRA_GCE_D>,
-				 <&mminfra CLK_MMINFRA_GCE_26M>;
-			clock-names = "gce0","gce-timer";
+			clocks = <&mminfra CLK_MMINFRA_GCE_D>;
+			clock-names = "gce";
 		};
 
 		clock-controller@1e990000 {
@@ -1956,9 +1955,8 @@
 			reg = <0 0x1e990000 0 0x4000>;
 			interrupts = <GIC_SPI 286 IRQ_TYPE_LEVEL_HIGH 0>;
 			#mbox-cells = <2>;
-			clocks = <&mminfra CLK_MMINFRA_GCE_M>,
-				 <&mminfra CLK_MMINFRA_GCE_26M>;
-			clock-names = "gce1","gce-timer";
+			clocks = <&mminfra CLK_MMINFRA_GCE_M>;
+			clock-names = "gce";
 		};
 
 		larb2: larb@1f002000 {
