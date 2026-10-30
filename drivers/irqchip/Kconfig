@@ -440,6 +440,21 @@ config IRQ_MXS
 	select IRQ_DOMAIN
 	select STMP_DEVICE
 
+config MEDIATEK_VDISP_IRQ
+	tristate "MediaTek VDisp Interrupt Crossbar"
+	depends on ARCH_MEDIATEK || COMPILE_TEST
+	default ARCH_MEDIATEK && MTK_MMSYS
+	select IRQ_DOMAIN_HIERARCHY
+	help
+	  Say yes here to enable support for the Interrupt Crossbar of
+	  the VDisp controller, used to route the Multimedia Subsystem
+	  peripheral interrupts to free interrupt lines on MediaTek SoCs.
+
+	  To compile this driver as a module, choose M here: the module
+	  will be called irq-mtk-vdisp.
+
+	  If unsure, say N.
+
 config MSCC_OCELOT_IRQ
 	bool
 	select IRQ_DOMAIN
