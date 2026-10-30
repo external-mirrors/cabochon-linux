@@ -2289,8 +2289,8 @@
 			reg = <0 0x300c0000 0 0x80000>;
 			interrupts = <GIC_SPI 483 IRQ_TYPE_LEVEL_HIGH 0>;
 			#mbox-cells = <2>;
-			iommus = <&mm_smmu 199>; /* remove me */
 			mboxes = <&gce0 15 CMDQ_THR_PRIO_1>;
+			power-domains = <&hpm_hwv MT8196_POWER_DOMAIN_MM_INFRA1>;
 		};
 
 		gce1: gce@30140000 {
@@ -2298,7 +2298,7 @@
 			reg = <0 0x30140000 0 0x80000>;
 			interrupts = <GIC_SPI 482 IRQ_TYPE_LEVEL_HIGH 0>;
 			#mbox-cells = <2>;
-			iommus = <&mm_smmu 183>; /* remove me */
+			power-domains = <&hpm_hwv MT8196_POWER_DOMAIN_MM_INFRA1>;
 		};
 
 		/* High Frame Rate Processor System Controller (HFRPSYS) */
