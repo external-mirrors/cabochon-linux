@@ -16,9 +16,9 @@
 #include "clk-mtk.h"
 
 static const struct mtk_gate_regs mm_v_cg_regs = {
-	.set_ofs = 0x104,
-	.clr_ofs = 0x108,
-	.sta_ofs = 0x100,
+	.set_ofs = 0x4,
+	.clr_ofs = 0x8,
+	.sta_ofs = 0x0,
 };
 
 static const struct mtk_gate_regs mm_v_hwv_regs = {
