@@ -230,31 +230,6 @@
 			};
 
 		};
-#if 0
-		switches {
-			#address-cells = <1>;
-			#size-cells = <0>;
-
-			switch@0 {
-				compatible = "typec-switch";
-				reg = <0>;
-				mode-switch;
-
-				ports {
-					#address-cells = <1>;
-					#size-cells = <0>;
-
-					port@0 {
-						reg = <0>;
-
-						anx_typec1: endpoint {
-							remote-endpoint = <&typec_port1>;
-						};
-					};
-				};
-			};
-		};
-#endif
 	};
 };
 

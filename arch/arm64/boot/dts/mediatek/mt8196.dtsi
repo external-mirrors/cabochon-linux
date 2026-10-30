@@ -2966,6 +2966,27 @@
 				reg = <0 0x70000 0 0x1000>;
 				clocks = <&dispsys1 CLK_MM1_DISP_DSC_WRAP2>;
 				trigger-sources = <&disp1_mutex 19>;
+
+				ports {
+					#address-cells = <1>;
+					#size-cells = <0>;
+
+					port@0 {
+						#address-cells = <1>;
+						#size-cells = <0>;
+						reg = <0>;
+
+						dsc2_in: endpoint@3 { reg = <3>; };
+					};
+
+					port@1 {
+						#address-cells = <1>;
+						#size-cells = <0>;
+						reg = <1>;
+
+						dsc2_out: endpoint@3 { reg = <3>; };
+					};
+				};
 			};
 
 			dsc3: dsc@80000 {
