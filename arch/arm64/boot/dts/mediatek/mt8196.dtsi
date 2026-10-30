@@ -5220,55 +5220,40 @@
 
 				power-domain@MT8196_POWER_DOMAIN_DISP_VCORE {
 					reg = <MT8196_POWER_DOMAIN_DISP_VCORE>;
+					clocks = <&vdisp_ao CLK_MM_V_DISP_VDISP_AO_CONFIG>,
+						 <&vdisp_ao CLK_MM_V_DISP_DPC>;
+					clock-names = "cfg", "dpc";
 					#address-cells = <1>;
 					#size-cells = <0>;
 					#power-domain-cells = <0>;
 
 					power-domain@MT8196_POWER_DOMAIN_DIS0_DORMANT {
 						reg = <MT8196_POWER_DOMAIN_DIS0_DORMANT>;
-						clocks = <&vdisp_ao CLK_MM_V_DISP_VDISP_AO_CONFIG>,
-							 <&vdisp_ao CLK_MM_V_DISP_DPC>;
-						clock-names = "cfg", "dpc";
 						#power-domain-cells = <0>;
 					};
 
 					power-domain@MT8196_POWER_DOMAIN_DIS1_DORMANT {
 						reg = <MT8196_POWER_DOMAIN_DIS1_DORMANT>;
-						clocks = <&vdisp_ao CLK_MM_V_DISP_VDISP_AO_CONFIG>,
-							 <&vdisp_ao CLK_MM_V_DISP_DPC>;
-						clock-names = "cfg", "dpc";
 						#power-domain-cells = <0>;
 					};
 
 					power-domain@MT8196_POWER_DOMAIN_DISP_EDPTX_DORMANT {
 						reg = <MT8196_POWER_DOMAIN_DISP_EDPTX_DORMANT>;
-						clocks = <&vdisp_ao CLK_MM_V_DISP_VDISP_AO_CONFIG>,
-							 <&vdisp_ao CLK_MM_V_DISP_DPC>;
-						clock-names = "cfg", "dpc";
 						#power-domain-cells = <0>;
 					};
 
 					power-domain@MT8196_POWER_DOMAIN_DISP_DPTX_DORMANT {
 						reg = <MT8196_POWER_DOMAIN_DISP_DPTX_DORMANT>;
-						clocks = <&vdisp_ao CLK_MM_V_DISP_VDISP_AO_CONFIG>,
-							 <&vdisp_ao CLK_MM_V_DISP_DPC>;
-						clock-names = "cfg", "dpc";
 						#power-domain-cells = <0>;
 					};
 
 					power-domain@MT8196_POWER_DOMAIN_OVL0_DORMANT {
 						reg = <MT8196_POWER_DOMAIN_OVL0_DORMANT>;
-						clocks = <&vdisp_ao CLK_MM_V_DISP_VDISP_AO_CONFIG>,
-							 <&vdisp_ao CLK_MM_V_DISP_DPC>;
-						clock-names = "cfg", "dpc";
 						#power-domain-cells = <0>;
 					};
 
 					power-domain@MT8196_POWER_DOMAIN_OVL1_DORMANT {
 						reg = <MT8196_POWER_DOMAIN_OVL1_DORMANT>;
-						clocks = <&vdisp_ao CLK_MM_V_DISP_VDISP_AO_CONFIG>,
-							 <&vdisp_ao CLK_MM_V_DISP_DPC>;
-						clock-names = "cfg", "dpc";
 						#power-domain-cells = <0>;
 					};
 
