@@ -14,6 +14,7 @@
 #include "mt8196.dtsi"
 #include "mt6363.dtsi"
 #include "mt6373.dtsi"
+#include "mt6685.dtsi"
 
 / {
 	model = "MediaTek Genio Pro 5100 EVK";
