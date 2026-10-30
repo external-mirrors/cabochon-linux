@@ -1,0 +1,52 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/interrupt-controller/mediatek,mt8196-vdisp-irq.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: MediaTek VDisp Interrupt Crossbar
+
+maintainers:
+  - AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
+
+description:
+  Some MediaTek SoCs have a large number of hardware interrupts in various of
+  the internal subsystems. One of those is the Multimedia Subsystem, which has
+  more interrupts than the available lines in the main interrupt controller.
+  Luckily though, not exactly all of the Multimedia-related interrupts would
+  be needed for correct operation, as such a requirement is dependant on the
+  SoC, board and actual software implementation, and that's why this Crossbar
+  does exist in the first place.
+  The VDisp Interrupt Crossbar, located in the Multimedia block of the SoC, is
+  therefore in charge of muxing a selection of hardware interrupts to the main
+  interrupt controller.
+
+properties:
+  compatible:
+    const: mediatek,mt8196-vdisp-irq
+
+  reg:
+    maxItems: 1
+
+  interrupt-controller: true
+
+  '#interrupt-cells':
+    const: 2
+
+required:
+  - compatible
+  - reg
+  - interrupt-controller
+  - '#interrupt-cells'
+
+additionalProperties: false
+
+examples:
+  - |
+    interrupt-controller@3e800000 {
+        compatible = "mediatek,mt8196-vdisp-irq";
+        reg = <0x3e800000 0x100>;
+        interrupt-parent = <&gic>;
+        interrupt-controller;
+        #interrupt-cells = <2>;
+    };
