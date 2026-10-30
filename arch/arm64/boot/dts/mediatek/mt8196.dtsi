@@ -2978,7 +2978,7 @@
 			dsi0: dsi@90000 {
 				compatible = "mediatek,mt8196-dsi";
 				reg = <0 0x90000 0 0x1000>;
-				interrupts = <GIC_SPI 453 IRQ_TYPE_LEVEL_HIGH 0>;
+				interrupts-extended = <&vdisp_irq 53 IRQ_TYPE_LEVEL_HIGH>;
 				clocks = <&dispsys1 CLK_MM1_DISP_DSI0>,
 					 <&dispsys1 CLK_MM1_MOD1>,
 					 <&mipi_tx_config0>;
@@ -2993,7 +2993,7 @@
 			dsi1: dsi@a0000 {
 				compatible = "mediatek,mt8196-dsi";
 				reg = <0 0xa0000 0 0x1000>;
-				interrupts = <GIC_SPI 455 IRQ_TYPE_LEVEL_HIGH 0>;
+				interrupts-extended = <&vdisp_irq 54 IRQ_TYPE_LEVEL_HIGH>;
 				clocks = <&dispsys1 CLK_MM1_DISP_DSI1>,
 					 <&dispsys1 CLK_MM1_MOD2>,
 					 <&mipi_tx_config1>;
@@ -3008,7 +3008,7 @@
 			dsi2: dsi@b0000 {
 				compatible = "mediatek,mt8196-dsi";
 				reg = <0 0xb0000 0 0x1000>;
-				interrupts = <GIC_SPI 456 IRQ_TYPE_LEVEL_HIGH 0>;
+				interrupts-extended = <&vdisp_irq 55 IRQ_TYPE_LEVEL_HIGH>;
 				clocks = <&dispsys1 CLK_MM1_DISP_DSI2>,
 					 <&dispsys1 CLK_MM1_MOD3>,
 					 <&mipi_tx_config2>;
@@ -3719,7 +3719,7 @@
 				compatible = "mediatek,mt8196-disp-outproc";
 				reg = <0 0x170000 0 0x1000>;
 				clocks = <&ovlsys0 CLK_OVL_OUTPROC0>;
-				interrupts = <GIC_SPI 450 IRQ_TYPE_LEVEL_HIGH 0>;
+				interrupts-extended = <&vdisp_irq 166 IRQ_TYPE_LEVEL_HIGH>;
 				mboxes = <&gce0 3 CMDQ_THR_PRIO_4>;
 				mediatek,gce-events = <CMDQ_EVENT_OVL0_FRAME_DONE_SEL(0)>;
 				trigger-sources = <&ovl0_mutex 20>;
@@ -3748,7 +3748,7 @@
 				compatible = "mediatek,mt8196-disp-outproc";
 				reg = <0 0x180000 0 0x1000>;
 				clocks = <&ovlsys0 CLK_OVL_OUTPROC1>;
-				interrupts = <GIC_SPI 451 IRQ_TYPE_LEVEL_HIGH 0>;
+				interrupts-extended = <&vdisp_irq 167 IRQ_TYPE_LEVEL_HIGH>;
 				trigger-sources = <&ovl0_mutex 21>;
 
 				ports {
@@ -4567,7 +4567,7 @@
 				compatible = "mediatek,mt8196-disp-outproc";
 				reg = <0 0x170000 0 0x1000>;
 				clocks = <&ovlsys1 CLK_OVL1_OVL_OUTPROC0>;
-				interrupts = <GIC_SPI 452 IRQ_TYPE_LEVEL_HIGH 0>;
+				interrupts-extended = <&vdisp_irq 214 IRQ_TYPE_LEVEL_HIGH>;
 				trigger-sources = <&ovl1_mutex 20>;
 
 				ports {
@@ -4601,7 +4601,8 @@
 			ovl1_outproc1: outproc@180000 {
 				compatible = "mediatek,mt8196-disp-outproc";
 				reg = <0 0x180000 0 0x1000>;
-				clocks = <&ovlsys1 CLK_OVL1_OVL_OUTPROC0>;
+				clocks = <&ovlsys1 CLK_OVL1_OVL_OUTPROC1>;
+				interrupts-extended = <&vdisp_irq 215 IRQ_TYPE_LEVEL_HIGH>;
 				trigger-sources = <&ovl1_mutex 21>;
 
 				ports {
@@ -4760,9 +4761,17 @@
 			#clock-cells = <1>;
 		};
 
-		vdisp_ao: clock-controller@3e800000 {
+		vdisp_irq: interrupt-controller@3e800000 {
+			compatible = "mediatek,mt8196-vdisp-irq";
+			reg = <0 0x3e800000 0 0x100>;
+			interrupt-parent = <&gic>;
+			interrupt-controller;
+			#interrupt-cells = <2>;
+		};
+
+		vdisp_ao: clock-controller@3e800100 {
 			compatible = "mediatek,mt8196-vdisp-ao";
-			reg = <0 0x3e800000 0 0x1000>;
+			reg = <0 0x3e800100 0 0x100>;
 			mediatek,hardware-voter = <&hfrpsys_hwv>;
 			#clock-cells = <1>;
 		};
