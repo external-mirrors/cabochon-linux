@@ -9,9 +9,13 @@ title: MediaTek mmsys controller
 maintainers:
   - Matthias Brugger <matthias.bgg@gmail.com>
 
-description:
+description: |
   The MediaTek mmsys system controller provides clock control, routing control,
   and miscellaneous control in mmsys partition.
+
+  Display function blocks may be described as child nodes of the controller.
+  In this case, their register addresses are relative to the MMSYS address
+  space.
 
 properties:
   $nodename:
@@ -61,6 +65,20 @@ properties:
           - const: syscon
 
   reg:
+    maxItems: 1
+
+  clocks:
+    description:
+      Clocks used by the MMSYS controller.
+    $ref: /schemas/types.yaml#/definitions/phandle-array
+
+  '#address-cells':
+    const: 2
+
+  '#size-cells':
+    const: 2
+
+  ranges:
     maxItems: 1
 
   power-domains:
@@ -122,6 +140,34 @@ properties:
       - required:
           - endpoint@2
 
+patternProperties:
+  '^dsi@[0-9a-f]+$':
+    $ref: /schemas/display/mediatek/mediatek,dsi.yaml#
+
+  '^mutex@[0-9a-f]+$':
+    $ref: /schemas/soc/mediatek/mediatek,mutex.yaml#
+
+  '^ovl@[0-9a-f]+$':
+    $ref: /schemas/display/mediatek/mediatek,ovl.yaml#
+
+  '^rdma@[0-9a-f]+$':
+    $ref: /schemas/display/mediatek/mediatek,rdma.yaml#
+
+allOf:
+  - if:
+      anyOf:
+        - required:
+            - '#address-cells'
+        - required:
+            - '#size-cells'
+        - required:
+            - ranges
+    then:
+      required:
+        - '#address-cells'
+        - '#size-cells'
+        - ranges
+
 required:
   - compatible
   - reg
@@ -143,4 +189,33 @@ examples:
         mboxes = <&gce 0 CMDQ_THR_PRIO_HIGHEST>,
                  <&gce 1 CMDQ_THR_PRIO_HIGHEST>;
         mediatek,gce-client-reg = <&gce SUBSYS_1400XXXX 0 0x1000>;
+    };
+  - |
+    #include <dt-bindings/clock/mediatek,mt8189-clk.h>
+    #include <dt-bindings/interrupt-controller/arm-gic.h>
+    #include <dt-bindings/power/mediatek,mt8189-power.h>
+
+    soc {
+        #address-cells = <2>;
+        #size-cells = <2>;
+
+        dispsys: syscon@14000000 {
+            compatible = "mediatek,mt8189-mmsys", "syscon";
+            reg = <0 0x14000000 0 0x1000>;
+            clocks = <&dispsys CLK_MM_DISP_MUTEX0>,
+                     <&dispsys CLK_MM_DIPSYS_CONFIG>;
+            #address-cells = <2>;
+            #size-cells = <2>;
+            #clock-cells = <1>;
+            ranges = <0 0 0 0x14000000 0 0x20000>;
+
+            mutex@1000 {
+                compatible = "mediatek,mt8189-disp-mutex";
+                reg = <0 0x1000 0 0x1000>;
+                interrupts = <GIC_SPI 332 IRQ_TYPE_LEVEL_HIGH>;
+                clocks = <&dispsys CLK_MM_DISP_MUTEX0>;
+                power-domains = <&spm MT8189_POWER_DOMAIN_DISP>;
+                #trigger-source-cells = <1>;
+            };
+        };
     };
