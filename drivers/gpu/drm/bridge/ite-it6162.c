@@ -2190,7 +2190,8 @@ static void it6162_remove_cec_adapter(struct it6162 *it6162)
 	cancel_work_sync(&it6162->cec_rx_work);
 	cancel_work_sync(&it6162->cec_tx_work);
 	cec_notifier_cec_adap_unregister(it6162->cec_notify, it6162->cec_adap);
-	cec_delete_adapter(it6162->cec_adap);
+	cec_unregister_adapter(it6162->cec_adap);
+	it6162->cec_adap = NULL;
 	mutex_destroy(&it6162->cec_lock);
 }
 
@@ -2266,7 +2267,6 @@ static int it6162_probe(struct i2c_client *client)
 		return ret;
 	}
 
-	it6162_create_cec_adapter(it6162);
 	it6162_add_ddc_i2c_adapter(it6162);
 
 	it6162->bridge.of_node = np;
@@ -2292,7 +2292,7 @@ static int it6162_probe(struct i2c_client *client)
 	ret = it6162_poweron(it6162);
 	if (ret) {
 		dev_err(dev, "Failed to power on: %d", ret);
-		goto err_cec;
+		goto err_audio;
 	}
 
 	/*
@@ -2317,14 +2317,17 @@ static int it6162_probe(struct i2c_client *client)
 		}
 	}
 
+	ret = it6162_create_cec_adapter(it6162);
+	if (ret)
+		dev_warn(dev, "Failed to create CEC adapter: %d", ret);
+
 	return 0;
 
 err_poweroff:
 	if (client->irq)
 		disable_irq(client->irq);
 	it6162_poweroff(it6162);
-err_cec:
-	it6162_remove_cec_adapter(it6162);
+err_audio:
 	it6162_hdmi_audio_dev_exit(it6162);
 	return ret;
 }
