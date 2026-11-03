@@ -550,10 +550,9 @@
 			#clock-cells = <1>;
 		};
 
-		emicfg_ao_mem: clock-controller@10270000 {
+		emicfg_ao_mem: syscon@10270000 {
 			compatible = "mediatek,mt8189-emicfg-ao-mem", "syscon";
 			reg = <0 0x10270000 0 0x1000>;
-			#clock-cells = <1>;
 		};
 
 		iommu@10330000 {
