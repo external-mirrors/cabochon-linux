@@ -72,7 +72,7 @@ properties:
 
   iommus:
     minItems: 1
-    maxItems: 2
+    maxItems: 5
 
   mediatek,gce-client-reg:
     description: The register of client driver can be configured by gce with
@@ -103,6 +103,26 @@ properties:
     required:
       - port@0
       - port@1
+
+allOf:
+  - if:
+      properties:
+        compatible:
+          contains:
+            const: mediatek,mt8189-disp-ovl
+    then:
+      properties:
+        iommus:
+          items:
+            - description: Layer 0 RDMA port
+            - description: Layer 1 RDMA port
+            - description: Layer 2 RDMA port
+            - description: Layer 3 RDMA port
+            - description: Header port
+    else:
+      properties:
+        iommus:
+          maxItems: 2
 
 required:
   - compatible
