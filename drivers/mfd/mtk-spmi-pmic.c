@@ -45,6 +45,7 @@
  */
 struct mtk_spmi_pmic_irq_grp {
 	u8 hwirq_base;
+	u8 hwirq_end;
 	u8 num_int_regs;
 	u16 con_reg;
 	u16 sta_reg;
@@ -97,15 +98,18 @@ static void mtk_spmi_pmic_irq_set_unmasking(struct irq_data *d, bool unmask)
 
 	for (i = 0; i < variant->num_groups; i++) {
 		const struct mtk_spmi_pmic_irq_grp *irq_grp = &variant->pmic_irq[i];
-		u32 con_reg;
+		u32 con_reg, reg_off, irq_idx;
 		u8 irq_en_bit;
 
-		if (hwirq < irq_grp->hwirq_base)
+		if (hwirq < irq_grp->hwirq_base || hwirq > irq_grp->hwirq_end)
 			continue;
 
-		con_reg = irq_grp->con_reg + (variant->con_reg_len * i);
-		irq_en_bit = hwirq - irq_grp->hwirq_base;
-		regmap_assign_bits(regmap, con_reg, BIT(irq_en_bit), unmask);
+		irq_idx = hwirq - irq_grp->hwirq_base;
+		reg_off = irq_idx / MTK_SPMI_PMIC_VAL_BITS;
+		con_reg = irq_grp->con_reg + (variant->con_reg_len * reg_off);
+		irq_en_bit = irq_idx % MTK_SPMI_PMIC_VAL_BITS;
+
+		regmap_assign_bits(regmap, con_reg, BIT(irq_en_bit), unmask ? BIT(irq_en_bit) : 0);
 
 		break;
 	}
@@ -346,6 +350,7 @@ static int mtk_spmi_pmic_irq_init(struct device *dev, struct regmap *regmap,
 #define MTK_SPMI_PMIC_IRQ_GROUP(pmic, group_name, group_index, first_irq, last_irq)	\
 {											\
 	.hwirq_base = first_irq,							\
+	.hwirq_end = last_irq,							\
 	.num_int_regs = ((last_irq - first_irq) / MTK_SPMI_PMIC_VAL_BITS) + 1,		\
 	.con_reg = pmic##_REG_##group_name##_TOP_INT_CON0,				\
 	.sta_reg = pmic##_REG_##group_name##_TOP_INT_STATUS0,				\
