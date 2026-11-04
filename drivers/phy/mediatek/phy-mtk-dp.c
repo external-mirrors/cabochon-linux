@@ -21,6 +21,7 @@
 #include <linux/platform_device.h>
 #include <linux/pm_runtime.h>
 #include <linux/regmap.h>
+#include <linux/usb/typec_mux.h>
 
 #define MTK_DP_PHY_MAX_LANES		4
 
@@ -285,7 +286,6 @@ struct mtk_dp_phya_imp_sel {
  * @ana_cktx_imp:   TX Clock Impedance Selection Settings (global)
  * @ana_lanes_imp:  TX Impedance Selection Settings (for all lanes)
  * @sel_ext_lanes:  Connects external lanes to this PHY's TX FIFO
- * @flip_lanes:     PHY Lane Flipping - flips lanes order from 0123 to 3210
  * @force_power:    Force PHY internal power states
  * @ana_lanes_conf: Configuration for local/master GLB, lane activation, etc.
  * @num_ana_lanes_conf: Number of configuration overrides for analog PHY lanes
@@ -316,7 +316,6 @@ struct mtk_dp_phy_pdata {
 	u8 ana_cktx_imp;
 	struct mtk_dp_phya_imp_sel ana_lanes_imp;
 	bool sel_ext_lanes;
-	bool flip_lanes;
 	bool force_power;
 	u8 ana_lanes_conf[MTK_DP_PHY_MAX_LANES];
 	u8 num_ana_lanes_conf;
@@ -329,8 +328,12 @@ struct mtk_dp_phy {
 	struct regmap *regmap;
 	struct mux_control *lane_mux;
 	struct mux_control *flip_mux;
+	struct typec_switch_dev *sw;
 	const struct mtk_dp_phy_pdata *pdata;
 
+	/* Protects the mux selections and their state */
+	struct mutex mux_lock;
+	bool flip_mux_selected;
 	u8 ana_bias_r;
 	u8 ana_cktx_imp;
 	struct mtk_dp_phya_imp_sel ana_impsel[MTK_DP_PHY_MAX_LANES];
@@ -415,6 +418,27 @@ static int mtk_dp_phy_init(struct phy *phy)
 	return 0;
 }
 
+/*
+ * A mux stays locked until deselected: drop the previous selection first,
+ * as this runs at every Type-C state change. Called with mux_lock held.
+ */
+static int mtk_dp_phy_mux_select(struct mux_control *mux, bool *selected,
+				 unsigned int state)
+{
+	int ret;
+
+	if (*selected) {
+		mux_control_deselect(mux);
+		*selected = false;
+	}
+
+	ret = mux_control_select(mux, state);
+	if (!ret)
+		*selected = true;
+
+	return ret;
+}
+
 static int mtk_dp_phy_ana_lanes_configure(struct mtk_dp_phy *dp_phy, unsigned int lanes)
 {
 	const struct mtk_dp_phy_pdata *pdata = dp_phy->pdata;
@@ -460,14 +484,7 @@ static int mtk_dp_phy_ana_lanes_configure(struct mtk_dp_phy *dp_phy, unsigned in
 			return ret;
 	}
 
-	/* If required, flip lanes order after configuring and activating */
-	if (pdata->flip_lanes) {
-		ret = mux_control_select(dp_phy->flip_mux, 1);
-		if (ret)
-			return ret;
-	}
-
-	/* ...and deactivate the unused ones to improve power efficiency */
+	/* Deactivate the unused ones to improve power efficiency */
 	for (; i < MTK_DP_PHY_MAX_LANES; i++) {
 		ret = regmap_clear_bits(dp_phy->regmap, off_ana_lane[i] + reg_ana_tx_ctl,
 					XTP_LN_LANE_ACTIVATE);
@@ -910,6 +927,25 @@ static const struct regmap_config mtk_dp_phy_regmap_cfg = {
 	.disable_locking = true,
 };
 
+static int mtk_dp_phy_typec_sw_set(struct typec_switch_dev *sw,
+				   enum typec_orientation orientation)
+{
+	struct mtk_dp_phy *dp_phy = typec_switch_get_drvdata(sw);
+
+	dev_dbg(dp_phy->dev, "Type-C orientation %d\n", orientation);
+
+	/* The flip also affects AUX: apply it now, before any AUX transfer */
+	guard(mutex)(&dp_phy->mux_lock);
+
+	return mtk_dp_phy_mux_select(dp_phy->flip_mux, &dp_phy->flip_mux_selected,
+				     orientation == TYPEC_ORIENTATION_REVERSE);
+}
+
+static void mtk_dp_phy_typec_sw_unregister(void *data)
+{
+	typec_switch_unregister(data);
+}
+
 static int mtk_dp_phy_probe(struct platform_device *pdev)
 {
 	struct device *dev = &pdev->dev;
@@ -929,6 +965,10 @@ static int mtk_dp_phy_probe(struct platform_device *pdev)
 	if (!dev->of_node)
 		return mtk_dp_phy_legacy_probe(pdev, dp_phy);
 
+	ret = devm_mutex_init(dev, &dp_phy->mux_lock);
+	if (ret)
+		return ret;
+
 	base = devm_platform_ioremap_resource(pdev, 0);
 	if (IS_ERR(base))
 		return PTR_ERR(base);
@@ -947,13 +987,31 @@ static int mtk_dp_phy_probe(struct platform_device *pdev)
 
 	dp_phy->pdata = device_get_match_data(dev);
 
-	/* PHY Lane Flipping is done via a MMIO MUX external to the PHY itself */
-	if (dp_phy->pdata->flip_lanes) {
-		dp_phy->flip_mux = mux_control_get(dev, "phy-flip");
-		if (IS_ERR(dp_phy->flip_mux)) {
+	/*
+	 * On Type-C, the lanes are flipped following the plug orientation,
+	 * via a MMIO MUX external to the PHY itself
+	 */
+	if (device_property_read_bool(dev, "orientation-switch")) {
+		struct typec_switch_desc sw_desc = {
+			.drvdata = dp_phy,
+			.fwnode = dev_fwnode(dev),
+			.set = mtk_dp_phy_typec_sw_set,
+		};
+
+		dp_phy->flip_mux = devm_mux_control_get(dev, "phy-flip");
+		if (IS_ERR(dp_phy->flip_mux))
 			return dev_err_probe(dev, PTR_ERR(dp_phy->flip_mux),
 					     "Cannot get phy-flip mux control\n");
-		}
+
+		dp_phy->sw = typec_switch_register(dev, &sw_desc);
+		if (IS_ERR(dp_phy->sw))
+			return dev_err_probe(dev, PTR_ERR(dp_phy->sw),
+					     "Failed to register typec switch\n");
+
+		ret = devm_add_action_or_reset(dev, mtk_dp_phy_typec_sw_unregister,
+					       dp_phy->sw);
+		if (ret)
+			return ret;
 	}
 
 	if (IS_REACHABLE(CONFIG_NVMEM)) {
@@ -1027,7 +1085,6 @@ static const struct mtk_dp_phy_pdata mt8196_dp_phy_data = {
 		.nmos = 8,
 	},
 	.sel_ext_lanes = false,
-	.flip_lanes = false,
 	.force_power = true,
 	.ana_lanes_conf = {
 		[0] = XTP_LN_DATA_EN_EXT_SEL,
