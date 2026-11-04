@@ -35,7 +35,7 @@
 			};
 
 			home {
-				linux,keycodes = <KEY_VOLUMEUP>;
+				linux,keycodes = <KEY_VOLUMEDOWN>;
 			};
 		};
 
