@@ -23,6 +23,27 @@
 	remote-endpoint = <&it6162_out>;
 };
 
+/*
+ * The SoC USB/DP selector (ipmux) flips the DP S-PHY lanes following the
+ * Type-C plug orientation, and selects 4 DP lanes or 2 DP + USB3 lanes
+ * following the DP Alt Mode pin assignment.
+ */
+&dp_phy {
+	orientation-switch;
+	mode-switch;
+
+	port {
+		dp_phy_typec_in: endpoint {
+			remote-endpoint = <&typec_con_dp_phy>;
+		};
+	};
+};
+
+/* The S-PHY lane flip also swaps AUX polarity: DPTX swaps it back */
+&dp_tx {
+	orientation-switch;
+};
+
 &hdmi_bridge_it6162 {
 	interrupts-extended = <&pio 143 IRQ_TYPE_LEVEL_LOW>;
 
@@ -113,7 +134,10 @@
 				};
 
 				port@2 {
+					#address-cells = <1>;
+					#size-cells = <0>;
 					reg = <2>;
+
 					typec_con_out: endpoint@0 {
 						reg = <0>;
 						remote-endpoint = <&typec_mux_in>;
@@ -122,6 +146,11 @@
 					typec_con_dp: endpoint@1 {
 						reg = <1>;
 						remote-endpoint = <&dptx_out0>;
+					};
+
+					typec_con_dp_phy: endpoint@2 {
+						reg = <2>;
+						remote-endpoint = <&dp_phy_typec_in>;
 					};
 				};
 			};
