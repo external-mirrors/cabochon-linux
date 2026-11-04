@@ -32,6 +32,7 @@
 #include <linux/pm_runtime.h>
 #include <linux/regmap.h>
 #include <linux/soc/mediatek/mtk_sip_svc.h>
+#include <linux/usb/typec_mux.h>
 #include <sound/hdmi-codec.h>
 #include <video/videomode.h>
 
@@ -153,6 +154,10 @@ struct mtk_dp {
 	struct phy *phy;
 	struct regmap *regs;
 	struct timer_list debounce_timer;
+
+	/* For USB Type-C (DP Alt Mode) plug orientation */
+	struct typec_switch_dev *sw;
+	bool aux_swap;
 
 	/* For legacy devicetree compatibility */
 	u16 legacy_regoff;
@@ -1348,8 +1353,20 @@ static void mtk_dp_initialize_hpd_detect_settings(struct mtk_dp *mtk_dp)
 			   HPD_INT_THD_ECO_DP_TRANS_P0_MASK);
 }
 
+static void mtk_dp_set_aux_swap(struct mtk_dp *mtk_dp)
+{
+	bool swap = READ_ONCE(mtk_dp->aux_swap);
+
+	mtk_dp_update_bits(mtk_dp, MTK_DP_AUX_P0_360C,
+			   swap ? AUX_SWAP_AUX_TX_P0 : 0, AUX_SWAP_AUX_TX_P0);
+	mtk_dp_update_bits(mtk_dp, MTK_DP_AUX_P0_3680,
+			   swap ? AUX_SWAP_TX_AUX_TX_P0 : 0, AUX_SWAP_TX_AUX_TX_P0);
+}
+
 static void mtk_dp_initialize_aux_settings(struct mtk_dp *mtk_dp)
 {
+	mtk_dp_set_aux_swap(mtk_dp);
+
 	/* Timeout threshold: 2974.4uS */
 	mtk_dp_update_bits(mtk_dp, MTK_DP_AUX_P0_360C,
 			   AUX_TIMEOUT_THRESHOLD_NS(2974400),
@@ -2655,6 +2672,10 @@ static void mtk_dp_oob_hpd_notify(struct drm_bridge *bridge,
 
 	mtk_dp_power_enable(mtk_dp);
 
+	/* The plug orientation is known before HPD: set AUX swap accordingly */
+	if (plugged_in)
+		mtk_dp_set_aux_swap(mtk_dp);
+
 	mtk_dp_update_bits(mtk_dp, MTK_DP_TRANS_P0_3414,
 			   HPD_OVERRIDE_EN_DP_TRANS_P0_MASK,
 			   HPD_OVERRIDE_EN_DP_TRANS_P0_MASK);
@@ -3311,6 +3332,47 @@ static int mtk_dp_edp_link_panel(struct drm_dp_aux *mtk_aux)
 	return 0;
 }
 
+static int mtk_dp_typec_sw_set(struct typec_switch_dev *sw,
+			       enum typec_orientation orientation)
+{
+	struct mtk_dp *mtk_dp = typec_switch_get_drvdata(sw);
+
+	dev_dbg(mtk_dp->dev, "Type-C orientation %d\n", orientation);
+
+	/*
+	 * The DP S-PHY lane flip also swaps the AUX lines polarity: swap AUX
+	 * back in the controller. Applied at the next (OOB) HPD plug event.
+	 */
+	WRITE_ONCE(mtk_dp->aux_swap, orientation == TYPEC_ORIENTATION_REVERSE);
+
+	return 0;
+}
+
+static void mtk_dp_typec_sw_unregister(void *data)
+{
+	typec_switch_unregister(data);
+}
+
+static int mtk_dp_register_typec(struct mtk_dp *mtk_dp)
+{
+	struct device *dev = mtk_dp->dev;
+	struct typec_switch_desc sw_desc = {
+		.drvdata = mtk_dp,
+		.fwnode = dev_fwnode(dev),
+		.set = mtk_dp_typec_sw_set,
+	};
+
+	if (!device_property_read_bool(dev, "orientation-switch"))
+		return 0;
+
+	mtk_dp->sw = typec_switch_register(dev, &sw_desc);
+	if (IS_ERR(mtk_dp->sw))
+		return dev_err_probe(dev, PTR_ERR(mtk_dp->sw),
+				     "Failed to register typec switch\n");
+
+	return devm_add_action_or_reset(dev, mtk_dp_typec_sw_unregister, mtk_dp->sw);
+}
+
 static int mtk_dp_probe(struct platform_device *pdev)
 {
 	struct mtk_dp *mtk_dp;
@@ -3434,6 +3496,10 @@ static int mtk_dp_probe(struct platform_device *pdev)
 			}
 		}
 	} else {
+		ret = mtk_dp_register_typec(mtk_dp);
+		if (ret)
+			return ret;
+
 		mtk_dp->bridge.ops = DRM_BRIDGE_OP_DETECT |
 				     DRM_BRIDGE_OP_EDID | DRM_BRIDGE_OP_HPD;
 		ret = devm_drm_bridge_add(dev, &mtk_dp->bridge);
