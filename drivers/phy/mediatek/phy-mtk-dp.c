@@ -21,6 +21,7 @@
 #include <linux/platform_device.h>
 #include <linux/pm_runtime.h>
 #include <linux/regmap.h>
+#include <linux/usb/typec_dp.h>
 #include <linux/usb/typec_mux.h>
 
 #define MTK_DP_PHY_MAX_LANES		4
@@ -285,7 +286,6 @@ struct mtk_dp_phya_imp_sel {
  * @ana_bias_r:     Internal resistance "R" Selection Settings (global)
  * @ana_cktx_imp:   TX Clock Impedance Selection Settings (global)
  * @ana_lanes_imp:  TX Impedance Selection Settings (for all lanes)
- * @sel_ext_lanes:  Connects external lanes to this PHY's TX FIFO
  * @force_power:    Force PHY internal power states
  * @ana_lanes_conf: Configuration for local/master GLB, lane activation, etc.
  * @num_ana_lanes_conf: Number of configuration overrides for analog PHY lanes
@@ -315,7 +315,6 @@ struct mtk_dp_phy_pdata {
 	u8 ana_bias_r;
 	u8 ana_cktx_imp;
 	struct mtk_dp_phya_imp_sel ana_lanes_imp;
-	bool sel_ext_lanes;
 	bool force_power;
 	u8 ana_lanes_conf[MTK_DP_PHY_MAX_LANES];
 	u8 num_ana_lanes_conf;
@@ -329,11 +328,13 @@ struct mtk_dp_phy {
 	struct mux_control *lane_mux;
 	struct mux_control *flip_mux;
 	struct typec_switch_dev *sw;
+	struct typec_mux_dev *mux;
 	const struct mtk_dp_phy_pdata *pdata;
 
 	/* Protects the mux selections and their state */
 	struct mutex mux_lock;
 	bool flip_mux_selected;
+	bool lane_mux_selected;
 	u8 ana_bias_r;
 	u8 ana_cktx_imp;
 	struct mtk_dp_phya_imp_sel ana_impsel[MTK_DP_PHY_MAX_LANES];
@@ -446,25 +447,6 @@ static int mtk_dp_phy_ana_lanes_configure(struct mtk_dp_phy *dp_phy, unsigned in
 	const u16 *off_ana_lane = pdata->off_ana_lane;
 	unsigned int num_lane_configs;
 	int i, ret;
-
-	/* This PHY may need to connect external lanes to itself */
-	if (pdata->sel_ext_lanes && lanes > 2) {
-		const u32 reg_ana_top = pdata->regs_ana_lane[DP_PHYA_LAN_LANE_TOP];
-
-		if (dp_phy->lane_mux) {
-			ret = mux_control_select(dp_phy->lane_mux, 1);
-			if (ret)
-				return ret;
-		}
-
-		for (i = 0; i < lanes; i++) {
-			ret = regmap_update_bits(dp_phy->regmap, off_ana_lane[i] + reg_ana_top,
-						 XTP_LN_TX_READ_SEL, ANA_LN_TFIFO_TXD_C_EXT_8LANE);
-			/* On failure, reverting settings is not necessary */
-			if (ret)
-				return ret;
-		}
-	}
 
 	num_lane_configs = min(lanes, pdata->num_ana_lanes_conf);
 
@@ -946,6 +928,34 @@ static void mtk_dp_phy_typec_sw_unregister(void *data)
 	typec_switch_unregister(data);
 }
 
+static int mtk_dp_phy_typec_mux_set(struct typec_mux_dev *mux,
+				    struct typec_mux_state *state)
+{
+	struct mtk_dp_phy *dp_phy = typec_mux_get_drvdata(mux);
+	bool four_lanes = false;
+
+	/*
+	 * Only DP Alt Mode pin assignments C and E use all four SuperSpeed
+	 * lanes for DP: in any other state two lanes are left to USB3, which
+	 * does not work with the 4-lanes selection.
+	 */
+	if (state->alt && state->alt->svid == USB_TYPEC_DP_SID)
+		four_lanes = state->mode == TYPEC_DP_STATE_C ||
+			     state->mode == TYPEC_DP_STATE_E;
+
+	dev_dbg(dp_phy->dev, "Type-C mode %lu, 4 lanes %d\n", state->mode, four_lanes);
+
+	guard(mutex)(&dp_phy->mux_lock);
+
+	return mtk_dp_phy_mux_select(dp_phy->lane_mux, &dp_phy->lane_mux_selected,
+				     four_lanes);
+}
+
+static void mtk_dp_phy_typec_mux_unregister(void *data)
+{
+	typec_mux_unregister(data);
+}
+
 static int mtk_dp_phy_probe(struct platform_device *pdev)
 {
 	struct device *dev = &pdev->dev;
@@ -977,10 +987,6 @@ static int mtk_dp_phy_probe(struct platform_device *pdev)
 	if (IS_ERR(dp_phy->regmap))
 		return PTR_ERR(dp_phy->regmap);
 
-	dp_phy->lane_mux = mux_control_get_optional(dev, "ext-lanes");
-	if (IS_ERR(dp_phy->lane_mux))
-		return PTR_ERR(dp_phy->lane_mux);
-
 	ret = devm_pm_runtime_enable(dev);
 	if (ret)
 		return ret;
@@ -1010,6 +1016,30 @@ static int mtk_dp_phy_probe(struct platform_device *pdev)
 
 		ret = devm_add_action_or_reset(dev, mtk_dp_phy_typec_sw_unregister,
 					       dp_phy->sw);
+		if (ret)
+			return ret;
+	}
+
+	/* On Type-C, the 4-lanes selection follows the DP Alt Mode pin assignment */
+	if (device_property_read_bool(dev, "mode-switch")) {
+		struct typec_mux_desc mux_desc = {
+			.drvdata = dp_phy,
+			.fwnode = dev_fwnode(dev),
+			.set = mtk_dp_phy_typec_mux_set,
+		};
+
+		dp_phy->lane_mux = devm_mux_control_get(dev, "ext-lanes");
+		if (IS_ERR(dp_phy->lane_mux))
+			return dev_err_probe(dev, PTR_ERR(dp_phy->lane_mux),
+					     "Cannot get ext-lanes mux control\n");
+
+		dp_phy->mux = typec_mux_register(dev, &mux_desc);
+		if (IS_ERR(dp_phy->mux))
+			return dev_err_probe(dev, PTR_ERR(dp_phy->mux),
+					     "Failed to register typec mux\n");
+
+		ret = devm_add_action_or_reset(dev, mtk_dp_phy_typec_mux_unregister,
+					       dp_phy->mux);
 		if (ret)
 			return ret;
 	}
@@ -1084,7 +1114,6 @@ static const struct mtk_dp_phy_pdata mt8196_dp_phy_data = {
 		.pmos = 8,
 		.nmos = 8,
 	},
-	.sel_ext_lanes = false,
 	.force_power = true,
 	.ana_lanes_conf = {
 		[0] = XTP_LN_DATA_EN_EXT_SEL,
