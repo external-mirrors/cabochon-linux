@@ -172,32 +172,24 @@ static const struct mtk_mmsys_driver_data mt8196_dispsys0_driver_data = {
 	.clk_driver = "clk-mt8196-disp0",
 	.routes = mmsys_mt8196_disp0_routing_table,
 	.num_routes = ARRAY_SIZE(mmsys_mt8196_disp0_routing_table),
-	.def_config = mmsys_mt8196_disp0_default_table,
-	.num_def_config = ARRAY_SIZE(mmsys_mt8196_disp0_default_table),
 };
 
 static const struct mtk_mmsys_driver_data mt8196_dispsys1_driver_data = {
 	.clk_driver = "clk-mt8196-disp1",
 	.routes = mmsys_mt8196_disp1_routing_table,
 	.num_routes = ARRAY_SIZE(mmsys_mt8196_disp1_routing_table),
-	.def_config = mmsys_mt8196_disp1_default_table,
-	.num_def_config = ARRAY_SIZE(mmsys_mt8196_disp1_default_table),
 };
 
 static const struct mtk_mmsys_driver_data mt8196_ovlsys0_driver_data = {
 	.clk_driver = "clk-mt8196-ovl0",
 	.routes = mmsys_mt8196_ovl0_routing_table,
 	.num_routes = ARRAY_SIZE(mmsys_mt8196_ovl0_routing_table),
-	.def_config = mmsys_mt8196_ovl0_default_table,
-	.num_def_config = ARRAY_SIZE(mmsys_mt8196_ovl0_default_table),
 };
 
 static const struct mtk_mmsys_driver_data mt8196_ovlsys1_driver_data = {
 	.clk_driver = "clk-mt8196-ovl1",
 	.routes = mmsys_mt8196_ovl1_routing_table,
 	.num_routes = ARRAY_SIZE(mmsys_mt8196_ovl1_routing_table),
-	.def_config = mmsys_mt8196_ovl0_default_table,
-	.num_def_config = ARRAY_SIZE(mmsys_mt8196_ovl0_default_table),
 };
 
 static const struct mtk_mmsys_driver_data mt8365_mmsys_driver_data = {
@@ -431,21 +423,6 @@ void mtk_mmsys_vpp_rsz_dcm_config(struct device *dev, bool enable,
 			      ((enable) ? client : 0), cmdq_pkt);
 }
 EXPORT_SYMBOL_GPL(mtk_mmsys_vpp_rsz_dcm_config);
-
-void mtk_mmsys_default_config(struct device *dev)
-{
-	struct mtk_mmsys *mmsys = dev_get_drvdata(dev);
-	const struct mtk_mmsys_default *def_config = mmsys->data->def_config;
-	int i;
-
-	if (!mmsys->data->num_def_config)
-		return;
-
-	for (i = 0; i < mmsys->data->num_def_config; i++)
-		mtk_mmsys_update_bits(mmsys, def_config[i].addr, def_config[i].mask,
-				      def_config[i].val, NULL);
-}
-EXPORT_SYMBOL_GPL(mtk_mmsys_default_config);
 
 static int mtk_mmsys_reset_update(struct reset_controller_dev *rcdev, unsigned long id,
 				  bool assert)
