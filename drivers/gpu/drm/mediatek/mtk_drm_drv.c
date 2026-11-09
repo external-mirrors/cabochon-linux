@@ -155,6 +155,7 @@ static const struct mtk_mmsys_driver_data mt8196_dispsys0_driver_data = {
 	.max_width = 8191,
 	.min_width = 2,
 	.min_height = 1,
+	.uses_systop = true,
 };
 
 static const struct mtk_mmsys_driver_data mt8196_dispsys1_driver_data = {
@@ -163,6 +164,7 @@ static const struct mtk_mmsys_driver_data mt8196_dispsys1_driver_data = {
 	.max_width = 8191,
 	.min_width = 2,
 	.min_height = 1,
+	.uses_systop = true,
 };
 
 static const struct mtk_mmsys_driver_data mt8196_ovlsys0_driver_data = {
@@ -171,6 +173,7 @@ static const struct mtk_mmsys_driver_data mt8196_ovlsys0_driver_data = {
 	.max_width = 8191,
 	.min_width = 2,
 	.min_height = 1,
+	.uses_systop = true,
 };
 
 static const struct mtk_mmsys_driver_data mt8196_ovlsys1_driver_data = {
@@ -179,6 +182,7 @@ static const struct mtk_mmsys_driver_data mt8196_ovlsys1_driver_data = {
 	.max_width = 8191,
 	.min_width = 2,
 	.min_height = 1,
+	.uses_systop = true,
 };
 
 static const struct of_device_id mtk_drm_of_ids[] = {
@@ -1059,6 +1063,8 @@ static int mtk_drm_of_get_ddp_ep_cid(struct device *dev, struct device_node *nod
  *                number of the initial endpoint for this CRTC path
  * @out_path:     Pointer to the structure that will contain the new pipeline
  * @controller_arch_v2: Check if DirectLink architecture or legacy VDO/MMSYS
+ * @uses_systop:  True if this SoC has been migrated to use SysTOP component
+ *                instead of external calls to mtk-mmsys
  *
  * MediaTek SoCs can use different DDP hardware pipelines (or paths) depending
  * on the board-specific desired display configuration; this function walks
@@ -1074,7 +1080,7 @@ static int mtk_drm_of_get_ddp_ep_cid(struct device *dev, struct device_node *nod
 static int mtk_drm_of_ddp_path_build_one(struct device *dev, struct device_node *node,
 					 enum mtk_crtc_path cpath,
 					 struct mtk_drm_path_definition *out_path,
-					 bool controller_arch_v2)
+					 bool controller_arch_v2, bool uses_systop)
 {
 	struct mtk_drm_comp_definition temp_path[MTK_DISP_CONTROLLER_MAX_COMP_PER_PATH];
 	struct device_node *next = NULL, *prev;
@@ -1085,6 +1091,12 @@ static int mtk_drm_of_ddp_path_build_one(struct device *dev, struct device_node 
 	int ret;
 
 	dev_vdbg(dev, "Building DDP Path for CRTC%d\n", cpath);
+
+	if (uses_systop) {
+		temp_path[idx].type = MTK_DISP_TOP;
+		temp_path[idx].inst_id = 0;
+		idx++;
+	}
 
 	if (controller_arch_v2) {
 		/* Check if the starting input is already a usable component */
@@ -1294,7 +1306,7 @@ static int mtk_drm_of_ddp_path_build(struct device *dev, struct device_node *nod
 			continue;
 
 		ret = mtk_drm_of_ddp_path_build_one(dev, node, i, &output_paths[i],
-						    controller_arch_v2);
+						    controller_arch_v2, data->uses_systop);
 		/*
 		 * For -ENODEV, this could mean that the device is not yet registered,
 		 * but that may be just because of a probe deferral, so it is possible
@@ -1427,6 +1439,37 @@ static int mtk_drm_register_sibling(struct device *dev, struct mtk_drm_private *
 	return 0;
 }
 
+static void mtk_drm_put_subdev(void *_dev)
+{
+	struct device *dev = _dev;
+
+	put_device(dev);
+}
+
+static int mtk_drm_register_systop(struct device *dev, struct mtk_drm_private *priv)
+{
+	struct platform_device *systop_pdev;
+	int ret;
+
+	systop_pdev = platform_device_register_data(dev, "mediatek-drm-sys-top",
+						    PLATFORM_DEVID_AUTO, NULL, 0);
+	if (IS_ERR(systop_pdev))
+		return PTR_ERR(systop_pdev);
+
+	priv->systop_dev = &systop_pdev->dev;
+
+	ret = devm_add_action_or_reset(dev, mtk_drm_put_subdev, priv->systop_dev);
+	if (ret)
+		return ret;
+
+	ret = mtk_ddp_comp_init(priv->systop_dev, NULL, &priv->hlist,
+				priv->data->mmsys_id, MTK_DISP_TOP, 0);
+	if (ret)
+		return ret;
+
+	return 0;
+}
+
 static int mtk_drm_probe(struct platform_device *pdev)
 {
 	struct device *dev = &pdev->dev;
@@ -1473,6 +1516,20 @@ static int mtk_drm_probe(struct platform_device *pdev)
 					     sizeof(*mtk_drm_data), GFP_KERNEL);
 		if (!private->data)
 			return -ENOMEM;
+
+		/*
+		 * If this display controller has been migrated to use SysTOP
+		 * instead of calling into mtk-mmsys, register the driver and
+		 * wire up its component.
+		 *
+		 * Eventually, this check will disappear when all SoCs will be
+		 * migrated to use SysTOP.
+		 */
+		if (private->data->uses_systop) {
+			ret = mtk_drm_register_systop(dev, private);
+			if (ret)
+				return ret;
+		}
 
 		ret = mtk_drm_of_ddp_path_build(dev, node, private->data);
 		if (ret)
@@ -1617,6 +1674,7 @@ static struct platform_driver * const mtk_drm_drivers[] = {
 	&mtk_dpi_driver,
 	&mtk_dvo_driver,
 	&mtk_drm_platform_driver,
+	&mtk_drm_sys_top_driver,
 	&mtk_dsi_driver,
 	&mtk_ethdr_driver,
 	&mtk_mdp_rdma_driver,

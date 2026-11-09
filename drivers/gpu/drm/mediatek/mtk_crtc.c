@@ -424,8 +424,6 @@ static unsigned int mtk_crtc_get_controller_map_idx(struct mtk_crtc *mtk_crtc,
 	return 0;
 }
 
-void mtk_mmsys_default_config(struct device *dev);
-
 /* FIXME: This is a hack - do it such that mtk_mutex_set_sof is not needed!! */
 void mtk_mutex_set_sof(struct mtk_mutex *mutex, enum mtk_ddp_comp_type type,
 		       unsigned int hw_inst_id);
@@ -480,6 +478,21 @@ static int mtk_crtc_ddp_hw_init(struct mtk_crtc *mtk_crtc)
 		return ret;
 	}
 
+	/* Check if SysTOP dev is present while all SoCs get migrated to it */
+	for (i = 0; i < mtk_crtc->num_controllers; i++) {
+		u8 controller_num = mtk_crtc->controller_idmap[i];
+		struct mtk_drm_private *priv;
+
+		priv = mtk_crtc_get_controller_priv(mtk_crtc, controller_num);
+		if (!priv)
+			return -ENODEV;
+
+		if (!priv->systop_dev)
+			continue;
+
+		mtk_drm_sys_top_start(priv->systop_dev);
+	}
+
 	for (i = 0; i < mtk_crtc->num_controllers; i++) {
 		ret = mtk_mutex_prepare(mtk_crtc->mutex[i]);
 		if (ret < 0) {
@@ -492,17 +505,6 @@ static int mtk_crtc_ddp_hw_init(struct mtk_crtc *mtk_crtc)
 	if (ret < 0) {
 		drm_err(dev, "Failed to enable component clocks: %d\n", ret);
 		goto err_mutex_unprepare;
-	}
-
-	for (i = 0; i < mtk_crtc->num_controllers; i++) {
-		u8 controller_num = mtk_crtc->controller_idmap[i];
-		struct mtk_drm_private *priv;
-
-		priv = mtk_crtc_get_controller_priv(mtk_crtc, controller_num);
-		if (!priv)
-			return -ENODEV;
-
-		mtk_mmsys_default_config(priv->mmsys_dev);
 	}
 
 	for (i = 0; i < mtk_crtc->ddp_comp_nr - 1; i++) {
@@ -660,6 +662,20 @@ static void mtk_crtc_ddp_hw_fini(struct mtk_crtc *mtk_crtc)
 
 	for (i = 0; i < mtk_crtc->num_controllers; i++)
 		mtk_mutex_unprepare(mtk_crtc->mutex[i]);
+
+	for (i = 0; i < mtk_crtc->num_controllers; i++) {
+		u8 controller_num = mtk_crtc->controller_idmap[i];
+		struct mtk_drm_private *priv;
+
+		priv = mtk_crtc_get_controller_priv(mtk_crtc, controller_num);
+		if (!priv)
+			continue;
+
+		if (!priv->systop_dev)
+			continue;
+
+		mtk_drm_sys_top_stop(priv->systop_dev);
+	}
 
 	pm_runtime_put(drm->dev);
 

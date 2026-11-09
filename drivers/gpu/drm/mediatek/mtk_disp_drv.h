@@ -16,6 +16,13 @@
 #include "mtk_mdp_rdma.h"
 #include "mtk_plane.h"
 
+/* Display Controller Top (Main) handlers */
+int mtk_sys_top_clk_enable(struct mtk_ddp_comp *comp);
+void mtk_sys_top_clk_disable(struct mtk_ddp_comp *comp);
+void mtk_drm_sys_top_start(struct device *dev);
+void mtk_drm_sys_top_stop(struct device *dev);
+
+/* Display Controller Components handlers */
 int mtk_aal_clk_enable(struct mtk_ddp_comp *comp);
 void mtk_aal_clk_disable(struct mtk_ddp_comp *comp);
 void mtk_aal_config(struct mtk_ddp_comp *comp, unsigned int w,

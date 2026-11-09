@@ -19,6 +19,7 @@ mediatek-drm-y := mtk_crtc.o \
 		  mtk_disp_wdma.o \
 		  mtk_drm_drv.o \
 		  mtk_drm_legacy.o \
+		  mtk_drm_systop.o \
 		  mtk_dsi.o \
 		  mtk_dpi_common.o \
 		  mtk_dpi.o \

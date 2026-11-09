@@ -111,6 +111,7 @@ enum mtk_ddp_comp_type {
 	MTK_DISP_RDMA,
 	MTK_DISP_RSZ,
 	MTK_DISP_TDSHP,
+	MTK_DISP_TOP,
 	MTK_DISP_UFOE,
 	MTK_DISP_WDMA,
 

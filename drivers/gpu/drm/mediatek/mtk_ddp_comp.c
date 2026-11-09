@@ -442,6 +442,11 @@ static const struct mtk_ddp_comp_funcs ddp_tdshp = {
 	.stop = mtk_tdshp_stop,
 };
 
+static const struct mtk_ddp_comp_funcs ddp_systop = {
+	.start = mtk_drm_sys_top_start,
+	.stop = mtk_drm_sys_top_stop,
+};
+
 static const struct mtk_ddp_comp_funcs ddp_wdma = {
 	.clk_enable = mtk_wdma_clk_enable,
 	.clk_disable = mtk_wdma_clk_disable,
@@ -540,6 +545,7 @@ static const struct mtk_ddp_comp_funcs *mtk_ddp_funcs[MTK_DDP_COMP_TYPE_MAX] = {
 	[MTK_DISP_RDMA]			= &ddp_rdma,
 	[MTK_DISP_RSZ]			= &ddp_rsz,
 	[MTK_DISP_TDSHP]		= &ddp_tdshp,
+	[MTK_DISP_TOP]			= &ddp_systop,
 	[MTK_DISP_UFOE]			= &ddp_ufoe,
 	[MTK_DISP_WDMA]			= &ddp_wdma,
 	[MTK_DISP_DPI]			= &ddp_dpi,
@@ -724,6 +730,7 @@ bool mtk_ddp_comp_is_internal_comp(enum mtk_ddp_comp_type type)
 	case MTK_DISP_OD:
 	case MTK_DISP_POSTMASK:
 	case MTK_DISP_RSZ:
+	case MTK_DISP_TOP:
 	case MTK_DISP_UFOE:
 		return true;
 	default:

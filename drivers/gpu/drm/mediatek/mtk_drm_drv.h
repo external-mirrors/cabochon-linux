@@ -52,6 +52,7 @@ struct mtk_mmsys_driver_data {
 	unsigned int num_conn_routes;
 
 	bool shadow_register;
+	bool uses_systop;
 	unsigned int mmsys_id;
 	unsigned int mmsys_dev_num;
 
@@ -65,6 +66,7 @@ struct mtk_drm_private {
 	bool mtk_drm_bound;
 	bool drm_master;
 	struct device *dev;
+	struct device *systop_dev;
 	struct device_node *mutex_node;
 	struct device *mutex_dev;
 	struct device *mmsys_dev;
@@ -96,4 +98,5 @@ extern struct platform_driver mtk_dvo_driver;
 extern struct platform_driver mtk_ethdr_driver;
 extern struct platform_driver mtk_mdp_rdma_driver;
 extern struct platform_driver mtk_padding_driver;
+extern struct platform_driver mtk_drm_sys_top_driver;
 #endif /* MTK_DRM_DRV_H */
