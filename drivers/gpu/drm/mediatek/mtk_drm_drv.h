@@ -16,6 +16,7 @@ enum mtk_crtc_path {
 	CRTC_EXT,
 	CRTC_THIRD,
 	CRTC_FOURTH,
+	CRTC_FIFTH,
 	MAX_CRTC,
 };
 
