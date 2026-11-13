@@ -986,7 +986,7 @@ static int mtk_mfg_probe(struct platform_device *pdev)
 	mfg->pd.power_off = mtk_mfg_power_off;
 	mfg->pd.power_on = mtk_mfg_power_on;
 	mfg->pd.set_performance_state = mtk_mfg_set_performance;
-	mfg->pd.flags = GENPD_FLAG_OPP_TABLE_FW;
+	mfg->pd.flags = GENPD_FLAG_OPP_TABLE_FW | GENPD_FLAG_ALWAYS_ON;
 
 	ret = pm_genpd_init(&mfg->pd, NULL, false);
 	if (ret)
