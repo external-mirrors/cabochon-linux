@@ -8,6 +8,10 @@
 /dts-v1/;
 /plugin/;
 
+&backlight_edp {
+	status = "okay";
+};
+
 &disp_pwm1 {
 	status = "okay";
 };

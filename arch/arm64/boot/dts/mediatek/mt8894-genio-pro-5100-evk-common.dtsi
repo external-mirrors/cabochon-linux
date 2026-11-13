@@ -78,6 +78,7 @@
 		pinctrl-0 = <&edp_backlight_en_pins>;
 		power-supply = <&vedp_vdc_12v0>;
 		pwms = <&disp_pwm1 0 500000>;
+		status = "disabled";
 	};
 
 	backlight_lcm1: backlight-lcm1 {
@@ -87,6 +88,7 @@
 		num-interpolated-steps = <1023>;
 		power-supply = <&vio33_tp1_lcm1>;
 		pwms = <&disp_pwm0 0 500000>;
+		status = "disabled";
 	};
 
 	can_clk: can-clk {
@@ -338,7 +340,7 @@
 		gpio = <&pio 212 GPIO_ACTIVE_HIGH>;
 		off-on-delay-us = <200>;
 		pinctrl-names = "default";
-		pinctrl-0 = <&vrpi_disp_5v_en>;
+		pinctrl-0 = <&vrpi_disp_p3v3_en>;
 		vin-supply = <&vvideo_5v>;
 	};
 
@@ -1489,6 +1491,13 @@
 	vmeas_en_pins: vmeas-en-default {
 		pins-regulator {
 			pinmux = <PINMUX_GPIO181__FUNC_GPIO181>;
+			output-high;
+		};
+	};
+
+	vrpi_disp_p3v3_en: vrpi-disp-p3v3-default {
+		pins-regulator {
+			pinmux = <PINMUX_GPIO212__FUNC_GPIO212>;
 			output-high;
 		};
 	};

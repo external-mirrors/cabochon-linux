@@ -11,6 +11,10 @@
 /dts-v1/;
 /plugin/;
 
+&backlight_lcm1 {
+	status = "okay";
+};
+
 &disp_pwm0 {
 	status = "okay";
 };
