@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: (GPL-2.0 OR MIT)
 /*
  * Copyright 2025 Google LLC
+ * Copyright (C) 2025 Collabora Ltd.
+ *                    AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
  */
 
 /dts-v1/;
@@ -83,7 +85,7 @@
 	spi-cs-hold-delay-ns = <43>;
 };
 
-&dsc1_out {
+&dl_in_relay1_5 {
 	remote-endpoint = <&dsi0_in>;
 };
 
@@ -101,7 +103,7 @@
 
 			dsi0_in: endpoint@2 {
 				reg = <2>;
-				remote-endpoint = <&dsc1_out>;
+				remote-endpoint = <&dl_in_relay1_5>;
 			};
 		};
 

@@ -285,6 +285,18 @@
 	status = "okay";
 };
 
+&dl_in_relay1_2 {
+	remote-endpoint = <&dsc0_in>;
+};
+
+&dsc0_in {
+	remote-endpoint = <&dl_in_relay1_2>;
+};
+
+&dsc0_out {
+	remote-endpoint = <&disp1_dp_intf0_in>;
+};
+
 &dp_intf0 {
 	status = "disabled";
 
@@ -297,8 +309,8 @@
 			#size-cells = <0>;
 			reg = <0>;
 
-			disp1_dp_intf0_in: endpoint@1 {
-				reg = <1>;
+			disp1_dp_intf0_in: endpoint@0 {
+				reg = <0>;
 				remote-endpoint = <&dsc0_out>;
 			};
 		};
@@ -314,6 +326,18 @@
 			};
 		};
 	};
+};
+
+&dl_in_relay1_4 {
+	remote-endpoint = <&dsc1_in>;
+};
+
+&dsc1_in {
+	remote-endpoint = <&dl_in_relay1_4>;
+};
+
+&dsc1_out {
+	remote-endpoint = <&disp1_dp_intf1_in>;
 };
 
 &dp_intf1 {
@@ -347,16 +371,16 @@
 	};
 };
 
-&dsc0_out {
-	remote-endpoint = <&disp1_dp_intf0_in>;
-};
-
-&dsc1_out {
-	remote-endpoint = <&disp1_dp_intf1_in>;
-};
-
 &dvo0 {
 	status = "okay";
+};
+
+&dl_in_relay1_1 {
+	remote-endpoint = <&dvo0_in>;
+};
+
+&dvo0_in {
+	remote-endpoint = <&dl_in_relay1_1>;
 };
 
 &dvo0_out {
