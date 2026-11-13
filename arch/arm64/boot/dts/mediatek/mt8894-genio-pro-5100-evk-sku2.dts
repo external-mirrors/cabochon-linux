@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0 OR MIT
 /*
  * Copyright (C) 2026 Collabora Ltd.
- * Author: Arnaud Ferraris <arnaud.ferraris@collabora.com>
+ *                    Arnaud Ferraris <arnaud.ferraris@collabora.com>
+ *                    AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
  */
 
 /dts-v1/;
@@ -13,10 +14,6 @@
 	model = "MediaTek Genio Pro 5100 EVK SKU2";
 	compatible = "mediatek,mt8894-evk-sku2", "mediatek,mt8894",
 		     "mediatek,mt8196";
-};
-
-&can_clk {
-	clock-frequency = <20000000>;
 };
 
 &connector_hdmi0_in {
@@ -44,6 +41,14 @@
 	orientation-switch;
 };
 
+&dptx_out0 {
+	remote-endpoint = <&typec_con_dp>;
+};
+
+&dsi0_out {
+	remote-endpoint = <&it6162_in>;
+};
+
 &hdmi_bridge_it6162 {
 	interrupts-extended = <&pio 143 IRQ_TYPE_LEVEL_LOW>;
 
@@ -55,7 +60,7 @@
 		port@0 {
 			reg = <0>;
 			it6162_in: endpoint {
-				/* remote-endpoint = <&dsi0_out>; */
+				remote-endpoint = <&dsi0_out>;
 			};
 		};
 
@@ -156,7 +161,6 @@
 			};
 		};
 	};
-
 
 	usb3_repeater: repeater@4b {
 		compatible = "nxp,ptn3222";
@@ -322,8 +326,6 @@
 &vvideo_5v_pins {
 	pins-regulator {
 		pinmux = <PINMUX_GPIO144__FUNC_GPIO144>;
-		//bias-pull-up = <MTK_PUPD_SET_R1R0_10>; /* 50kOhm PU */
 	};
 };
 
-#include "mt8894-genio-pro-display-pipeline.dtsi"

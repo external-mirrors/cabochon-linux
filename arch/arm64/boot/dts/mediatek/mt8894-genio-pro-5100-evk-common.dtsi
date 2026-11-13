@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0 OR MIT
 /*
  * Copyright (C) 2026 Collabora Ltd.
- * Authors: Arnaud Ferraris <arnaud.ferraris@collabora.com>
- *          AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
+ *                    Arnaud Ferraris <arnaud.ferraris@collabora.com>
+ *                    AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
  */
 
 /dts-v1/;
@@ -38,20 +38,6 @@
 		stdout-path = "serial0:115200n8";
 	};
 
-	keys: gpio-keys {
-		compatible = "gpio-keys";
-		pinctrl-names = "default";
-		pinctrl-0 = <&gpio_key_pins>;
-
-		button-volume-up {
-			wakeup-source;
-			debounce-interval = <100>;
-			gpios = <&pio 60 GPIO_ACTIVE_LOW>;
-			label = "volume_up";
-			linux,code = <KEY_VOLUMEUP>;
-		};
-	};
-
 	memory@80000000 {
 		/* 16GB */
 		device_type = "memory";
@@ -82,10 +68,45 @@
 		};
 	};
 
+	backlight_edp: backlight-edp {
+		compatible = "pwm-backlight";
+		brightness-levels = <0 1023>;
+		default-brightness-level = <576>;
+		enable-gpios = <&pio 5 GPIO_ACTIVE_HIGH>;
+		num-interpolated-steps = <1023>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&edp_backlight_en_pins>;
+		power-supply = <&vedp_vdc_12v0>;
+		pwms = <&disp_pwm1 0 500000>;
+	};
+
+	backlight_lcm1: backlight-lcm1 {
+		compatible = "pwm-backlight";
+		brightness-levels = <0 1023>;
+		default-brightness-level = <576>;
+		num-interpolated-steps = <1023>;
+		power-supply = <&vio33_tp1_lcm1>;
+		pwms = <&disp_pwm0 0 500000>;
+	};
+
 	can_clk: can-clk {
 		compatible = "fixed-clock";
 		#clock-cells = <0>;
 		clock-frequency = <20000000>;
+	};
+
+	keys: gpio-keys {
+		compatible = "gpio-keys";
+		pinctrl-names = "default";
+		pinctrl-0 = <&gpio_key_pins>;
+
+		button-volume-up {
+			wakeup-source;
+			debounce-interval = <100>;
+			gpios = <&pio 60 GPIO_ACTIVE_LOW>;
+			label = "volume_up";
+			linux,code = <KEY_VOLUMEUP>;
+		};
 	};
 
 	connector-hdmi0 {
@@ -167,6 +188,37 @@
 		pinctrl-names = "default";
 		pinctrl-0 = <&can_vdd_en_pins>;
 		vin-supply = <&vaudio_5v>;
+	};
+
+	/* eDP connector power rails */
+	vedp_p3v3: regulator-vedp-p3v3 {
+		compatible = "regulator-fixed";
+		regulator-name = "vedp_p3v3";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		gpio = <&pio 7 GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+		pinctrl-names = "default";
+		pinctrl-0 = <&vedp_p3v3_pins>;
+		off-on-delay-us = <1000>;
+		vin-supply = <&vvideo_5v>;
+	};
+
+	vedp_vdc_12v0: regulator-vedp-vdc-12v0 {
+		compatible = "regulator-fixed";
+		regulator-name = "vedp_vdc12v0";
+		regulator-min-microvolt = <12000000>;
+		regulator-max-microvolt = <12000000>;
+		gpio = <&pio 6 GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+		/*
+		 * PE507BA - Soft Start, RC delay = 47Kohms * 0.22uF => 10ms
+		 * Plus voltage ramp up stable time for 110.1uF total output caps.
+		 */
+		off-on-delay-us = <11000>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&vedp_vdc_12v0_pins>;
+		vin-supply = <&vsys_12v>;
 	};
 
 	/* system wide 3.3V power rail */
@@ -276,38 +328,45 @@
 		regulator-boot-on;
 	};
 
-	/* Used by all the 3v3 IOs in the Raspberry Pi connector */
-	vraspi_3v3: regulator-raspi-3v3 {
+	/* RT9078N - Used by all the 3v3 IOs in the Raspberry Pi connector */
+	vrpi_disp_io3v3: regulator-vrpi-disp-io-p3v3 {
 		compatible = "regulator-fixed";
-		regulator-name = "vraspi_3v3";
+		regulator-name = "vrpi-dispio";
 		regulator-min-microvolt = <3300000>;
 		regulator-max-microvolt = <3300000>;
-		vin-supply = <&vraspi>;
-		regulator-always-on;
-		regulator-boot-on;
+		enable-active-high;
+		gpio = <&pio 212 GPIO_ACTIVE_HIGH>;
+		off-on-delay-us = <200>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&vrpi_disp_5v_en>;
+		vin-supply = <&vvideo_5v>;
 	};
 
-	/* Provides the 5v supply for Raspberry Pi connector */
-	vraspi_5v: regulator-raspi-5v {
+	vrpi_disp_5v: regulator-vrpi-disp {
 		compatible = "regulator-fixed";
-		regulator-name = "vraspi_5v";
+		regulator-name = "vrpi-disp";
 		regulator-min-microvolt = <5000000>;
 		regulator-max-microvolt = <5000000>;
-		vin-supply = <&vraspi>;
-		regulator-always-on;
-		regulator-boot-on;
-	};
-
-	vraspi: regulator-raspi {
-		compatible = "regulator-fixed";
-		regulator-name = "vraspi";
 		enable-active-high;
 		gpio = <&pio 139 GPIO_ACTIVE_HIGH>;
 		off-on-delay-us = <1000>;
 		pinctrl-names = "default";
-		pinctrl-0 = <&vraspi_pins>;
+		pinctrl-0 = <&vrpi_disp_5v_en>;
 		vin-supply = <&vvideo_5v>;
-		regulator-always-on;
+	};
+
+	/* Schematics call this BL_LCM1, but it's really for LCM2; 2.4 Amps max. */
+	vbl_lcm2: regulator-bl-lcm2 {
+		compatible = "regulator-fixed";
+		regulator-name = "bl_lcm2";
+		regulator-min-microvolt = <5000000>;
+		regulator-max-microvolt = <5000000>;
+		gpio = <&pio 25 GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+		off-on-delay-us = <1000>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&disp_dsi2_vbacklight_en_pins>;
+		vin-supply = <&vvideo_5v>;
 	};
 
 	/* system wide 12.0V power rail */
@@ -429,6 +488,16 @@
 		fan-no-pwm-release;
 		pulses-per-revolution = <2>;
 	};
+};
+
+&disp_pwm0 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&disp_pwm0_pins>;
+};
+
+&disp_pwm1 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&disp_pwm1_pins>;
 };
 
 &i2c0 {
@@ -596,6 +665,15 @@
 	core-supply = <&mt6373_vbuck7>;
 	stack-supply = <&mt6319_s7_vbuck1>;
 	sram-supply = <&mt6319_s15_vbuck3>;
+	status = "okay";
+};
+
+&mipi_tx_config0 {
+	drive-strength-microamp = <5600>;
+	status = "okay";
+};
+
+&mipi_tx_config1 {
 	status = "okay";
 };
 
@@ -883,9 +961,57 @@
 		};
 	};
 
+	disp_dsi1_pins: disp-dsi1-pins {
+		pins-rst {
+			pinmux = <PINMUX_GPIO90__FUNC_GPIO90>;
+			drive-strength = <8>;
+			output-low;
+		};
+
+		pins-en {
+			pinmux = <PINMUX_GPIO89__FUNC_GPIO89>;
+			drive-strength = <8>;
+			bias-pull-up;
+			output-low;
+		};
+	};
+
+	disp_dsi2_vbacklight_en_pins: dsi2-vbl-en-pins {
+		pins-en {
+			pinmux = <PINMUX_GPIO25__FUNC_GPIO25>;
+			output-high;
+		};
+	};
+
+	disp_pwm0_pins: disp-pwm0-pins {
+		pins-pwm {
+			pinmux = <PINMUX_GPIO103__FUNC_DISP_PWM>;
+		};
+	};
+
 	disp_pwm1_pins: disp-pwm1-pins {
 		pins-pwm {
 			pinmux = <PINMUX_GPIO4__FUNC_DISP_PWM1>;
+		};
+	};
+
+	disp_touchscreen_pins: disp-touchscreen-pins {
+		pins-irq {
+			pinmux = <PINMUX_GPIO138__FUNC_GPIO138>;
+			input-enable;
+			bias-disable;
+		};
+
+		pins-reset {
+			pinmux = <PINMUX_GPIO137__FUNC_GPIO137>;
+			output-high;
+		};
+	};
+
+	edp_backlight_en_pins: edp-bl-en-pins {
+		pins-en {
+			pinmux = <PINMUX_GPIO5__FUNC_GPIO5>;
+			output-high;
 		};
 	};
 
@@ -1314,6 +1440,21 @@
 		};
 	};
 
+
+	vedp_p3v3_pins: vedp-3v3-en-default {
+		pins-regulator {
+			pinmux = <PINMUX_GPIO7__FUNC_GPIO7>;
+			output-high;
+		};
+	};
+
+	vedp_vdc_12v0_pins: vedp-vdc-12v-default {
+		pins-regulator {
+			pinmux = <PINMUX_GPIO6__FUNC_GPIO6>;
+			output-high;
+		};
+	};
+
 	veth33_pins: veth33-default {
 		pins-regulator {
 			pinmux = <PINMUX_GPIO159__FUNC_GPIO159>;
@@ -1352,7 +1493,7 @@
 		};
 	};
 
-	vraspi_pins: vraspi-default {
+	vrpi_disp_5v_en: vrpi-disp-5v-default {
 		pins-regulator {
 			pinmux = <PINMUX_GPIO139__FUNC_GPIO139>;
 			output-high;
@@ -1689,4 +1830,146 @@
 			};
 		};
 	};
+};
+
+/*
+ * Display Controller Pipeline is at the end to ensure readability: as this
+ * contains multiple interconnections, intertwining those nodes with all of
+ * the others will make that unnecessarily hard to understand.
+ *
+ * This is not typical for devicetrees, which must keep all of the overrides
+ * in alphabetical order, but the high complexity of this pipeline setup
+ * makes that necessary.
+ */
+&dispsys0 {
+	/delete-property/ mboxes;
+};
+
+&dispsys1 {
+	/delete-property/ mboxes;
+};
+
+&ovlsys0 {
+	/delete-property/ mboxes;
+};
+
+&ovlsys1 {
+	/delete-property/ mboxes;
+};
+
+
+/*
+ * The first output has Picture Quality enabled, but the others do not;
+ * to disable PQ on that one as well:
+ * - dl_in_relay0_0 must go directly to dl_out_relay0_1 (and vice-versa)
+ * - rsz0_in and dither0_out shall have no endpoints connected.
+ *
+ * Note that all of the final display outputs are on DISPSYS1, and laid
+ * out on the controller with the first two DirectLink relays pointing
+ * to outputs that are always available on the board; In particular:
+ *
+ * - dl_in_relay1_1: DSI 0     -> DSI to HDMI Bridge
+ * - dl_in_relay1_2: DP_INTF 0 -> DisplayPort 0 on Type C connector
+ * - dl_in_relay1_3: DSI 1     -> On-board DSI 1 connector
+ * - dl_in_relay1_4: DSI 2     -> On-board DSI 2 connector
+ * - dl_in_relay1_5: DVO 0     -> On-board embedded DisplayPort (eDP) connector
+ * - dl_in_relay1_6: DP_INTF 1 -> DisplayPort 1 (for MST on DisplayPort 0)
+ */
+&dl_in_relay1_1 {
+	remote-endpoint = <&dsi0_in>;
+};
+
+&dl_in_relay1_2 {
+	remote-endpoint = <&dp_intf0_in>;
+};
+
+/* DisplayPort Output */
+&dp_intf0 {
+	status = "okay";
+
+	ports {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		port@0 {
+			#address-cells = <1>;
+			#size-cells = <0>;
+			reg = <0>;
+
+			dp_intf0_in: endpoint@0 {
+				reg = <0>;
+				remote-endpoint = <&dl_in_relay1_2>;
+			};
+		};
+
+		port@1 {
+			#address-cells = <1>;
+			#size-cells = <0>;
+			reg = <1>;
+
+			dp_intf0_out: endpoint@1 {
+				reg = <1>;
+				remote-endpoint = <&dptx_in0>;
+			};
+		};
+	};
+};
+
+&dp_phy {
+	status = "okay";
+};
+
+&dp_tx {
+	status = "okay";
+	#sound-dai-cells = <0>;
+
+	ports {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		port@0 {
+			#address-cells = <1>;
+			#size-cells = <0>;
+			reg = <0>;
+
+			dptx_in0: endpoint@0 {
+				reg = <0>;
+				remote-endpoint = <&dp_intf0_out>;
+			};
+		};
+
+		port@1 {
+			reg = <1>;
+			dptx_out0: endpoint {
+				data-lanes = <0 1>;
+			};
+		};
+	};
+};
+
+&dsi0 {
+	status = "okay";
+
+	ports {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		port@0 {
+			reg = <0>;
+			dsi0_in: endpoint {
+				remote-endpoint = <&dl_in_relay1_1>;
+			};
+		};
+
+		port@1 {
+			reg = <1>;
+			/* Output is set in SKU specific devicetree */
+			dsi0_out: endpoint { };
+		};
+	};
+};
+
+&vdisp_ctrl {
+	/* TODO FIXME: Downstream node! remove me! */
+	status = "okay";
 };

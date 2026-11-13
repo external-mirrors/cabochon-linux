@@ -1,0 +1,77 @@
+// SPDX-License-Identifier: (GPL-2.0 OR MIT)
+/*
+ * Embedded DisplayPort Generic Display module
+ * Copyright (C) 2026 Collabora Ltd.
+ *                    AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
+ */
+
+/dts-v1/;
+/plugin/;
+
+&disp_pwm1 {
+	status = "okay";
+};
+
+&dl_in_relay1_5 {
+	remote-endpoint = <&dvo0_in>;
+};
+
+&dvo0 {
+	status = "okay";
+};
+
+&dvo0_in {
+	remote-endpoint = <&dl_in_relay1_5>;
+};
+
+&dvo0_out {
+	remote-endpoint = <&edp_in>;
+};
+
+&edp_phy {
+	status = "okay";
+};
+
+&edp_tx {
+	pinctrl-names = "default";
+	pinctrl-0 = <&edp_hpd_pins>;
+	status = "okay";
+
+	ports {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		port@0 {
+			reg = <0>;
+			edp_in: endpoint {
+				remote-endpoint = <&dvo0_out>;
+			};
+		};
+
+		port@1 {
+			reg = <1>;
+			edp_out: endpoint {
+				data-lanes = <0 1 2 3>;
+				remote-endpoint = <&edp_panel_in>;
+			};
+		};
+	};
+
+	aux-bus {
+		panel: panel {
+			compatible = "edp-panel";
+			power-supply = <&vedp_p3v3>;
+			backlight = <&backlight_edp>;
+			status = "okay";
+
+			port {
+				edp_panel_in: endpoint {
+					remote-endpoint = <&edp_out>;
+				};
+			};
+		};
+	};
+};
+
+
+

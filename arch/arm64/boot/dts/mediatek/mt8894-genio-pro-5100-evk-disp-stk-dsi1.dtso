@@ -1,0 +1,80 @@
+// SPDX-License-Identifier: (GPL-2.0 OR MIT)
+/*
+ * Startek KD070FHFID078 DSI Display module
+ * Copyright (C) 2026 Collabora Ltd.
+ *                    AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
+ */
+
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/interrupt-controller/irq.h>
+
+/dts-v1/;
+/plugin/;
+
+&disp_pwm0 {
+	status = "okay";
+};
+
+&dl_in_relay1_3 {
+	remote-endpoint = <&dsi1_in>;
+};
+
+&dsi1 {
+	#address-cells = <1>;
+	#size-cells = <0>;
+	status = "okay";
+
+	panel@0 {
+		compatible = "startek,kd070fhfid078", "himax,hx8279";
+		reg = <0>;
+		backlight = <&backlight_lcm1>;
+		enable-gpios = <&pio 89 GPIO_ACTIVE_HIGH>;
+		reset-gpios = <&pio 90 GPIO_ACTIVE_HIGH>;
+		iovcc-supply = <&vio18_lcm1>;
+		vdd-supply = <&vsys_lcm1>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&disp_dsi1_pins>;
+
+		port {
+			dsi_panel_in: endpoint {
+				remote-endpoint = <&dsi1_out>;
+			};
+		};
+	};
+
+	ports {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		port@0 {
+			reg = <0>;
+			dsi1_in: endpoint {
+				remote-endpoint = <&dl_in_relay1_3>;
+			};
+		};
+
+		port@1 {
+			reg = <1>;
+			dsi1_out: endpoint {
+				remote-endpoint = <&dsi_panel_in>;
+			};
+		};
+	};
+};
+
+&i2c0 {
+	#address-cells = <1>;
+	#size-cells = <0>;
+
+	touchscreen@5d {
+		compatible = "goodix,gt9271";
+		reg = <0x5d>;
+		interrupts-extended = <&pio 138 IRQ_TYPE_EDGE_RISING>;
+		irq-gpios = <&pio 138 GPIO_ACTIVE_HIGH>;
+		reset-gpios = <&pio 137 GPIO_ACTIVE_HIGH>;
+		AVDD28-supply = <&vsys_lcm1>;
+		VDDIO-supply = <&vio18_lcm1>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&disp_touchscreen_pins>;
+	};
+};

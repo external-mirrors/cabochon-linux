@@ -196,9 +196,48 @@ dtb-$(CONFIG_ARCH_MEDIATEK) += mt8395-radxa-nio-12l-8-hd-panel.dtbo
 mt8395-radxa-nio-12l-8-hd-panel-dtbs := mt8395-radxa-nio-12l.dtb mt8395-radxa-nio-12l-8-hd-panel.dtbo
 dtb-$(CONFIG_ARCH_MEDIATEK) += mt8395-radxa-nio-12l-8-hd-panel.dtb
 dtb-$(CONFIG_ARCH_MEDIATEK) += mt8516-pumpkin.dtb
-dtb-$(CONFIG_ARCH_MEDIATEK) += mt8894-genio-pro-5100-evk.dtb
+
 dtb-$(CONFIG_ARCH_MEDIATEK) += mt8894-genio-pro-5100-evk-sku1.dtb
 dtb-$(CONFIG_ARCH_MEDIATEK) += mt8894-genio-pro-5100-evk-sku2.dtb
+dtb-$(CONFIG_ARCH_MEDIATEK) += mt8894-genio-pro-5100-evk-disp-stk-dsi1.dtbo
+dtb-$(CONFIG_ARCH_MEDIATEK) += mt8894-genio-pro-5100-evk-disp-rpi-dsi2.dtbo
+dtb-$(CONFIG_ARCH_MEDIATEK) += mt8894-genio-pro-5100-evk-disp-edp.dtbo
+mt8894-genio-pro-5100-evk-sku1-dsi1-dtbs :=		\
+	mt8894-genio-pro-5100-evk-sku1.dtb		\
+	mt8894-genio-pro-5100-evk-disp-stk-dsi1.dtbo
+mt8894-genio-pro-5100-evk-sku1-dsi2-dtbs :=		\
+	mt8894-genio-pro-5100-evk-sku1.dtb		\
+	mt8894-genio-pro-5100-evk-disp-rpi-dsi2.dtbo
+mt8894-genio-pro-5100-evk-sku1-edp-dtbs :=		\
+	mt8894-genio-pro-5100-evk-sku1.dtb		\
+	mt8894-genio-pro-5100-evk-disp-edp.dtbo
+mt8894-genio-pro-5100-evk-sku1-disp-all-dtbs :=		\
+	mt8894-genio-pro-5100-evk-sku1.dtb		\
+	mt8894-genio-pro-5100-evk-disp-stk-dsi1.dtbo	\
+	mt8894-genio-pro-5100-evk-disp-rpi-dsi2.dtbo	\
+	mt8894-genio-pro-5100-evk-disp-edp.dtbo
+dtb-$(CONFIG_ARCH_MEDIATEK) += mt8894-genio-pro-5100-evk-sku1-dsi1.dtb
+dtb-$(CONFIG_ARCH_MEDIATEK) += mt8894-genio-pro-5100-evk-sku1-dsi2.dtb
+dtb-$(CONFIG_ARCH_MEDIATEK) += mt8894-genio-pro-5100-evk-sku1-edp.dtb
+dtb-$(CONFIG_ARCH_MEDIATEK) += mt8894-genio-pro-5100-evk-sku1-disp-all.dtb
+mt8894-genio-pro-5100-evk-sku2-dsi1-dtbs :=		\
+	mt8894-genio-pro-5100-evk-sku2.dtb		\
+	mt8894-genio-pro-5100-evk-disp-stk-dsi1.dtbo
+mt8894-genio-pro-5100-evk-sku2-dsi2-dtbs :=		\
+	mt8894-genio-pro-5100-evk-sku2.dtb		\
+	mt8894-genio-pro-5100-evk-disp-rpi-dsi2.dtbo
+mt8894-genio-pro-5100-evk-sku2-edp-dtbs :=		\
+	mt8894-genio-pro-5100-evk-sku2.dtb		\
+	mt8894-genio-pro-5100-evk-disp-edp.dtbo
+mt8894-genio-pro-5100-evk-sku2-disp-all-dtbs :=		\
+	mt8894-genio-pro-5100-evk-sku2.dtb		\
+	mt8894-genio-pro-5100-evk-disp-stk-dsi1.dtbo	\
+	mt8894-genio-pro-5100-evk-disp-rpi-dsi2.dtbo	\
+	mt8894-genio-pro-5100-evk-disp-edp.dtbo
+dtb-$(CONFIG_ARCH_MEDIATEK) += mt8894-genio-pro-5100-evk-sku2-dsi1.dtb
+dtb-$(CONFIG_ARCH_MEDIATEK) += mt8894-genio-pro-5100-evk-sku2-dsi2.dtb
+dtb-$(CONFIG_ARCH_MEDIATEK) += mt8894-genio-pro-5100-evk-sku2-edp.dtb
+dtb-$(CONFIG_ARCH_MEDIATEK) += mt8894-genio-pro-5100-evk-sku2-disp-all.dtb
 
 # Device tree overlays support
 DTC_FLAGS_mt7986a-bananapi-bpi-r3 := -@
@@ -209,3 +248,5 @@ DTC_FLAGS_mt7988a-bananapi-bpi-r4-pro-4e := -@
 DTC_FLAGS_mt7988a-bananapi-bpi-r4-pro-8x := -@
 DTC_FLAGS_mt8365-evk := -@
 DTC_FLAGS_mt8395-radxa-nio-12l := -@
+DTC_FLAGS_mt8894-genio-pro-5100-evk-sku1 := -@
+DTC_FLAGS_mt8894-genio-pro-5100-evk-sku2 := -@

@@ -1,0 +1,97 @@
+// SPDX-License-Identifier: (GPL-2.0 OR MIT)
+/*
+ * Raspberry Pi DSI Display module
+ * Copyright (C) 2026 Collabora Ltd.
+ *                    AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
+ */
+
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/interrupt-controller/irq.h>
+
+/dts-v1/;
+/plugin/;
+
+&{/} {
+	backlight_rpi: backlight {
+		compatible = "pwm-backlight";
+		brightness-levels = <0 1023>;
+		default-brightness-level = <576>;
+		num-interpolated-steps = <1023>;
+		pwms = <&mcu_rpi_disp 0 200000 0>;
+		vin-supply = <&vbl_lcm2>;
+	};
+
+	vtouch_rpi: regulator-dsi-touch {
+		compatible = "regulator-fixed";
+		gpio = <&mcu_rpi_disp 1 GPIO_ACTIVE_HIGH>;
+		regulator-name = "rpi-display-touch";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		startup-delay-us = <50000>;
+		enable-active-high;
+	};
+};
+
+&i2c1 {
+	mcu_rpi_disp: regulator@45 {
+		compatible = "raspberrypi,touchscreen-panel-regulator-v2";
+		reg = <0x45>;
+		gpio-controller;
+		#gpio-cells = <2>;
+		#pwm-cells = <3>;
+	};
+
+	touchscreen@5d {
+		compatible = "goodix,gt911";
+		reg = <0x5d>;
+		AVDD28-supply = <&vtouch_rpi>;
+		VDDIO-supply = <&vrpi_disp_io3v3>;
+		touchscreen-size-x = <720>;
+		touchscreen-size-y = <1280>;
+	};
+};
+
+&dl_in_relay1_4 {
+	remote-endpoint = <&dsi2_in>;
+};
+
+&dsi2 {
+	#address-cells = <1>;
+	#size-cells = <0>;
+	status = "okay";
+
+
+	panel@0 {
+		compatible = "raspberrypi,dsi-7inch", "ilitek,ili9881c";
+		reg = <0>;
+		backlight = <&backlight_rpi>;
+		iovcc-supply = <&vrpi_disp_io3v3>;
+		power-supply = <&vrpi_disp_5v>;
+		reset-gpios = <&mcu_rpi_disp 0 GPIO_ACTIVE_LOW>;
+
+		port {
+			dsi_panel_in: endpoint {
+				remote-endpoint = <&dsi2_out>;
+			};
+		};
+	};
+
+	ports {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		port@0 {
+			reg = <0>;
+			dsi2_in: endpoint {
+				remote-endpoint = <&dl_in_relay1_4>;
+			};
+		};
+
+		port@1 {
+			reg = <1>;
+			dsi2_out: endpoint {
+				remote-endpoint = <&dsi_panel_in>;
+			};
+		};
+	};
+};
