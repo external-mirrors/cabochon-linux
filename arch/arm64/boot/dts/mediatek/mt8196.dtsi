@@ -59,6 +59,8 @@
 		dsi1 = &dsi1;
 		dsi2 = &dsi2;
 		dvo0 = &dvo0;
+		exdma0 = &ovl0_exdma0;
+		exdma1 = &ovl0_exdma1;
 		exdma2 = &ovl0_exdma2;
 		exdma3 = &ovl0_exdma3;
 		exdma4 = &ovl0_exdma4;
@@ -1087,8 +1089,8 @@
 		disp_pwm1: pwm@160c0000 {
 			compatible = "mediatek,mt8196-disp-pwm", "mediatek,mt8183-disp-pwm";
 			reg = <0 0x160c0000 0 0x1000>;
-			clocks = <&topckgen CLK_TOP_DISP_PWM>;
-			clock-names = "main";
+			clocks = <&topckgen CLK_TOP_DISP_PWM>, <&clk26m>;
+			clock-names = "main", "mm";
 			#pwm-cells = <2>;
 			status = "disabled";
 		};
@@ -1096,8 +1098,8 @@
 		disp_pwm2: pwm@160d0000 {
 			compatible = "mediatek,mt8196-disp-pwm", "mediatek,mt8183-disp-pwm";
 			reg = <0 0x160d0000 0 0x1000>;
-			clocks = <&topckgen CLK_TOP_DISP_PWM>;
-			clock-names = "main";
+			clocks = <&topckgen CLK_TOP_DISP_PWM>, <&clk26m>;
+			clock-names = "main", "mm";
 			#pwm-cells = <2>;
 			status = "disabled";
 		};
@@ -1105,8 +1107,8 @@
 		disp_pwm3: pwm@160e0000 {
 			compatible = "mediatek,mt8196-disp-pwm", "mediatek,mt8183-disp-pwm";
 			reg = <0 0x160e0000 0 0x1000>;
-			clocks = <&topckgen CLK_TOP_DISP_PWM>;
-			clock-names = "main";
+			clocks = <&topckgen CLK_TOP_DISP_PWM>, <&clk26m>;
+			clock-names = "main", "mm";
 			#pwm-cells = <2>;
 			status = "disabled";
 		};
@@ -1114,8 +1116,8 @@
 		disp_pwm4: pwm@160f0000 {
 			compatible = "mediatek,mt8196-disp-pwm", "mediatek,mt8183-disp-pwm";
 			reg = <0 0x160f0000 0 0x1000>;
-			clocks = <&topckgen CLK_TOP_DISP_PWM>;
-			clock-names = "main";
+			clocks = <&topckgen CLK_TOP_DISP_PWM>, <&clk26m>;
+			clock-names = "main", "mm";
 			#pwm-cells = <2>;
 			status = "disabled";
 		};
@@ -2401,12 +2403,14 @@
 							reg = <0>;
 							clocks = <&dispsys0 CLK_MM_DISP_DLI_ASYNC0>;
 							remote-endpoint = <&ovl_dl_out_async0_5>;
+							mediatek,port-id = <0>;
 						};
 
 						dl_in_async0_1: endpoint@1 {
 							reg = <1>;
 							clocks = <&dispsys0 CLK_MM_DISP_DLI_ASYNC1>;
 							remote-endpoint = <&ovl_dl_out_async0_6>;
+							mediatek,port-id = <1>;
 						};
 
 						dl_in_async0_8: endpoint@2 {
@@ -2414,6 +2418,20 @@
 							clocks = <&dispsys0 CLK_MM_DISP_DLI_ASYNC8>;
 							remote-endpoint = <&dl_out_async0_3>;
 							mediatek,port-id = <8>;
+						};
+
+						dl_in_async0_9: endpoint@3 {
+							reg = <3>;
+							clocks = <&dispsys0 CLK_MM_DISP_DLI_ASYNC9>;
+							remote-endpoint = <&ovl_dl_out_async1_6>;
+							mediatek,port-id = <9>;
+						};
+
+						dl_in_async0_2: endpoint@4 {
+							reg = <4>;
+							clocks = <&dispsys0 CLK_MM_DISP_DLI_ASYNC2>;
+							remote-endpoint = <&ovl_dl_out_async0_7>;
+							mediatek,port-id = <2>;
 						};
 					};
 
@@ -2432,7 +2450,7 @@
 						dl_out_async0_2: endpoint@1 {
 							reg = <1>;
 							clocks = <&dispsys0 CLK_MM_DISP_DLO_ASYNC2>;
-							remote-endpoint = <&dl_in_relay0_1>;
+							remote-endpoint = <&dl_in_async1_2>;
 							mediatek,port-id = <2>;
 						};
 
@@ -2441,6 +2459,20 @@
 							clocks = <&dispsys0 CLK_MM_DISP_DLO_ASYNC3>;
 							remote-endpoint = <&dl_in_async0_8>;
 							mediatek,port-id = <3>;
+						};
+
+						dl_out_async0_4: endpoint@3 {
+							reg = <3>;
+							clocks = <&dispsys0 CLK_MM_DISP_DLO_ASYNC4>;
+							remote-endpoint = <&dl_in_relay0_3>;
+							mediatek,port-id = <4>;
+						};
+
+						dl_out_async0_5: endpoint@4 {
+							reg = <4>;
+							clocks = <&dispsys0 CLK_MM_DISP_DLO_ASYNC5>;
+							remote-endpoint = <&dl_in_async1_5>;
+							mediatek,port-id = <5>;
 						};
 					};
 
@@ -2456,11 +2488,24 @@
 
 						dl_in_relay0_1: endpoint@1 {
 							reg = <1>;
-							remote-endpoint = <&dl_out_async0_2>;
+							remote-endpoint = <&dl_out_relay0_2>;
 						};
 
 						dl_in_relay0_2: endpoint@2 {
 							reg = <2>;
+							remote-endpoint = <&dl_out_relay0_3>;
+						};
+
+						dl_in_relay0_3: endpoint@3 {
+							reg = <3>;
+							remote-endpoint = <&dl_out_async0_4>;
+							mediatek,port-id = <4>;
+						};
+
+						dl_in_relay0_5: endpoint@4 {
+							reg = <4>;
+							remote-endpoint = <&dl_out_relay0_5>;
+							mediatek,port-id = <5>;
 						};
 					};
 
@@ -2477,13 +2522,28 @@
 
 						dl_out_relay0_2: endpoint@1 {
 							reg = <1>;
+							remote-endpoint = <&dl_in_relay0_1>;
 							mediatek,port-id = <2>;
 						};
 
 						dl_out_relay0_3: endpoint@2 {
 							reg = <2>;
+							remote-endpoint = <&dl_in_relay0_2>;
 							mediatek,port-id = <3>;
 						};
+
+						dl_out_relay0_4: endpoint@3 {
+							reg = <3>;
+							remote-endpoint = <&dl_in_async1_4>;
+							mediatek,port-id = <4>;
+						};
+
+						dl_out_relay0_5: endpoint@4 {
+							reg = <4>;
+							remote-endpoint = <&dl_in_relay0_5>;
+							mediatek,port-id = <5>;
+						};
+
 					};
 				};
 			};
@@ -2655,47 +2715,13 @@
 				trigger-sources = <&disp0_mutex 42>;
 			};
 
-			tdshp0: tdshp@1e0000 {
-				compatible = "mediatek,mt8196-disp-tdshp";
-				reg = <0 0x1e0000 0 0x1000>;
-				clocks = <&dispsys0 CLK_MM_DISP_TDSHP0>;
-				power-domains = <&hpm_hwv MT8196_POWER_DOMAIN_DIS0_DORMANT>;
-				trigger-sources = <&disp0_mutex 53>;
-
-				ports {
-					#address-cells = <1>;
-					#size-cells = <0>;
-
-					port@0 {
-						reg = <0>;
-						tdshp0_in: endpoint {
-							remote-endpoint = <&rsz0_out>;
-						};
-					};
-
-					port@1 {
-						reg = <1>;
-						tdshp0_out: endpoint {
-							remote-endpoint = <&ccorr0_in>;
-						};
-					};
-				};
-			};
-
-			tdshp1: tdshp@1f0000 {
-				compatible = "mediatek,mt8196-disp-tdshp";
-				reg = <0 0x1f0000 0 0x1000>;
-				clocks = <&dispsys0 CLK_MM_DISP_TDSHP1>;
-				power-domains = <&hpm_hwv MT8196_POWER_DOMAIN_DIS0_DORMANT>;
-				trigger-sources = <&disp0_mutex 54>;
-			};
-
 			postmask0: postmask@180000 {
 				compatible = "mediatek,mt8196-disp-postmask",
 					     "mediatek,mt8192-disp-postmask";
 				reg = <0 0x180000 0 0x1000>;
 				clocks = <&dispsys0 CLK_MM_DISP_POSTMASK0>;
 				power-domains = <&hpm_hwv MT8196_POWER_DOMAIN_DIS0_DORMANT>;
+				trigger-sources = <&disp0_mutex 46>;
 
 				ports {
 					#address-cells = <1>;
@@ -2723,6 +2749,7 @@
 				reg = <0 0x190000 0 0x1000>;
 				clocks = <&dispsys0 CLK_MM_DISP_POSTMASK1>;
 				power-domains = <&hpm_hwv MT8196_POWER_DOMAIN_DIS0_DORMANT>;
+				trigger-sources = <&disp0_mutex 47>;
 			};
 
 			mdp_rsz0: resizer@1a0000 {
@@ -2758,6 +2785,41 @@
 				clocks = <&dispsys0 CLK_MM_MDP_RSZ1>;
 				power-domains = <&hpm_hwv MT8196_POWER_DOMAIN_DIS0_DORMANT>;
 				trigger-sources = <&disp0_mutex 51>;
+			};
+
+			tdshp0: tdshp@1e0000 {
+				compatible = "mediatek,mt8196-disp-tdshp";
+				reg = <0 0x1e0000 0 0x1000>;
+				clocks = <&dispsys0 CLK_MM_DISP_TDSHP0>;
+				power-domains = <&hpm_hwv MT8196_POWER_DOMAIN_DIS0_DORMANT>;
+				trigger-sources = <&disp0_mutex 53>;
+
+				ports {
+					#address-cells = <1>;
+					#size-cells = <0>;
+
+					port@0 {
+						reg = <0>;
+						tdshp0_in: endpoint {
+							remote-endpoint = <&rsz0_out>;
+						};
+					};
+
+					port@1 {
+						reg = <1>;
+						tdshp0_out: endpoint {
+							remote-endpoint = <&ccorr0_in>;
+						};
+					};
+				};
+			};
+
+			tdshp1: tdshp@1f0000 {
+				compatible = "mediatek,mt8196-disp-tdshp";
+				reg = <0 0x1f0000 0 0x1000>;
+				clocks = <&dispsys0 CLK_MM_DISP_TDSHP1>;
+				power-domains = <&hpm_hwv MT8196_POWER_DOMAIN_DIS0_DORMANT>;
+				trigger-sources = <&disp0_mutex 54>;
 			};
 		};
 
@@ -2797,6 +2859,7 @@
 						dl_in_async1_2: endpoint@1 {
 							reg = <1>;
 							clocks = <&dispsys1 CLK_MM1_DISP_DLI_ASYNC22>;
+							remote-endpoint = <&dl_out_async0_2>;
 							mediatek,port-id = <2>;
 						};
 
@@ -2805,6 +2868,20 @@
 							clocks = <&dispsys1 CLK_MM1_DISP_DLI_ASYNC23>;
 							remote-endpoint = <&ovl_dl_out_async1_5>;
 							mediatek,port-id = <3>;
+						};
+
+						dl_in_async1_4: endpoint@3 {
+							reg = <3>;
+							clocks = <&dispsys1 CLK_MM1_DISP_DLI_ASYNC24>;
+							remote-endpoint = <&dl_out_relay0_4>;
+							mediatek,port-id = <4>;
+						};
+
+						dl_in_async1_5: endpoint@4 {
+							reg = <4>;
+							clocks = <&dispsys1 CLK_MM1_DISP_DLI_ASYNC25>;
+							remote-endpoint = <&dl_out_async0_5>;
+							mediatek,port-id = <5>;
 						};
 					};
 
@@ -2830,6 +2907,18 @@
 							clocks = <&dispsys1 CLK_MM1_DISPSYS1_CONFIG>;
 							mediatek,port-id = <3>;
 						};
+
+						dl_out_async1_3: endpoint@3 {
+							reg = <3>;
+							clocks = <&dispsys1 CLK_MM1_DISPSYS1_CONFIG>;
+							mediatek,port-id = <4>;
+						};
+
+						dl_out_async1_5: endpoint@4 {
+							reg = <4>;
+							clocks = <&dispsys1 CLK_MM1_DISPSYS1_CONFIG>;
+							mediatek,port-id = <5>;
+						};
 					};
 
 					port@2 {
@@ -2839,20 +2928,27 @@
 
 						dl_in_relay1_1: endpoint@0 {
 							reg = <0>;
-							remote-endpoint = <&dvo0_in>;
 							mediatek,port-id = <1>;
 						};
 
 						dl_in_relay1_2: endpoint@1 {
 							reg = <1>;
-							remote-endpoint = <&dsc0_in>;
 							mediatek,port-id = <2>;
 						};
 
 						dl_in_relay1_3: endpoint@2 {
 							reg = <2>;
-							remote-endpoint = <&dsc1_in>;
 							mediatek,port-id = <3>;
+						};
+
+						dl_in_relay1_4: endpoint@3 {
+							reg = <3>;
+							mediatek,port-id = <4>;
+						};
+
+						dl_in_relay1_5: endpoint@4 {
+							reg = <4>;
+							mediatek,port-id = <5>;
 						};
 					};
 
@@ -2867,10 +2963,20 @@
 
 						dl_out_relay1_2: endpoint@1 {
 							reg = <1>;
+							remote-endpoint = <&ovl_dl_out_async0_2>;
+							mediatek,port-id = <2>;
 						};
 
 						dl_out_relay1_3: endpoint@2 {
 							reg = <2>;
+						};
+
+						dl_out_relay1_4: endpoint@3 {
+							reg = <3>;
+						};
+
+						dl_out_relay1_5: endpoint@4 {
+							reg = <4>;
 						};
 					};
 				};
@@ -2952,10 +3058,7 @@
 						#size-cells = <0>;
 						reg = <0>;
 
-						dsc1_in: endpoint@2 {
-							reg = <2>;
-							remote-endpoint = <&dl_in_relay1_3>;
-						};
+						dsc1_in: endpoint@2 { reg = <2>; };
 					};
 
 					port@1 {
@@ -3044,22 +3147,13 @@
 					#size-cells = <0>;
 
 					port@0 {
-						#address-cells = <1>;
-						#size-cells = <0>;
 						reg = <0>;
-
-						dvo0_in: endpoint@0 {
-							reg = <0>;
-							remote-endpoint = <&dl_in_relay1_1>;
-						};
+						dvo0_in: endpoint { };
 					};
 
 					port@1 {
-						#address-cells = <1>;
-						#size-cells = <0>;
 						reg = <1>;
-
-						dvo0_out: endpoint@0 { reg = <0>; };
+						dvo0_out: endpoint { };
 					};
 				};
 			};
@@ -3094,9 +3188,14 @@
 					remote-endpoint = <&ovl0_resizer0_in>;
 				};
 
-				ovlsys0_ep_ext: endpoint@1 {
+				ovlsys0_ep_ext0: endpoint@1 {
 					reg = <1>;
 					remote-endpoint = <&exdma0_6_in>;
+				};
+
+				ovlsys0_ep_ext1: endpoint@4 {
+					reg = <4>;
+					remote-endpoint = <&exdma0_8_in>;
 				};
 			};
 
@@ -3127,6 +3226,22 @@
 							clocks = <&ovlsys0 CLK_OVL_DLI1>;
 							mediatek,port-id = <6>;
 						};
+
+						ovl_dl_in_async0_2: endpoint@2 {
+							clocks = <&ovlsys0 CLK_OVL_DLI2>;
+							reg = <2>;
+						};
+
+						ovl_dl_in_async0_3: endpoint@3 {
+							clocks = <&ovlsys0 CLK_OVL_DLI3>;
+							reg = <3>;
+						};
+
+						ovl_dl_in_async0_4: endpoint@4 {
+							reg = <4>;
+							clocks = <&ovlsys0 CLK_OVL_DLI4>;
+							mediatek,port-id = <7>;
+						};
 					};
 
 					port@1 {
@@ -3146,6 +3261,24 @@
 							clocks = <&ovlsys0 CLK_OVL_DLO6>;
 							remote-endpoint = <&dl_in_async0_1>;
 							mediatek,port-id = <6>;
+						};
+
+						ovl_dl_out_async0_2: endpoint@2 {
+							reg = <2>;
+							clocks = <&ovlsys0 CLK_OVL_DLO2>;
+							remote-endpoint = <&dl_out_relay1_2>;
+						};
+
+						ovl_dl_out_async0_3: endpoint@3 {
+							reg = <3>;
+							clocks = <&ovlsys0 CLK_OVL_DLO3>;
+						};
+
+						ovl_dl_out_async0_7: endpoint@4 {
+							reg = <4>;
+							clocks = <&ovlsys0 CLK_OVL_DLO7>;
+							remote-endpoint = <&dl_in_async0_2>;
+							mediatek,port-id = <7>;
 						};
 					};
 
@@ -3171,6 +3304,20 @@
 							remote-endpoint = <&outproc0_1_out>;
 							mediatek,port-id = <6>;
 						};
+
+						ovl_dl_out_relay0_2: endpoint@2 {
+							reg = <2>;
+						};
+
+						ovl_dl_out_relay0_3: endpoint@3 {
+							reg = <3>;
+						};
+
+						ovl_dl_out_relay0_7: endpoint@4 {
+							reg = <4>;
+							remote-endpoint = <&outproc0_3_out>;
+							mediatek,port-id = <7>;
+						};
 					};
 				};
 			};
@@ -3182,6 +3329,26 @@
 				#trigger-source-cells = <1>;
 				mediatek,gce-events = <CMDQ_EVENT_DISP1_STREAM_DONE_ENG_EVENT(0)>,
 						      <CMDQ_EVENT_DISP1_STREAM_DONE_ENG_EVENT(1)>;
+			};
+
+			ovl0_exdma0: dma-controller@30000 {
+				compatible = "mediatek,mt8196-disp-exdma";
+				reg = <0 0x30000 0 0x1000>;
+				#dma-cells = <1>;
+				clocks = <&ovlsys0 CLK_OVL_EXDMA0>;
+				power-domains = <&hpm_hwv MT8196_POWER_DOMAIN_OVL0_DORMANT>;
+				mediatek,larb = <&smi_larb0>;
+				trigger-sources = <&ovl0_mutex 0>;
+			};
+
+			ovl0_exdma1: dma-controller@40000 {
+				compatible = "mediatek,mt8196-disp-exdma";
+				reg = <0 0x40000 0 0x1000>;
+				#dma-cells = <1>;
+				clocks = <&ovlsys0 CLK_OVL_EXDMA1>;
+				power-domains = <&hpm_hwv MT8196_POWER_DOMAIN_OVL0_DORMANT>;
+				mediatek,larb = <&smi_larb0>;
+				trigger-sources = <&ovl0_mutex 1>;
 			};
 
 			ovl0_exdma2: dma-controller@50000 {
@@ -3322,7 +3489,7 @@
 
 						exdma0_6_in: endpoint@1 {
 							reg = <1>;
-							remote-endpoint = <&ovlsys0_ep_ext>;
+							remote-endpoint = <&ovlsys0_ep_ext0>;
 						};
 					};
 
@@ -3394,9 +3561,9 @@
 						#size-cells = <0>;
 						reg = <0>;
 
-						exdma0_8_in: endpoint@1 {
-							reg = <1>;
-							remote-endpoint = <&blender0_6_out>;
+						exdma0_8_in: endpoint@4 {
+							reg = <4>;
+							remote-endpoint = <&ovlsys0_ep_ext1>;
 						};
 					};
 
@@ -3405,8 +3572,8 @@
 						#size-cells = <0>;
 						reg = <1>;
 
-						exdma0_8_out: endpoint@1 {
-							reg = <1>;
+						exdma0_8_out: endpoint@4 {
+							reg = <4>;
 							remote-endpoint = <&blender0_7_in>;
 						};
 					};
@@ -3431,8 +3598,8 @@
 						#size-cells = <0>;
 						reg = <0>;
 
-						exdma0_9_in: endpoint@1 {
-							reg = <1>;
+						exdma0_9_in: endpoint@4 {
+							reg = <4>;
 							remote-endpoint = <&blender0_7_out>;
 						};
 					};
@@ -3442,8 +3609,8 @@
 						#size-cells = <0>;
 						reg = <1>;
 
-						exdma0_9_out: endpoint@1 {
-							reg = <1>;
+						exdma0_9_out: endpoint@4 {
+							reg = <4>;
 							remote-endpoint = <&blender0_8_in>;
 						};
 					};
@@ -3638,7 +3805,7 @@
 
 						blender0_6_out: endpoint@1 {
 							reg = <1>;
-							remote-endpoint = <&exdma0_8_in>;
+							remote-endpoint = <&outproc0_1_in>;
 						};
 					};
 				};
@@ -3660,8 +3827,8 @@
 						#size-cells = <0>;
 						reg = <0>;
 
-						blender0_7_in: endpoint@1 {
-							reg = <1>;
+						blender0_7_in: endpoint@4 {
+							reg = <4>;
 							remote-endpoint = <&exdma0_8_out>;
 						};
 					};
@@ -3671,8 +3838,8 @@
 						#size-cells = <0>;
 						reg = <1>;
 
-						blender0_7_out: endpoint@1 {
-							reg = <1>;
+						blender0_7_out: endpoint@4 {
+							reg = <4>;
 							remote-endpoint = <&exdma0_9_in>;
 						};
 					};
@@ -3695,8 +3862,8 @@
 						#size-cells = <0>;
 						reg = <0>;
 
-						blender0_8_in: endpoint@1 {
-							reg = <1>;
+						blender0_8_in: endpoint@4 {
+							reg = <4>;
 							remote-endpoint = <&exdma0_9_out>;
 						};
 					};
@@ -3706,9 +3873,9 @@
 						#size-cells = <0>;
 						reg = <1>;
 
-						blender0_8_out: endpoint@1 {
-							reg = <1>;
-							remote-endpoint = <&outproc0_1_in>;
+						blender0_8_out: endpoint@4 {
+							reg = <4>;
+							remote-endpoint = <&outproc0_3_in>;
 						};
 					};
 				};
@@ -3737,6 +3904,7 @@
 
 					port@0 {
 						reg = <0>;
+
 						outproc0_0_in: endpoint {
 							remote-endpoint = <&blender0_4_out>;
 						};
@@ -3744,6 +3912,7 @@
 
 					port@1 {
 						reg = <1>;
+
 						outproc0_0_out: endpoint {
 							remote-endpoint = <&ovl_dl_out_relay0_5>;
 						};
@@ -3756,6 +3925,7 @@
 				reg = <0 0x180000 0 0x1000>;
 				clocks = <&ovlsys0 CLK_OVL_OUTPROC1>;
 				interrupts-extended = <&vdisp_irq 167 IRQ_TYPE_LEVEL_HIGH>;
+				mediatek,gce-events = <CMDQ_EVENT_OVL0_FRAME_DONE_SEL(1)>;
 				trigger-sources = <&ovl0_mutex 21>;
 
 				ports {
@@ -3769,7 +3939,7 @@
 
 						outproc0_1_in: endpoint@1 {
 							reg = <1>;
-							remote-endpoint = <&blender0_8_out>;
+							remote-endpoint = <&blender0_6_out>;
 						};
 					};
 
@@ -3790,6 +3960,8 @@
 				compatible = "mediatek,mt8196-disp-outproc";
 				reg = <0 0x190000 0 0x1000>;
 				clocks = <&ovlsys0 CLK_OVL_OUTPROC2>;
+				interrupts-extended = <&vdisp_irq 168 IRQ_TYPE_LEVEL_HIGH>;
+				mediatek,gce-events = <CMDQ_EVENT_OVL0_FRAME_DONE_SEL(2)>;
 				trigger-sources = <&ovl0_mutex 22>;
 			};
 
@@ -3797,7 +3969,36 @@
 				compatible = "mediatek,mt8196-disp-outproc";
 				reg = <0 0x1a0000 0 0x1000>;
 				clocks = <&ovlsys0 CLK_OVL_OUTPROC3>;
+				interrupts-extended = <&vdisp_irq 169 IRQ_TYPE_LEVEL_HIGH>;
+				mediatek,gce-events = <CMDQ_EVENT_OVL0_FRAME_DONE_SEL(3)>;
 				trigger-sources = <&ovl0_mutex 23>;
+
+				ports {
+					#address-cells = <1>;
+					#size-cells = <0>;
+
+					port@0 {
+						#address-cells = <1>;
+						#size-cells = <0>;
+						reg = <0>;
+
+						outproc0_3_in: endpoint@4 {
+							reg = <4>;
+							remote-endpoint = <&blender0_8_out>;
+						};
+					};
+
+					port@1 {
+						#address-cells = <1>;
+						#size-cells = <0>;
+						reg = <1>;
+
+						outproc0_3_out: endpoint@4 {
+							reg = <4>;
+							remote-endpoint = <&ovl_dl_out_relay0_7>;
+						};
+					};
+				};
 			};
 
 			ovl0_outproc4: outproc@1b0000 {
@@ -3908,6 +4109,11 @@
 							reg = <2>;
 							clocks = <&ovlsys1 CLK_OVL1_DLI2>;
 						};
+
+						ovl_dl_in_async1_3: endpoint@3 {
+							reg = <3>;
+							clocks = <&ovlsys1 CLK_OVL1_DLI3>;
+						};
 					};
 
 					port@1 {
@@ -3935,7 +4141,7 @@
 						ovl_dl_out_async1_6: endpoint@3 {
 							reg = <3>;
 							clocks = <&ovlsys1 CLK_OVL1_DLO6>;
-							remote-endpoint = <&dl_in_async1_3>;
+							remote-endpoint = <&dl_in_async0_9>;
 							mediatek,port-id = <6>;
 						};
 					};
@@ -3950,6 +4156,14 @@
 						#address-cells = <1>;
 						#size-cells = <0>;
 						reg = <3>;
+
+						ovl_dl_out_relay1_0: endpoint@0 {
+							reg = <0>;
+						};
+
+						ovl_dl_out_relay1_1: endpoint@1 {
+							reg = <1>;
+						};
 
 						ovl_dl_out_relay1_5: endpoint@2 {
 							reg = <2>;
