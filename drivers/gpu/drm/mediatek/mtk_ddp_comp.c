@@ -54,7 +54,13 @@
 #define POSTMASK_EN					BIT(0)
 #define DISP_REG_POSTMASK_CFG			0x0020
 #define POSTMASK_RELAY_MODE				BIT(0)
+#define POSTMASK_DRAM_MODE				BIT(1)
+#define POSTMASK_BGCLR_IN				BIT(2)
+#define POSTMASK_GCLAST_EN				BIT(6)
+#define POSTMASK_STALL_CG_ON				BIT(8)
 #define DISP_REG_POSTMASK_SIZE			0x0030
+#define DISP_REG_POSTMASK_BANK_CON		0x0128
+#define POSTMASK_BANK_DDREN_REQ_DIS			BIT(5)
 
 #define DISP_REG_RSZ_EN				0x0000
 #define DISP_REG_RSZ_INPUT_SIZE			0x0010
@@ -216,8 +222,15 @@ static void mtk_postmask_config(struct mtk_ddp_comp *comp, unsigned int w,
 
 	mtk_ddp_write(cmdq_pkt, w << 16 | h, &priv->cmdq_reg, priv->regs,
 		      DISP_REG_POSTMASK_SIZE);
-	mtk_ddp_write(cmdq_pkt, POSTMASK_RELAY_MODE, &priv->cmdq_reg,
+
+	mtk_ddp_write(cmdq_pkt,
+		      POSTMASK_RELAY_MODE | POSTMASK_DRAM_MODE | POSTMASK_BGCLR_IN |
+		      POSTMASK_GCLAST_EN | POSTMASK_STALL_CG_ON, &priv->cmdq_reg,
 		      priv->regs, DISP_REG_POSTMASK_CFG);
+
+	/* Disable DDREN in Relay Mode */
+	mtk_ddp_write_mask(cmdq_pkt, 0, &priv->cmdq_reg, priv->regs,
+			   DISP_REG_POSTMASK_BANK_CON, POSTMASK_BANK_DDREN_REQ_DIS);
 }
 
 static void mtk_postmask_start(struct device *dev)
