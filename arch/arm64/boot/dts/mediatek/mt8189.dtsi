@@ -1978,5 +1978,6 @@
 			     <GIC_PPI 11 IRQ_TYPE_LEVEL_HIGH 0>,
 			     <GIC_PPI 10 IRQ_TYPE_LEVEL_HIGH 0>,
 			     <GIC_PPI 12 IRQ_TYPE_LEVEL_HIGH 0>;
+		clock-frequency = <13000000>;
 	};
 };
