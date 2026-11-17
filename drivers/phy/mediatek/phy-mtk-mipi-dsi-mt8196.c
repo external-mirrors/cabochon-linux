@@ -78,7 +78,7 @@ static int mtk_mipi_tx_pll_enable(struct clk_hw *hw)
 	u32 pres = MIPITX_PRESERVED_MINI;
 	unsigned long long pcw_calc;
 	unsigned int txdiv, txdiv0;
-	u64 pcw_base, ssc_calc;
+	u64 pcw_base;
 	u32 ssc, pcw;
 
 	dev_dbg(mipi_tx->dev, "enable: %u bps\n", mipi_tx->data_rate);
@@ -132,9 +132,11 @@ static int mtk_mipi_tx_pll_enable(struct clk_hw *hw)
 	mtk_phy_set_bits(base + MIPITX_PLL_CON1, RG_DSI_PLL_EN);
 	udelay(30);
 
-	/* Calculate delta amplitude for the Spread Spectrum (SSC) */
-	ssc_calc = div_u64(pcw_base, txdiv) * DSI_PHY_SSC_DEVIATION_TGT;
-	ssc = div_u64(ssc_calc, DSI_PHY_SSC_AMPL_PRESCALER);
+	/*
+	 * Calculate delta amplitude for the Spread Spectrum (SSC): this is a
+	 * fraction of the PCW and always fits in the 16 bits of the register
+	 */
+	ssc = div_u64((u64)pcw * DSI_PHY_SSC_DEVIATION_TGT, DSI_PHY_SSC_AMPL_PRESCALER);
 
 	/* Set the same delta, this results in Center-Spread Spectrum */
 	mtk_phy_update_field(base + MIPITX_PLL_CON3, RG_DSI_PLL_SDM_SSC_DELTA1, ssc);
