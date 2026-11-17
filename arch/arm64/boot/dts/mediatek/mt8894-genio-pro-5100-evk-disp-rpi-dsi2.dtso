@@ -18,7 +18,7 @@
 		default-brightness-level = <576>;
 		num-interpolated-steps = <1023>;
 		pwms = <&mcu_rpi_disp 0 200000 0>;
-		vin-supply = <&vbl_lcm2>;
+		power-supply = <&vbl_lcm2>;
 	};
 
 	vtouch_rpi: regulator-dsi-touch {
@@ -36,6 +36,7 @@
 	mcu_rpi_disp: regulator@45 {
 		compatible = "raspberrypi,touchscreen-panel-regulator-v2";
 		reg = <0x45>;
+		vin-supply = <&vrpi_disp_io3v3>;
 		gpio-controller;
 		#gpio-cells = <2>;
 		#pwm-cells = <3>;
@@ -51,8 +52,24 @@
 	};
 };
 
+/*
+ * The panel i2c reaches the display board's MCU through a level translator
+ * powered by LCM_3V3_EN (GPIO212). With that rail off nothing answers at 0x45,
+ * and the panel reset, the backlight PWM and the touch rail all live in that
+ * MCU, so none of them can work and the panel never probes. The MCU driver
+ * does not request any supply, hence nothing could ever enable the rail first.
+ */
+&vrpi_disp_io3v3 {
+	regulator-boot-on;
+	regulator-always-on;
+};
+
 &dl_in_relay1_4 {
 	remote-endpoint = <&dsi2_in>;
+};
+
+&mipi_tx_config2 {
+	status = "okay";
 };
 
 &dsi2 {
